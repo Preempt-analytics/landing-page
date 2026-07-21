@@ -121,6 +121,36 @@ we want richer MLflow SDK features.
 - Variable (not secret — already public in the ML repo's own docs): `MLFLOW_TRACKING_URI`.
 - Model names are hardcoded constants in the script, matching how the ML repo treats them as a fixed integration contract.
 
+**Where this repo lives is independent of whether it can reach DagsHub.** This repo
+should be hosted under the team's main GitHub account/org, not the `Preempt-Analytics-Demo`
+account the ML repo uses (see §7 item 4 for why). That choice has **no effect** on
+the dashboard's ability to read live data: the fetch step just makes an outbound
+HTTPS call to `dagshub.com` using whatever credential is stored as *this repo's own*
+secret. Any GitHub repo's Actions runner can reach any public API — it doesn't
+matter which account owns the workflow. "Mint a fresh token" means generating a new
+token string for the same `Preempt-Analytics-Demo/predictive-maintenance-demo`
+DagsHub project (that's still where the live model data lives), stored only as a
+secret on this repo — not pointing at a different data source, and never written to
+a committed file this time.
+
+**What actually makes a local demo run show up on the dashboard.** Running
+`docker compose up` locally does not push anything to DagsHub by itself. The full
+chain, traced through the ML repo's own scripts:
+1. The simulator generates readings into local `simulation.db`.
+2. `monitor.py` detects drift → runs `export_simulation_to_parquet.py --push` → uploads to DagsHub via DVC, commits `retrain.trigger`, pushes to GitHub.
+3. That push fires `retrain.yml` **on GitHub Actions**, not locally → trains → `promote_model.py` moves the `@production` alias if the new version clears its gates.
+
+Only step 3 changes what's on DagsHub's MLflow registry — running the simulator
+alone won't move the dashboard, only a full drift → retrain → promote cycle will.
+Given the hourly cron below, that's up to ~1 hour of lag by default. For a live
+walkthrough where immediate reflection matters, either manually fire this repo's
+`workflow_dispatch` right after a promotion completes, or wire up the
+`repository_dispatch` hook noted below.
+
+**Worth a two-minute check:** if the DagsHub project is public, its MLflow API may
+allow anonymous reads with no token at all, which would simplify this further —
+worth glancing at the project's visibility setting on DagsHub before minting a token.
+
 **No path exposes the token client-side:** the fetch happens only inside the GitHub Actions runner. `metrics.json` (plain numbers + ISO timestamps) is the only artifact that reaches `src/`, and Astro imports it at build time into static HTML. The deployed site makes **zero** runtime calls to DagsHub.
 
 **Refresh cadence: hourly, `cron: "17 * * * *"`.** Retraining in this system is drift-triggered, not scheduled, so there's no fixed cadence to match. Hourly keeps the page from ever looking stale relative to how often this demo actually promotes new versions (hours-to-days), without hammering DagsHub's API. The `:17` offset avoids the well-documented top-of-hour GitHub Actions scheduler queuing delay.
@@ -275,7 +305,18 @@ These need a person, not a coding agent, to resolve:
 1. **Logo/icon** — the triangle/A mark in both mockups is itself a placeholder. Commission/generate a real one, or ship a text-only wordmark until one exists.
 2. **Hero photo** — the macro-gears image needs sourcing (stock license) or generation. Scaffolding works without it (gradient placeholder), but the visual won't match the mockup until it's dropped in.
 3. **Fake customer logo strip** — decide between omitting it, or a truthful "Built with" tech-stack strip instead of invented company names.
-4. **Fresh DagsHub token** — mint a new token scoped to this repo before wiring up `scripts/fetch-metrics.mjs` in CI; never copy the one from the ML repo's `.env.demo`/`.dvc/config`.
+4. **Hosting account: main GitHub account/org, not `Preempt-Analytics-Demo`.** The ML
+   repo's demo account ships credentials deliberately, for zero-setup friction —
+   checked, and its SSH credential is specifically a repo-scoped deploy key (not an
+   account-wide PAT), so it can't reach a sibling repo by itself. The real risk is
+   account-level compromise and blast-radius asymmetry: the ML demo repo is
+   *designed* to be disposable (rotate a token, no harm done); a public landing page
+   during "wider release" carries real reputational stakes that shouldn't share a
+   trust boundary with an account built around "embed it, it's easier." Mint a
+   DagsHub token fresh for this repo (read-only scope if DagsHub's token UI offers
+   it — worth checking) and never copy the one from the ML repo's `.env.demo`/`.dvc/config`.
+5. **Branch protection on `main`** — require a PR + at least one review before merge. `deploy.yml` auto-builds and publishes on every push to `main`, so without this, one compromised collaborator credential or a stray force-push goes straight to the live public site with no checkpoint.
+6. **Enable secret scanning + push protection** on this repo — a live guard rail against ever repeating the `.dvc/config`/`.env.demo` class of mistake (a real credential landing in a committed file), catching it at push time instead of after the fact.
 
 ---
 
