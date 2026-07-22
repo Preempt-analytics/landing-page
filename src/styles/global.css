@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens (docs/ARCHITECTURE.md §5). Single-valued — the site is
+   dark-only by deliberate design choice (§12), so there is no light variant.
+--------------------------------------------------------------------------- */
+@theme {
+  --color-navy-950: #0a0f1a;
+  --color-navy-900: #0d1b2e;
+  --color-navy-800: #13233a;
+  --color-navy-700: #1c3350;
+  --color-teal-300: #5eead4;
+  --color-teal-400: #2dd4bf;
+  --color-teal-500: #14b8a6;
+  --color-blue-500: #3b82f6;
+  --color-offwhite: #f8fafc;
+  --color-muted: #cbd5e1;
+  --color-alert-400: #ff6b6b;
+
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   Base
+--------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem; /* keep anchor targets clear of the sticky nav */
+  background-color: var(--color-navy-950);
+}
+
+body {
+  background-color: var(--color-navy-950);
+  color: var(--color-offwhite);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible focus ring on every interactive element (§12 accessibility). */
+:focus-visible {
+  outline: 2px solid var(--color-teal-400);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Screen-reader-only helper for text alternatives (§12). */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion — one blanket rule so every animated component inherits it (§12).
+--------------------------------------------------------------------------- */
+@keyframes pulse-pin {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(1.35); }
+}
+
+@keyframes ring-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,91 @@
+---
+// §9.2 Live Factory — connective tissue between the abstract hero and the physical
+// hardware. Stylized SVG placeholder of a CNC/milling floor (the dataset is a
+// milling process), glowing sensor pins, one sample drift callout. A photoreal
+// render is a future upgrade (§7).
+---
+
+<section class="relative overflow-hidden border-t border-white/5 bg-navy-900 py-20">
+  <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 md:px-8 lg:grid-cols-2">
+    <!-- Copy -->
+    <div>
+      <h2 class="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+        <span class="text-offwhite">Live Factory.</span><br />
+        <span class="text-teal-400">Real Predictions.</span>
+      </h2>
+      <p class="mt-6 max-w-lg text-lg leading-relaxed text-muted">
+        Our system continuously monitors CNC milling machines, detects subtle
+        changes in tool wear and vibration, and predicts failures long before they
+        impact production.
+      </p>
+    </div>
+
+    <!-- Stylized CNC floor placeholder -->
+    <div class="relative">
+      <div class="relative aspect-[4/3] w-full overflow-hidden rounded-2xl border border-white/10 bg-navy-950">
+        <svg viewBox="0 0 400 300" class="h-full w-full" role="img" aria-label="Stylized factory floor with CNC milling machines and glowing sensor markers; one machine shows a drift alert.">
+          <defs>
+            <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#0d1b2e" />
+              <stop offset="1" stop-color="#06101d" />
+            </linearGradient>
+            <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur stdDeviation="3" result="b" />
+              <feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge>
+            </filter>
+          </defs>
+
+          <rect width="400" height="300" fill="url(#floor)" />
+
+          <!-- perspective grid floor -->
+          <g stroke="rgba(94,234,212,0.14)" stroke-width="0.6">
+            {Array.from({ length: 9 }).map((_, i) => (
+              <line x1={i * 50} y1="150" x2={i * 50 - 120} y2="300" />
+            ))}
+            {Array.from({ length: 5 }).map((_, i) => (
+              <line x1="0" y1={150 + i * 30} x2="400" y2={150 + i * 30} />
+            ))}
+          </g>
+
+          <!-- CNC machine blocks (simple isometric boxes) -->
+          {[
+            { x: 70, y: 120 },
+            { x: 190, y: 100 },
+            { x: 300, y: 130 },
+            { x: 130, y: 200 },
+            { x: 260, y: 210 },
+          ].map((m) => (
+            <g>
+              <rect x={m.x} y={m.y} width="46" height="34" rx="3" fill="#16283f" stroke="rgba(94,234,212,0.35)" stroke-width="1" />
+              <rect x={m.x + 6} y={m.y - 12} width="34" height="14" rx="2" fill="#1c3350" stroke="rgba(94,234,212,0.25)" stroke-width="0.8" />
+              <line x1={m.x + 23} y1={m.y - 12} x2={m.x + 23} y2={m.y - 22} stroke="rgba(94,234,212,0.4)" stroke-width="1" />
+            </g>
+          ))}
+
+          <!-- healthy sensor pins (pulsing) -->
+          {[
+            { x: 93, y: 118 },
+            { x: 213, y: 98 },
+            { x: 153, y: 198 },
+            { x: 283, y: 208 },
+          ].map((p, i) => (
+            <circle cx={p.x} cy={p.y} r="4" fill="#2dd4bf" filter="url(#glow)" style={`animation: pulse-pin 2.4s ${i * 0.5}s ease-in-out infinite; transform-box: fill-box; transform-origin: center;`} />
+          ))}
+
+          <!-- alerting machine pin -->
+          <circle cx="323" cy="128" r="5" fill="#ff6b6b" filter="url(#glow)" style="animation: pulse-pin 1.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center;" />
+        </svg>
+
+        <!-- Drift callout card -->
+        <div class="absolute left-[62%] top-[26%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
+          <p class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
+            Drift detected
+          </p>
+          <p class="mt-1 text-sm font-semibold text-offwhite">Tool Wear Shift</p>
+          <p class="text-xs text-muted">2.3 hrs to failure</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

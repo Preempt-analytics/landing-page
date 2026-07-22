@@ -1,0 +1,132 @@
+---
+// §9.6 The MLOps System — the DEEP half of the two-loop design, positioned late for
+// the interested reader. Same system as §9.3, one level deeper. Real pipeline labels,
+// honest capstone-true claim strip. Circle on desktop, vertical list on mobile (§12).
+import Button from '../Button.astro';
+import { withBase } from '../../lib/site';
+
+const nodes = [
+  { title: 'Sensor Data', body: 'Live/simulated readings from machines' },
+  { title: 'Prediction API', body: 'Real-time inference & failure probability' },
+  { title: 'Evidently Drift Check', body: 'Detects data & model drift' },
+  { title: 'GitHub Actions', body: 'Automated CI/CD for ML' },
+  { title: 'DVC Pipeline', body: 'Versioned data + retraining' },
+  { title: 'MLflow Registry', body: 'Compare, track & promote models' },
+];
+
+// Positions around a circle (top start, clockwise) as percentages.
+const R = 42;
+const placed = nodes.map((n, i) => {
+  const a = (-90 + i * 60) * (Math.PI / 180);
+  return { ...n, left: 50 + R * Math.cos(a), top: 50 + R * Math.sin(a) };
+});
+
+const builtWith = ['Python', 'Pandas', 'Scikit-learn', 'NumPy'];
+const poweredBy = ['GitHub Actions', 'DVC', 'MLflow', 'Evidently AI'];
+
+const claims = [
+  { title: 'Automated', body: 'No manual retraining' },
+  { title: 'Reproducible', body: 'DVC-versioned data & pipeline' },
+  { title: 'Monitored', body: 'Evidently drift checks' },
+  { title: 'Open-source stack', body: 'Runs on your own machine' },
+];
+---
+
+<section id="tech-stack" class="scroll-mt-20 border-t border-white/5 bg-navy-900 py-20">
+  <div class="mx-auto max-w-7xl px-5 md:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
+        For the technical reader
+      </p>
+      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+        The MLOps System Behind the Predictions
+      </h2>
+      <p class="mt-4 text-lg text-muted">
+        The same loop from
+        <a href="#how-it-works" class="text-teal-300 underline decoration-teal-400/40 underline-offset-4 hover:text-teal-200">How it works</a>
+        — now with the tools that run it.
+      </p>
+    </div>
+
+    <div class="mt-14 grid gap-8 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-center">
+      <!-- Built With -->
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
+        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Built with</h3>
+        <ul class="flex flex-wrap gap-2">
+          {builtWith.map((t) => (
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-1.5 text-sm text-muted">{t}</li>
+          ))}
+        </ul>
+      </div>
+
+      <!-- Circular diagram (desktop) / vertical list (mobile) -->
+      <div>
+        <!-- desktop circle -->
+        <div class="relative mx-auto hidden aspect-square w-full max-w-md lg:block">
+          <svg class="absolute inset-0 h-full w-full" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <circle cx="50" cy="50" r="42" stroke="rgba(45,212,191,0.25)" stroke-width="0.5" stroke-dasharray="2 2" />
+          </svg>
+          <!-- center mark -->
+          <div class="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950">
+            <svg viewBox="0 0 32 32" width="30" height="30" fill="none" aria-hidden="true">
+              <path d="M16 3 L29 28 L3 28 Z" stroke="var(--color-teal-400)" stroke-width="2" stroke-linejoin="round" />
+              <path d="M16 13 L23 26 L9 26 Z" fill="var(--color-teal-400)" opacity="0.9" />
+            </svg>
+          </div>
+          {
+            placed.map((n, i) => (
+              <div
+                class="absolute w-32 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-2.5 text-center"
+                style={`left:${n.left}%; top:${n.top}%;`}
+              >
+                <p class="text-xs font-semibold text-teal-300">{i + 1}. {n.title}</p>
+                <p class="mt-0.5 text-[0.65rem] leading-tight text-muted/80">{n.body}</p>
+              </div>
+            ))
+          }
+        </div>
+
+        <!-- mobile linearized list -->
+        <ol class="space-y-2 lg:hidden">
+          {
+            nodes.map((n, i) => (
+              <li class="flex items-start gap-3 rounded-lg border border-white/10 bg-navy-800/50 p-3">
+                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-400/15 text-xs font-bold text-teal-300">{i + 1}</span>
+                <div>
+                  <p class="text-sm font-semibold text-offwhite">{n.title}</p>
+                  <p class="text-xs text-muted">{n.body}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+
+      <!-- Powered By -->
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
+        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Powered by</h3>
+        <ul class="flex flex-wrap gap-2">
+          {poweredBy.map((t) => (
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-1.5 text-sm text-muted">{t}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Honest, capstone-true claim strip -->
+    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        claims.map((c) => (
+          <div class="text-center sm:text-left">
+            <p class="text-sm font-semibold text-teal-300">{c.title}</p>
+            <p class="mt-0.5 text-xs text-muted">{c.body}</p>
+          </div>
+        ))
+      }
+    </div>
+
+    <div class="mt-10 flex justify-center">
+      <Button href={withBase('/try-it-yourself')} variant="solid">Test it on your device →</Button>
+    </div>
+  </div>
+</section>

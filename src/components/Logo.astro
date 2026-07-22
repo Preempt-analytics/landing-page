@@ -1,0 +1,26 @@
+---
+// Placeholder brand mark — a stylized triangle/A, per ARCHITECTURE.md §7 item 1.
+// The real logo is still an open item; this is a text wordmark + simple SVG.
+interface Props {
+  class?: string;
+}
+const { class: className = '' } = Astro.props;
+---
+
+<span class={`inline-flex items-center gap-2.5 ${className}`}>
+  <svg
+    viewBox="0 0 32 32"
+    width="30"
+    height="30"
+    fill="none"
+    aria-hidden="true"
+    class="shrink-0"
+  >
+    <path d="M16 3 L29 28 L3 28 Z" stroke="var(--color-teal-400)" stroke-width="2" stroke-linejoin="round" />
+    <path d="M16 13 L23 26 L9 26 Z" fill="var(--color-teal-400)" opacity="0.9" />
+  </svg>
+  <span class="leading-tight">
+    <span class="block text-[1.05rem] font-semibold tracking-tight text-offwhite">Preempt</span>
+    <span class="block text-[0.7rem] font-medium tracking-[0.2em] text-muted uppercase">Analytics</span>
+  </span>
+</span>

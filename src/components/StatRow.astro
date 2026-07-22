@@ -1,0 +1,38 @@
+---
+import StatCard from './StatCard.astro';
+import {
+  isLive,
+  failureRecallPct,
+  lastPromotedAt,
+  relativeTime,
+} from '../lib/metrics';
+
+const live = isLive();
+const recall = `${failureRecallPct()}%`;
+const retrained = relativeTime(lastPromotedAt());
+// Honesty cue (§5): live values labelled live, illustrative copy labelled illustrative.
+const recallCaption = live ? 'live · updated hourly' : 'sample metric';
+---
+
+<div class="grid gap-4 sm:grid-cols-3">
+  <StatCard value={recall} label="Failure Recall" caption={recallCaption} captionTone={live ? 'live' : 'plain'}>
+    <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+      <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.6" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  </StatCard>
+
+  <StatCard value="2.3M" label="Sensor Readings / Day" caption="illustrative" captionTone="illustrative">
+    <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 12h3l2-6 4 12 2-6h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </StatCard>
+
+  <StatCard value="∞" label="Retrains Automatically" caption={`Last retrained ${retrained}`} captionTone={live ? 'live' : 'plain'}>
+    <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M20 4v4h-4M4 20v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+  </StatCard>
+</div>

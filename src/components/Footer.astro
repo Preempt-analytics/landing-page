@@ -1,0 +1,72 @@
+---
+import Logo from './Logo.astro';
+import { REPO_URL, TEAM, PROGRAM, withBase } from '../lib/site';
+const year = new Date().getFullYear();
+---
+
+<footer id="project-team" class="scroll-mt-20 border-t border-white/5 bg-navy-950">
+  <div class="mx-auto max-w-7xl px-5 py-14 md:px-8">
+    <div class="grid gap-10 md:grid-cols-3">
+      <!-- About / capstone framing -->
+      <div>
+        <Logo class="mb-4" />
+        <p class="max-w-sm text-sm leading-relaxed text-muted">
+          Predictive maintenance for industrial equipment — a complete MLOps
+          pipeline: live sensor predictions, automated drift monitoring, and
+          self-triggering retraining.
+        </p>
+        <p class="mt-4 max-w-sm text-xs leading-relaxed text-muted/70">
+          A capstone project showcase built on <strong class="font-medium text-muted">simulated CNC sensor data</strong> —
+          not a live paying-customer deployment.
+        </p>
+      </div>
+
+      <!-- Team -->
+      <div>
+        <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
+          Project &amp; team
+        </h2>
+        <ul class="space-y-2 text-sm text-muted">
+          {
+            TEAM.map((m) => (
+              <li>
+                <span class="text-offwhite">{m.name}</span>{' '}
+                <a href={m.url} class="text-teal-400 hover:text-teal-300" rel="noopener">
+                  {m.handle}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-4 text-xs text-muted/70">{PROGRAM}</p>
+      </div>
+
+      <!-- Links -->
+      <div>
+        <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
+          Links
+        </h2>
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a href={withBase('/try-it-yourself')} class="text-muted hover:text-offwhite">
+              Test it on your device
+            </a>
+          </li>
+          <li>
+            <a href={REPO_URL} class="text-muted hover:text-offwhite" rel="noopener">
+              GitHub repository
+            </a>
+          </li>
+          <li>
+            <a href="#top" class="text-muted hover:text-offwhite">Back to top ↑</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-12 flex flex-col gap-3 border-t border-white/5 pt-6 text-xs text-muted/60 md:flex-row md:items-center md:justify-between">
+      <p>© {year} Preempt Analytics — capstone project. Built with Astro &amp; Tailwind.</p>
+      <p>This site uses no analytics and no tracking. Nothing you do here is logged.</p>
+    </div>
+  </div>
+</footer>

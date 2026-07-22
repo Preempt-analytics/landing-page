@@ -1,0 +1,56 @@
+---
+// §9.1 Product Preview — the "See it in action" destination. The dashboard is a
+// finished screenshot shown inside browser chrome, framed as a Concept preview so
+// its (deliberately) dead interactivity reads as intentional. A team-recorded
+// in-action clip drops into the same frame later (open item §7).
+import { Image } from 'astro:assets';
+import dashboard from '../../assets/dashboard.png';
+---
+
+<section id="product" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
+  <div class="mx-auto max-w-6xl px-5 md:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
+        The product
+      </p>
+      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+        Here's what the platform looks like in practice.
+      </h2>
+      <p class="mt-4 text-lg leading-relaxed text-muted">
+        A maintenance control center: fleet health, machines ranked by failure
+        probability, and live sensor readings — all in one place.
+      </p>
+    </div>
+
+    <!-- Framed concept preview -->
+    <figure class="relative mx-auto mt-12 max-w-5xl">
+      <div class="overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
+        <!-- browser chrome -->
+        <div class="flex items-center gap-2 border-b border-white/10 bg-navy-800/60 px-4 py-2.5">
+          <span class="h-3 w-3 rounded-full bg-alert-400/70"></span>
+          <span class="h-3 w-3 rounded-full bg-yellow-400/60"></span>
+          <span class="h-3 w-3 rounded-full bg-teal-400/70"></span>
+          <span class="ml-3 truncate text-xs text-muted/60">preempt-analytics · maintenance control center</span>
+        </div>
+        <Image
+          src={dashboard}
+          alt="Preempt Analytics maintenance dashboard: an Overall Fleet Health tile at 94%, a Priority Maintenance Queue ranking machines such as Press-07 (97% failure probability, critical) and CNC-03 (89%, high), a failure-probability trend chart, and live sensor tiles for temperature, vibration, rotational speed, torque and tool wear."
+          widths={[640, 960, 1280]}
+          sizes="(max-width: 1024px) 100vw, 1024px"
+          class="block w-full select-none"
+          draggable="false"
+        />
+      </div>
+
+      <!-- Concept-preview cue: this is a picture of the app, not the live app -->
+      <figcaption class="absolute right-4 top-14 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300 backdrop-blur-sm">
+        Concept preview
+      </figcaption>
+    </figure>
+
+    <p class="mx-auto mt-6 max-w-2xl text-center text-sm text-muted/70">
+      A static preview of the interface — an animated walkthrough of the system
+      running is on the way.
+    </p>
+  </div>
+</section>

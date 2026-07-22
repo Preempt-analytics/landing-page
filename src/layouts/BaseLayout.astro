@@ -1,0 +1,52 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import { withBase } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+const {
+  title = 'Preempt Analytics — Predictive Maintenance',
+  description = 'Predict machine failures before they happen. A predictive-maintenance MLOps capstone: live sensor predictions, automated drift monitoring, and self-triggering retraining.',
+} = Astro.props;
+
+// Project-scoped social preview (§10) — no personal identity, points at the project.
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href={withBase('/favicon.svg')} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#0a0f1a" />
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body id="top">
+    <a
+      href="#product"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-teal-400 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-navy-950"
+    >
+      Skip to content
+    </a>
+    <Nav />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

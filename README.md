@@ -1,6 +1,57 @@
-# landing-page
-Landing page for the [predictive maintenance engine project](https://github.com/Preempt-analytics/predictive-maintenance-capstone)
+# Preempt Analytics — landing page
+
+Public marketing site for the [Preempt Analytics predictive-maintenance capstone](https://github.com/Preempt-Analytics-Demo/predictive-maintenance-demo).
+Built with **Astro + Tailwind CSS v4**, deployed to GitHub Pages.
+
+## Develop
+
+```bash
+npm install
+npm run dev        # local dev server
+npm run build      # static build → dist/
+npm run preview    # preview the production build
+```
+
+Requires Node 22+. The site is **dark-only by design** and ships **no analytics / no
+tracking**.
+
+## Live metrics
+
+The hero stat tiles can show real numbers (production model recall + last-retrained
+time) fetched at build time from DagsHub's MLflow API:
+
+```bash
+npm run fetch-metrics   # writes src/data/metrics.json (needs DAGSHUB_* env vars)
+```
+
+Without credentials it **fails open**: the committed `src/data/metrics.json` sample
+values are used and the tiles label themselves `sample metric` (never faked as live).
+See `.env.example` and [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) §4.
+
+## Deploy (first-time setup)
+
+CI (`.github/workflows/deploy.yml`) fetches metrics → builds → deploys on every push
+to `main` (and hourly). Before it goes green:
+
+1. **Settings → Pages → Source → "GitHub Actions"**
+2. Add secrets `DAGSHUB_USERNAME`, `DAGSHUB_TOKEN` (token minted **fresh** for this
+   repo — never copied from the ML repo) and variable `MLFLOW_TRACKING_URI`.
 
 ## For contributors
+
 - **Architecture & design decisions:** [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — the living source of truth for *why* the site is built the way it is.
-- **Picking up someone else's Claude session?** Read [`claude-handover/claude-handover-doc.md`](claude-handover/claude-handover-doc.md) first, then run its ground-truth verify commands before editing.
+- **Picking up a Claude session?** Read the latest dated file in [`claude-handover/`](claude-handover/) first, then run its ground-truth verify commands before editing.
+
+## Structure
+
+```
+src/
+├── components/          # Nav, Hero, Footer, StatCard, Button, Logo …
+│   └── sections/        # ProductPreview, LiveFactory, HowItWorks, Benefits, UserStory, MlopsSystem
+├── layouts/BaseLayout.astro
+├── pages/               # index.astro, try-it-yourself.astro
+├── data/                # metrics.json (CI-refreshed) + metrics.sample.json
+├── lib/                 # site constants, metrics helpers
+└── styles/global.css    # @theme tokens, reduced-motion, focus
+scripts/fetch-metrics.mjs # CI: DagsHub MLflow → metrics.json
+```

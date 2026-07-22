@@ -1,0 +1,65 @@
+---
+// §9.3 How it works — the birds-eye, non-technical loop. NO tool logos here (that's
+// §9.6's job); this is the same system at a shallower zoom. Cards stack on mobile.
+import Button from '../Button.astro';
+import { withBase } from '../../lib/site';
+
+const steps = [
+  { n: '1', title: 'Collect', body: 'Stream sensor data from your machines in real time.', icon: 'pulse' },
+  { n: '2', title: 'Predict', body: 'AI models assess failure probability continuously.', icon: 'brain' },
+  { n: '3', title: 'Detect', body: 'Anomalies and drift are caught early and automatically.', icon: 'search' },
+  { n: '4', title: 'Retrain', body: 'Models retrain on fresh data through the pipeline.', icon: 'refresh' },
+  { n: '5', title: 'Improve', body: 'Predictions get better over time — cutting downtime and cost.', icon: 'check' },
+];
+const outcome = { title: 'Business Impact', body: 'Increase uptime. Lower costs. Extend asset life.', icon: 'chart' };
+
+const icons: Record<string, string> = {
+  pulse: 'M3 12h3l2-6 4 12 2-6h4',
+  brain: 'M9 3a3 3 0 0 0-3 3 3 3 0 0 0-1 5 3 3 0 0 0 2 5 3 3 0 0 0 6 0V4a3 3 0 0 0-3-1zm6 0a3 3 0 0 1 3 3 3 3 0 0 1 1 5 3 3 0 0 1-2 5',
+  search: 'M11 4a7 7 0 1 0 4.2 12.6L21 21m-4.5-9.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z',
+  refresh: 'M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2M20 4v4h-4M4 20v-4h4',
+  check: 'M20 6 9 17l-5-5',
+  chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+};
+---
+
+<section id="how-it-works" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
+  <div class="mx-auto max-w-7xl px-5 md:px-8">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+        The AI + MLOps platform for continuous reliability
+      </h2>
+      <p class="mt-4 text-lg text-muted">One system. One loop. Always learning.</p>
+    </div>
+
+    <!-- Loop: 6 cards, horizontal row on desktop, stacked on mobile -->
+    <ol class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+      {
+        [...steps, outcome].map((s, i) => {
+          const isOutcome = i === steps.length;
+          return (
+            <li class={`relative rounded-xl border p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
+              <div class="mb-3 text-teal-400">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d={icons[s.icon]} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <h3 class="text-base font-semibold text-offwhite">
+                {'n' in s ? `${s.n}. ${s.title}` : s.title}
+              </h3>
+              <p class="mt-1.5 text-sm leading-relaxed text-muted">{s.body}</p>
+              {!isOutcome && (
+                <span class="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 text-teal-400/50 lg:block" aria-hidden="true">→</span>
+              )}
+            </li>
+          );
+        })
+      }
+    </ol>
+
+    <div class="mt-12 flex flex-wrap justify-center gap-4">
+      <Button href="#product" variant="solid">See it in action →</Button>
+      <Button href={withBase('/try-it-yourself')} variant="outline">Test it on your device</Button>
+    </div>
+  </div>
+</section>

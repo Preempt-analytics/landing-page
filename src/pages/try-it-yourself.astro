@@ -1,0 +1,74 @@
+---
+// §9.7 Try It Yourself — plain-language (Krug/Redish), menu-first, teaser not a full
+// copy of the README. Links out to the repo rather than duplicating setup steps.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { REPO_URL, withBase } from '../lib/site';
+---
+
+<BaseLayout
+  title="Run it yourself — Preempt Analytics"
+  description="Run the Preempt Analytics predictive-maintenance demo on your own machine. One prerequisite (Docker Desktop), a friendly menu, and a link to the full instructions on GitHub."
+>
+  <section class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
+    <a href={withBase('/')} class="text-sm text-teal-400 hover:text-teal-300">← Back to home</a>
+
+    <h1 class="mt-6 text-4xl font-bold tracking-tight text-offwhite sm:text-5xl">
+      Run Preempt Analytics on your own machine.
+    </h1>
+    <p class="mt-5 text-lg leading-relaxed text-muted">
+      Everything runs inside Docker. You don't need Python, or any ML knowledge —
+      just one prerequisite and a couple of minutes.
+    </p>
+
+    <!-- Prerequisite -->
+    <div class="mt-10 rounded-xl border border-white/10 bg-navy-800/40 p-5">
+      <p class="text-sm font-semibold text-offwhite">You need one thing: Docker Desktop</p>
+      <p class="mt-1 text-sm text-muted">
+        Install it and make sure it's running (the whale icon in your menu/task bar).
+        Nothing else to set up.
+      </p>
+    </div>
+
+    <!-- Friendly path first -->
+    <h2 class="mt-12 text-xl font-semibold text-offwhite">The easy way — a menu, no commands to remember</h2>
+    <p class="mt-2 text-muted">After cloning, run one script and press a number to simulate readings, open the drift report, or watch the pipeline retrain itself.</p>
+    <div class="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+      <pre class="text-sm text-teal-200"><code># Mac / Linux
+./preempt.sh
+
+# Windows
+.\preempt.ps1</code></pre>
+    </div>
+
+    <!-- Manual path second -->
+    <h2 class="mt-12 text-xl font-semibold text-offwhite">Prefer to type it? Three commands</h2>
+    <div class="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+      <pre class="text-sm text-teal-200"><code>git clone https://github.com/Preempt-Analytics-Demo/predictive-maintenance-demo.git
+cd predictive-maintenance-demo
+docker compose up -d</code></pre>
+    </div>
+    <p class="mt-3 text-sm text-muted">
+      From there you can generate sensor readings and watch drift detection trigger
+      an automatic retraining run — the full walkthrough lives in the README.
+    </p>
+
+    <!-- Shared-resource expectation -->
+    <div class="mt-8 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5">
+      <p class="text-sm text-muted">
+        <span class="font-semibold text-teal-300">Heads up:</span> retraining runs on a
+        shared demo pipeline (about 10 runs/hour for everyone combined). If it's busy,
+        your data still uploads and your run simply queues — nothing is broken.
+      </p>
+    </div>
+
+    <div class="mt-10">
+      <a
+        href={REPO_URL}
+        rel="noopener"
+        class="inline-flex items-center gap-2 rounded-lg bg-teal-400 px-6 py-3 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
+      >
+        Full instructions on GitHub →
+      </a>
+    </div>
+  </section>
+</BaseLayout>
