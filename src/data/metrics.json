@@ -2,7 +2,7 @@
   "_meta": {
     "source": "sample",
     "note": "Committed seed — overwritten by CI (scripts/fetch-metrics.mjs) on every build once DAGSHUB_TOKEN is set. Until then, source stays 'sample' and the hero tiles label themselves accordingly.",
-    "fetched_at": "2026-07-22T19:42:58.293Z"
+    "fetched_at": "2026-07-22T21:35:14.512Z"
   },
   "binary_model": {
     "name": "predictive-maintenance-binary",
