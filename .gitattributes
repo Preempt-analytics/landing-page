@@ -1,0 +1,11 @@
+# Normalize line endings to LF for every text file, on every platform, regardless
+# of a contributor's local `core.autocrlf` setting — avoids Mac/Windows line-ending
+# diff noise (CLAUDE.md's Platform Agnosticism protocol).
+* text=auto eol=lf
+
+# Binary files — never touch, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
