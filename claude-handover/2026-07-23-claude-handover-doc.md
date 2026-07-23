@@ -4,7 +4,7 @@ schema: v1
 project: preempt-analytics-landing
 updated: 2026-07-23 (governance session — CLAUDE.md + platform-agnostic hardening)
 updated_by: Claude (governance → cross-platform fix session)
-head_sha: 0a4fa14
+head_sha: 3a1039e
 branch: main
 status: green
 ---
@@ -15,7 +15,7 @@ status: green
 
 ```
 Project: preempt-analytics-landing — public marketing site for Preempt Analytics (predictive-maintenance ML capstone)
-State: green · branch main @ 0a4fa14, pushed to origin. Build passes (npm run build verified after every change below).
+State: green · branch main @ 3a1039e, pushed to origin. Build passes (npm run build verified after every change below).
 Just did: wrote CLAUDE.md (Laws/Contracts/Danger-Zones/Quick-ref, scaled from the ML repo's pattern); merged it with a real conflicting CLAUDE.md a teammate (Nate, envelopingCODE) pushed independently after hitting a genuine Windows bug; adopted his lockfile fix (rolldown-vite chain was missing the Windows native binary — mine had drifted onto it too); ran a full platform-agnostic audit and closed the two gaps it found (.gitattributes, package.json engines); fixed fetch-metrics.mjs committing to main every hour for no real reason.
 DO NEXT: no code is blocked. Human should: (1) skim CLAUDE.md — first real cross-session review since teammates are now actively editing this repo too; (2) confirm Nate is aware his original throwaway CLAUDE.md got merged into the fuller one, not silently discarded; (3) continue whatever landing-page content/section work was in progress.
 DON'T: don't try to "clean up" the ~10 existing "chore: refresh live model metrics" commits already in history — that's a rewrite of shared history nobody asked for; the fix only stops new noise. Don't assume you're the only one pushing to main — this session hit two live collisions with a teammate's session in about an hour.
@@ -151,13 +151,13 @@ landing-page section/content work is next per `docs/ARCHITECTURE.md`'s roadmap.
 ## 5. Ground truth — verify, don't trust this doc
 
 ```bash
-git fetch origin && git log --oneline -5     # tip = 0a4fa14 or later?
+git fetch origin && git log --oneline -5     # tip = 3a1039e or later?
 git status                                    # clean?
 rm -rf node_modules && npm ci && npm run build   # must pass; watch package count (~295, not ~303)
 grep -c rolldown package-lock.json            # expect 0
 npm run fetch-metrics                         # expect "No metric changes" + git status clean after
 ```
-- **Branch / commit:** `main` @ `0a4fa14`, pushed to `origin`.
+- **Branch / commit:** `main` @ `3a1039e`, pushed to `origin`.
 - **Build:** passes. Lockfile confirmed clean of the rolldown chain.
 - **Uncommitted work:** none.
 - **Canonical *why*:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) (design)
