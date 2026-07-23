@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 // Refresh live model metrics from DagsHub's MLflow REST API (ARCHITECTURE.md §4).
 //
-// Runs ONLY in CI. Writes src/data/metrics.json. Uses two raw GETs per model —
+// Runs ONLY in CI. Writes src/data/metrics.json. Uses three raw GETs per model —
 // no `mlflow` Python client, no heavy deps (Node's built-in fetch).
+//
+// NOTE: `model-versions/get-by-alias` 404s on DagsHub's MLflow proxy (confirmed
+// live, with and without auth — DagsHub just hasn't implemented that route), so
+// alias resolution goes through `registered-models/get`'s `aliases` array instead.
 //
 // FAILS OPEN: any error keeps the last-committed values and logs a warning, so a
 // DagsHub outage or a missing token can never break the build or show `undefined%`.
@@ -45,11 +49,21 @@ async function api(path, params) {
 }
 
 async function fetchModel(registeredName) {
-  const alias = await api('model-versions/get-by-alias', {
+  const registered = await api('registered-models/get', {
     name: registeredName,
-    alias: 'production',
   });
-  const version = alias.model_version;
+  const aliasEntry = (registered.registered_model?.aliases ?? []).find(
+    (a) => a.alias === 'production'
+  );
+  if (!aliasEntry) {
+    throw new Error(`no 'production' alias set on ${registeredName}`);
+  }
+
+  const versionInfo = await api('model-versions/get', {
+    name: registeredName,
+    version: aliasEntry.version,
+  });
+  const version = versionInfo.model_version;
   const run = await api('runs/get', { run_id: version.run_id });
   const m = Object.fromEntries(
     (run.run?.data?.metrics ?? []).map((x) => [x.key, x.value])
@@ -73,14 +87,31 @@ function loadExisting() {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
+// Compare by value, not by JSON key order, so a hand-edited/reformatted
+// metrics.json can't produce a false "changed" result.
+function metricsEqual(a, b) {
+  if (!a || !b) return false;
+  return (
+    a.version === b.version &&
+    a.promoted_at === b.promoted_at &&
+    a.metrics?.recall_test === b.metrics?.recall_test &&
+    a.metrics?.precision_test === b.metrics?.precision_test &&
+    a.metrics?.f1_test === b.metrics?.f1_test
+  );
+}
+
 async function main() {
-  const data = loadExisting();
+  const existing = loadExisting();
+  const data = structuredClone(existing);
   let anyLive = false;
+  let changed = false;
 
   for (const [key, registeredName] of Object.entries(MODELS)) {
     try {
-      data[key] = await fetchModel(registeredName);
+      const fresh = await fetchModel(registeredName);
       anyLive = true;
+      if (!metricsEqual(fresh, existing[key])) changed = true;
+      data[key] = fresh;
       console.log(`✓ ${registeredName}: live metrics fetched`);
     } catch (err) {
       console.warn(
@@ -89,9 +120,20 @@ async function main() {
     }
   }
 
+  const source = anyLive ? 'live' : 'sample';
+  if (source !== existing._meta?.source) changed = true;
+
+  // Only touch fetched_at (and so only produce a commit-worthy diff) when a
+  // value actually changed — this used to bump on every hourly CI run
+  // regardless, which committed to main every hour for no real reason.
+  if (!changed) {
+    console.log('No metric changes — leaving metrics.json untouched.');
+    return;
+  }
+
   data._meta = {
-    source: anyLive ? 'live' : 'sample',
-    note: data._meta?.note ?? '',
+    source,
+    note: existing._meta?.note ?? '',
     fetched_at: new Date().toISOString(),
   };
 

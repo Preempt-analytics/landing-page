@@ -83,14 +83,25 @@ to the browser or committing one to this repo.
 - Registered models: `predictive-maintenance-binary`, `predictive-maintenance-multiclass`, each with a `@production` alias
 - Metrics logged per run: `f1_test`, `precision_test`, `recall_test`, `brier_score`
 
-**Confirmed REST endpoints (checked live against `mlflow.org/docs/latest/rest-api.html`):**
+**Confirmed REST endpoints — tested live against DagsHub's actual MLflow proxy (not just `mlflow.org/docs/latest/rest-api.html`):**
 
 | Call | Method | Path | Params |
 |---|---|---|---|
-| Resolve `@production` alias → version + run_id | GET | `/api/2.0/mlflow/model-versions/get-by-alias` | `name`, `alias=production` |
+| Resolve `@production` alias → version | GET | `/api/2.0/mlflow/registered-models/get` | `name` |
+| Resolve version → run_id | GET | `/api/2.0/mlflow/model-versions/get` | `name`, `version` |
 | Fetch that run's metrics | GET | `/api/2.0/mlflow/runs/get` | `run_id` |
 
-Both require HTTP Basic Auth: `Authorization: Basic base64(DAGSHUB_USERNAME:DAGSHUB_TOKEN)`.
+**Landmine, resolved:** `model-versions/get-by-alias` — the single-call shortcut MLflow's
+own docs describe — returns HTTP 404 "unsupported endpoint" on DagsHub's proxy. Confirmed
+live (2026-07-23) that this isn't an auth gap: the 404 is identical with and without
+credentials, while the three-call chain above succeeds **anonymously, with zero token**,
+against this public repo. DagsHub simply hasn't implemented that one convenience route.
+`registered-models/get`'s response already includes an `aliases: [{alias, version}]` array,
+which is what the first call above uses to resolve `@production` → version number.
+
+Auth headers (`Authorization: Basic base64(DAGSHUB_USERNAME:DAGSHUB_TOKEN)`) are still sent
+when the secrets are present, as defense-in-depth for if the DagsHub project ever goes
+private — but they are not currently required for any of the three calls above.
 
 **Is this pipeline already built somewhere in the ML repo? No — checked, and worth recording why.**
 `scripts/promote_model.py` in the ML repo already has `get_production_version()` and
@@ -105,14 +116,14 @@ new work, not a duplicate of something that already exists.
 
 **Judgment call: plain Node `fetch()`, not the Python `mlflow` client.** `promote_model.py`'s
 approach is proven, but pulling the full `mlflow` package (and its pandas/pyarrow-sized
-dependency tree) into this repo's CI just to make two GET requests is more tooling
-than the job needs — the REST paths are already confirmed above. Two raw HTTP calls
+dependency tree) into this repo's CI just to make three GET requests is more tooling
+than the job needs — the REST paths are already confirmed above. Three raw HTTP calls
 in Node keep this repo's CI dependency-free (Node 22's built-in `fetch`, no `pip
 install`, no second language in a JS/Astro project). Reversible later if it turns out
 we want richer MLflow SDK features.
 
 **`scripts/fetch-metrics.mjs`** — runs in CI, writes `src/data/metrics.json`:
-- For each of the two registered models: resolve `@production` → run_id → pull `recall_test`/`f1_test`/`precision_test` and the version's `last_updated_timestamp`.
+- For each of the two registered models: resolve `@production` → version → run_id → pull `recall_test`/`f1_test`/`precision_test` and the version's `last_updated_timestamp`.
 - **Fails open, never fails the build:** if a fetch for one model errors, keep that model's last-committed values in `metrics.json` and log a warning — a stale-but-valid number beats a broken build or a page showing `undefined%`.
 - Falls back to `metrics.sample.json` if `metrics.json` doesn't exist yet (first run).
 
@@ -146,10 +157,6 @@ Given the hourly cron below, that's up to ~1 hour of lag by default. For a live
 walkthrough where immediate reflection matters, either manually fire this repo's
 `workflow_dispatch` right after a promotion completes, or wire up the
 `repository_dispatch` hook noted below.
-
-**Worth a two-minute check:** if the DagsHub project is public, its MLflow API may
-allow anonymous reads with no token at all, which would simplify this further —
-worth glancing at the project's visibility setting on DagsHub before minting a token.
 
 **No path exposes the token client-side:** the fetch happens only inside the GitHub Actions runner. `metrics.json` (plain numbers + ISO timestamps) is the only artifact that reaches `src/`, and Astro imports it at build time into static HTML. The deployed site makes **zero** runtime calls to DagsHub.
 

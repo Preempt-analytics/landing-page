@@ -1,27 +1,27 @@
 {
   "_meta": {
-    "source": "sample",
-    "note": "Committed seed — overwritten by CI (scripts/fetch-metrics.mjs) on every build once DAGSHUB_TOKEN is set. Until then, source stays 'sample' and the hero tiles label themselves accordingly.",
-    "fetched_at": "2026-07-23T09:29:31.618Z"
+    "source": "live",
+    "note": "Live-fetched by CI (scripts/fetch-metrics.mjs) against DagsHub's public MLflow proxy — works anonymously for this public repo; DAGSHUB_TOKEN is optional defense-in-depth, not required. Falls back to sample values only if DagsHub is unreachable or the production alias is missing.",
+    "fetched_at": "2026-07-23T09:32:22.902Z"
   },
   "binary_model": {
     "name": "predictive-maintenance-binary",
     "version": "2",
-    "promoted_at": "2026-07-20T02:37:00Z",
+    "promoted_at": "2026-07-01T12:19:44.226Z",
     "metrics": {
-      "recall_test": 0.98,
-      "precision_test": 0.94,
-      "f1_test": 0.96
+      "recall_test": 1,
+      "precision_test": 1,
+      "f1_test": 1
     }
   },
   "multiclass_model": {
     "name": "predictive-maintenance-multiclass",
-    "version": "3",
-    "promoted_at": "2026-07-19T09:12:00Z",
+    "version": "2",
+    "promoted_at": "2026-07-01T12:18:45.081Z",
     "metrics": {
-      "recall_test": 0.91,
-      "precision_test": 0.9,
-      "f1_test": 0.9
+      "recall_test": 1,
+      "precision_test": 1,
+      "f1_test": 1
     }
   }
 }

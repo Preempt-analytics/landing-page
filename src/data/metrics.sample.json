@@ -1,7 +1,7 @@
 {
   "_meta": {
     "source": "sample",
-    "note": "Seed/fallback values. Never overwritten by CI. Real numbers replace these once DAGSHUB_TOKEN is set and scripts/fetch-metrics.mjs runs.",
+    "note": "Seed/fallback values. Never overwritten by CI. Real numbers replace these automatically — scripts/fetch-metrics.mjs reads DagsHub's public MLflow proxy anonymously (ARCHITECTURE.md §4); DAGSHUB_TOKEN is optional defense-in-depth, not required for this repo.",
     "fetched_at": null
   },
   "binary_model": {
