@@ -93,6 +93,46 @@ Unix-only environment just because local dev happens to be on one. Concretely:
     Mac/Linux and a Windows form where they differ — the same discipline the ML
     repo's own README already follows, and now this repo's `README.md` does too.
 
+### Standing Protocol — Digital Sovereignty & Privacy
+Default to European-hosted/operated infrastructure, CDNs, and services wherever a
+real choice exists. Avoid China-, Russia-, and North Korea-linked infrastructure
+entirely for supply-chain and cybersecurity reasons — this isn't just the site's
+own "no analytics / no tracking" stance (Danger Zones), it extends to the tooling
+and services used to build and ship it. US-based providers are acceptable only as
+a fallback when no viable alternative exists, given weaker GDPR alignment — e.g.
+`registry.npmjs.org` is used because there is no realistic full EU-hosted mirror
+of the public npm package ecosystem, not because a US registry is preferred.
+  - **Check the resolved registry domain before trusting a regenerated
+    lockfile.** A personal machine's global `~/.npmrc` can silently point
+    `npm install` at a third-party mirror — already happened once:
+    `registry.npmmirror.com` (a China-hosted mirror) baked into every `resolved`
+    URL of a regenerated `package-lock.json`. If `package-lock.json`'s
+    `resolved` fields aren't `registry.npmjs.org`, regenerate explicitly with
+    `npm install --registry https://registry.npmjs.org/` and flag it — a
+    contributor's personal global npm config must never leak into a shared,
+    committed lockfile.
+  - No big-tech telemetry or analytics, from any provider, in any part of the
+    stack — build tooling, CI actions, or any future third-party service
+    considered for this repo, not just the shipped site.
+
+### Standing Protocol — Multi-Instance Collaboration
+This repo is routinely worked on by more than one Claude Code instance at once —
+a teammate's parallel session, another window on a different machine. Treat
+that as the normal case, not an anomaly:
+  - Before merging or pushing, `git fetch` and check for divergent remote
+    history — that's expected here, not a sign something went wrong.
+  - Default to **merging** another instance's committed work, not force-pushing
+    over it or rebasing it away. Resolve conflicts by combining intent from
+    both sides, not by unilaterally picking one.
+  - If a file has *uncommitted* changes that don't match anything you just did,
+    assume another live session owns them. Don't stash, edit, revert, or commit
+    over them without asking first. `git stash` is fine to *unblock* your own
+    work as long as the stashed content is restored unchanged afterward.
+  - When changes genuinely can't be reconciled automatically — two different
+    fixes to the same function, two different values for the same data field —
+    stop and surface the conflict to the user with both versions shown, rather
+    than guessing which one should win.
+
 ### Standing Protocol — Transparency
 Before any change that touches an Integration Contract, state:
   1. Which contract is affected
@@ -276,6 +316,10 @@ and the handover docs so they don't have to be rediscovered:
 - **Every push to `main` deploys live** (once Pages + secrets are configured,
   per `ARCHITECTURE.md` §7 item 5's open branch-protection item). Treat `main` as
   production, not a scratchpad.
+- **A regenerated lockfile inherits whichever registry the generating machine's
+  global npm config points at.** Already happened once — a global `~/.npmrc`
+  pointed at `registry.npmmirror.com` (China-hosted) and every `resolved` URL in
+  `package-lock.json` silently followed. See Digital Sovereignty & Privacy above.
 
 ---
 
