@@ -15,6 +15,13 @@ npm run preview    # preview the production build
 Requires Node 22+. The site is **dark-only by design** and ships **no analytics / no
 tracking**.
 
+**Windows note:** run these one per line, not chained with `&&` — that syntax fails
+in Windows PowerShell 5.1. If `npm run dev` errors with `Cannot find native binding`
+/ `Cannot find module '@rolldown/binding-*'`, the lockfile has drifted onto the
+experimental rolldown-vite dependency chain and is missing your platform's native
+binary (a known npm optional-deps bug — [npm/cli#4828](https://github.com/npm/cli/issues/4828)).
+Fix: delete `node_modules` and `package-lock.json`, then `npm install` again.
+
 ## Live metrics
 
 The hero stat tiles can show real numbers (production model recall + last-retrained
