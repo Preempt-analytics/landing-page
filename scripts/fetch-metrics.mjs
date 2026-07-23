@@ -73,14 +73,31 @@ function loadExisting() {
   return JSON.parse(readFileSync(file, 'utf8'));
 }
 
+// Compare by value, not by JSON key order, so a hand-edited/reformatted
+// metrics.json can't produce a false "changed" result.
+function metricsEqual(a, b) {
+  if (!a || !b) return false;
+  return (
+    a.version === b.version &&
+    a.promoted_at === b.promoted_at &&
+    a.metrics?.recall_test === b.metrics?.recall_test &&
+    a.metrics?.precision_test === b.metrics?.precision_test &&
+    a.metrics?.f1_test === b.metrics?.f1_test
+  );
+}
+
 async function main() {
-  const data = loadExisting();
+  const existing = loadExisting();
+  const data = structuredClone(existing);
   let anyLive = false;
+  let changed = false;
 
   for (const [key, registeredName] of Object.entries(MODELS)) {
     try {
-      data[key] = await fetchModel(registeredName);
+      const fresh = await fetchModel(registeredName);
       anyLive = true;
+      if (!metricsEqual(fresh, existing[key])) changed = true;
+      data[key] = fresh;
       console.log(`✓ ${registeredName}: live metrics fetched`);
     } catch (err) {
       console.warn(
@@ -89,9 +106,20 @@ async function main() {
     }
   }
 
+  const source = anyLive ? 'live' : 'sample';
+  if (source !== existing._meta?.source) changed = true;
+
+  // Only touch fetched_at (and so only produce a commit-worthy diff) when a
+  // value actually changed — this used to bump on every hourly CI run
+  // regardless, which committed to main every hour for no real reason.
+  if (!changed) {
+    console.log('No metric changes — leaving metrics.json untouched.');
+    return;
+  }
+
   data._meta = {
-    source: anyLive ? 'live' : 'sample',
-    note: data._meta?.note ?? '',
+    source,
+    note: existing._meta?.note ?? '',
     fetched_at: new Date().toISOString(),
   };
 
