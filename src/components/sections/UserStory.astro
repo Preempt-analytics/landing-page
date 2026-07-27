@@ -2,12 +2,19 @@
 // §9.5 "While the employees sleep" — anonymized (no named person, no stock photo).
 // Present-tense, active-voice timeline. Overnight Impact numbers are illustrative
 // and labelled as such. Part of #solutions.
+import { withBase } from '../../lib/site';
+
+// Timeline copy + timestamps (human review, 2026-07-23): short, scannable status
+// labels carry the contrast color (Krug — the label is what a scanning eye needs,
+// not the clock); the body sentence underneath stays active-voice / present-tense
+// (§9.5's original tense fix). Retrain/promote timestamps shift +8 min after the
+// trigger to reflect a realistic GitHub Actions queue/startup delay.
 const beats = [
-  { time: '02:16', title: 'Detects drift', body: 'Tool-wear shift spotted on CNC-01 by the drift monitor.' },
-  { time: '02:16', title: 'Triggers the pipeline', body: 'The CI pipeline starts automatically.' },
-  { time: '02:20', title: 'Retrains the model', body: 'A new model trains on the latest factory data.' },
-  { time: '02:37', title: 'Promotes the winner', body: 'The better model is promoted to production automatically.' },
-  { time: '08:47', title: 'Reports all-clear', body: 'Maintenance lead checks the dashboard. No calls. No incidents.' },
+  { time: '02:16 AM', title: 'Drift Detected', body: 'Tool-wear shift spotted on CNC-01 by Evidently AI.' },
+  { time: '02:16 AM', title: 'Pipeline Triggered', body: 'The GitHub Actions pipeline kicks off automatically.' },
+  { time: '02:28 AM', title: 'Model Retrained', body: 'A fresh model trains on the latest factory data.' },
+  { time: '02:45 AM', title: 'Model Promoted', body: 'The new version beats the old one and goes live automatically.' },
+  { time: '08:47 AM', title: 'System Healthy', body: 'The maintenance lead opens the dashboard. No calls. No incidents.' },
 ];
 
 const impact = [
@@ -21,23 +28,32 @@ const impact = [
 <section class="border-t border-white/5 bg-navy-950 py-20">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="text-4xl font-bold tracking-tight sm:text-5xl">
+      <h2 class="text-4xl font-bold tracking-tight sm:text-5xl 2xl:text-6xl">
         <span class="text-offwhite">While the employees</span>
         <span class="text-teal-400">sleep…</span>
       </h2>
       <p class="mt-4 text-lg text-muted">The system watches over the factory all night.</p>
     </div>
 
-    <!-- Timeline: horizontal on lg, stacked on mobile -->
-    <ol class="relative mt-14 grid gap-8 lg:grid-cols-5 lg:gap-4">
+    <!-- Timeline: horizontal on lg, stacked on mobile. Human review (2026-07-23):
+         a one-time animated reveal when this scrolls into view — Drift Detected
+         flashes red and holds red, a white light travels node to node lighting
+         each one, and System Healthy flashes green at the end. Needs a small
+         IntersectionObserver script (below) to trigger it once; without JS (or
+         once it's played) it just holds today's plain teal dots / settled colors
+         — never a broken or half-lit state. -->
+    <ol class="timeline relative mt-14 grid gap-8 lg:grid-cols-5 lg:gap-4" data-timeline>
       <div class="absolute left-0 right-0 top-[7px] hidden h-px bg-gradient-to-r from-transparent via-teal-400/40 to-transparent lg:block" aria-hidden="true"></div>
+      <span class="timeline-glow" aria-hidden="true"></span>
       {
         beats.map((b) => (
           <li class="relative pl-6 lg:pl-0 lg:pt-6 lg:text-center">
-            <span class="absolute left-0 top-1 h-3.5 w-3.5 rounded-full border-2 border-teal-400 bg-navy-950 lg:left-1/2 lg:top-0 lg:-translate-x-1/2" aria-hidden="true"></span>
-            <p class="text-xs font-semibold tracking-wide text-teal-400">{b.time}</p>
-            <h3 class="mt-1 text-sm font-semibold text-offwhite">{b.title}</h3>
-            <p class="mt-1 text-xs leading-relaxed text-muted">{b.body}</p>
+            <span class="absolute left-0 top-1 h-3.5 w-3.5 lg:left-1/2 lg:top-0 lg:-translate-x-1/2" aria-hidden="true">
+              <span class="timeline-dot block h-full w-full rounded-full border-2 border-teal-400 bg-navy-950"></span>
+            </span>
+            <p class="text-xs font-medium tracking-wide text-muted/70">{b.time}</p>
+            <h3 class="mt-1 text-sm font-semibold text-teal-400">{b.title}</h3>
+            <p class="mt-1 max-w-[9rem] text-xs leading-relaxed text-muted lg:mx-auto">{b.body}</p>
           </li>
         ))
       }
@@ -80,7 +96,11 @@ const impact = [
         <p class="mt-4 text-sm text-muted">The team rests. The pipeline doesn't.</p>
       </div>
 
-      <!-- Morning Summary -->
+      <!-- Morning Summary. CTA deliberately reads "See the dashboard" rather than the
+           site's standard "See it in action" (human review, 2026-07-23) — this one
+           button mirrors the exact action the maintenance lead takes in the story
+           beat above it, an intentional one-off exception to the settled two-verb
+           CTA label, not a new third verb introduced sitewide. -->
       <div class="flex flex-col rounded-xl border border-white/10 bg-navy-800/40 p-6">
         <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
         <div class="mt-4 flex items-center gap-3">
@@ -92,10 +112,10 @@ const impact = [
           <p class="text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
         </div>
         <a
-          href="#product"
+          href={withBase('/product')}
           class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
         >
-          See it in action →
+          See the dashboard →
         </a>
       </div>
     </div>
@@ -107,3 +127,186 @@ const impact = [
     </p>
   </div>
 </section>
+
+<script>
+  // Plays the timeline reveal once, the first time it's ~40% visible — a story
+  // beat, not a decoration that should replay every time someone scrolls past.
+  const timeline = document.querySelector<HTMLElement>('[data-timeline]');
+  if (timeline) {
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              timeline.classList.add('is-playing');
+              observer.disconnect();
+            }
+          }
+        },
+        { threshold: 0.4 }
+      );
+      observer.observe(timeline);
+    } else {
+      // No IntersectionObserver support — skip straight to the settled end state.
+      timeline.classList.add('is-playing');
+    }
+  }
+</script>
+
+<style>
+  /* Traveling light: dwells at Drift Detected while it flashes red, then slides
+     node to node in step with each dot's own flash below. Desktop-only, same
+     breakpoint as the horizontal line it rides (§12 — the line itself is
+     lg:block-only). */
+  .timeline-glow {
+    position: absolute;
+    top: 7px;
+    left: 10%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 9999px;
+    background: #fff;
+    box-shadow:
+      0 0 12px 4px rgba(255, 255, 255, 0.9),
+      0 0 24px 8px color-mix(in srgb, var(--color-teal-400) 50%, transparent);
+    opacity: 0;
+    display: none;
+  }
+  @media (min-width: 1024px) {
+    .timeline-glow {
+      display: block;
+    }
+  }
+
+  .timeline.is-playing .timeline-glow {
+    animation: timeline-travel 4.2s ease-in-out forwards;
+  }
+  .timeline.is-playing li:nth-child(1) .timeline-dot {
+    animation: timeline-dot-alert 0.6s ease-out forwards;
+  }
+  .timeline.is-playing li:nth-child(2) .timeline-dot {
+    animation: timeline-dot-lit 0.4s ease-out 1.3s forwards;
+  }
+  .timeline.is-playing li:nth-child(3) .timeline-dot {
+    animation: timeline-dot-lit 0.4s ease-out 2s forwards;
+  }
+  .timeline.is-playing li:nth-child(4) .timeline-dot {
+    animation: timeline-dot-lit 0.4s ease-out 2.7s forwards;
+  }
+  .timeline.is-playing li:nth-child(5) .timeline-dot {
+    animation: timeline-dot-resolve 0.7s ease-out 3.4s forwards;
+  }
+
+  @keyframes timeline-travel {
+    0% {
+      left: 10%;
+      opacity: 0;
+    }
+    5% {
+      opacity: 1;
+    }
+    14% {
+      left: 10%;
+      opacity: 1;
+    }
+    31% {
+      left: 30%;
+    }
+    36% {
+      left: 30%;
+    }
+    48% {
+      left: 50%;
+    }
+    53% {
+      left: 50%;
+    }
+    64% {
+      left: 70%;
+    }
+    69% {
+      left: 70%;
+    }
+    81% {
+      left: 90%;
+      opacity: 1;
+    }
+    86% {
+      left: 90%;
+      opacity: 0;
+    }
+    100% {
+      left: 90%;
+      opacity: 0;
+    }
+  }
+
+  /* Drift Detected: flashes alert-red, holds red — the one node that stays an
+     alert color rather than settling back to teal. */
+  @keyframes timeline-dot-alert {
+    0% {
+      border-color: var(--color-teal-400);
+      background-color: var(--color-navy-950);
+      box-shadow: none;
+      transform: scale(1);
+    }
+    35% {
+      border-color: var(--color-alert-400);
+      background-color: var(--color-alert-400);
+      box-shadow: 0 0 16px 6px color-mix(in srgb, var(--color-alert-400) 70%, transparent);
+      transform: scale(1.6);
+    }
+    100% {
+      border-color: var(--color-alert-400);
+      background-color: var(--color-alert-400);
+      box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-alert-400) 50%, transparent);
+      transform: scale(1);
+    }
+  }
+
+  /* Pipeline Triggered / Model Retrained / Model Promoted: the traveling light
+     arrives, flashes white, settles into the site's usual "lit" teal. */
+  @keyframes timeline-dot-lit {
+    0% {
+      border-color: var(--color-teal-400);
+      background-color: var(--color-navy-950);
+      box-shadow: none;
+      transform: scale(1);
+    }
+    50% {
+      border-color: #fff;
+      background-color: #fff;
+      box-shadow: 0 0 14px 5px rgba(255, 255, 255, 0.8);
+      transform: scale(1.5);
+    }
+    100% {
+      border-color: var(--color-teal-400);
+      background-color: var(--color-teal-400);
+      box-shadow: 0 0 6px 2px color-mix(in srgb, var(--color-teal-400) 50%, transparent);
+      transform: scale(1);
+    }
+  }
+
+  /* System Healthy: the story's resolution — flashes success-green, holds green. */
+  @keyframes timeline-dot-resolve {
+    0% {
+      border-color: var(--color-teal-400);
+      background-color: var(--color-navy-950);
+      box-shadow: none;
+      transform: scale(1);
+    }
+    40% {
+      border-color: var(--color-success-400);
+      background-color: var(--color-success-400);
+      box-shadow: 0 0 18px 6px color-mix(in srgb, var(--color-success-400) 70%, transparent);
+      transform: scale(1.6);
+    }
+    100% {
+      border-color: var(--color-success-400);
+      background-color: var(--color-success-400);
+      box-shadow: 0 0 8px 2px color-mix(in srgb, var(--color-success-400) 50%, transparent);
+      transform: scale(1);
+    }
+  }
+</style>

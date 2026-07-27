@@ -1,6 +1,12 @@
 ---
 // §9.3 How it works — the birds-eye, non-technical loop. NO tool logos here (that's
 // §9.6's job); this is the same system at a shallower zoom. Cards stack on mobile.
+// Icon rings + a wraparound feedback arrow (human review, 2026-07-23): each icon
+// sits in a gradient ring straddling the card's top edge, and a curved arrow beneath
+// the row loops from the last card back to the first — visually spelling out
+// "One system. One loop. Always learning." The wraparound arrow only renders at the
+// lg breakpoint where all 6 cards share one row (§12 responsive rule); stacked
+// layouts get a simple text loop-back cue instead of bent SVG geometry.
 import Button from '../Button.astro';
 import { withBase } from '../../lib/site';
 
@@ -21,44 +27,95 @@ const icons: Record<string, string> = {
   check: 'M20 6 9 17l-5-5',
   chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
 };
+
+// One gradient per node, cycling through the site's existing teal/blue tokens
+// (Contract 4 — new hues aren't introduced, existing ones are recombined).
+const ringGradients = [
+  'linear-gradient(135deg, var(--color-teal-400), var(--color-blue-500))',
+  'linear-gradient(135deg, var(--color-blue-500), var(--color-teal-300))',
+  'linear-gradient(135deg, var(--color-teal-300), var(--color-teal-500))',
+  'linear-gradient(135deg, var(--color-teal-500), var(--color-blue-500))',
+  'linear-gradient(135deg, var(--color-blue-500), var(--color-teal-400))',
+];
+const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--color-teal-400))';
 ---
 
 <section id="how-it-works" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center">
-      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl">
+      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
         The AI + MLOps platform for continuous reliability
       </h2>
-      <p class="mt-4 text-lg text-muted">One system. One loop. Always learning.</p>
+      <p class="mt-4 text-lg text-muted 2xl:text-xl">One system. One loop. Always learning.</p>
     </div>
 
     <!-- Loop: 6 cards, horizontal row on desktop, stacked on mobile -->
-    <ol class="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-      {
-        [...steps, outcome].map((s, i) => {
-          const isOutcome = i === steps.length;
-          return (
-            <li class={`relative rounded-xl border p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
-              <div class="mb-3 text-teal-400">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d={icons[s.icon]} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-              </div>
-              <h3 class="text-base font-semibold text-offwhite">
-                {'n' in s ? `${s.n}. ${s.title}` : s.title}
-              </h3>
-              <p class="mt-1.5 text-sm leading-relaxed text-muted">{s.body}</p>
-              {!isOutcome && (
-                <span class="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 text-teal-400/50 lg:block" aria-hidden="true">→</span>
-              )}
-            </li>
-          );
-        })
-      }
-    </ol>
+    <div class="relative mt-16 pb-14 lg:pb-24">
+      <ol class="grid gap-x-4 gap-y-10 sm:grid-cols-2 lg:grid-cols-6 lg:gap-y-4">
+        {
+          [...steps, outcome].map((s, i) => {
+            const isOutcome = i === steps.length;
+            const gradient = isOutcome ? outcomeGradient : ringGradients[i];
+            return (
+              <li class={`relative rounded-xl border pt-9 p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
+                <div
+                  class="absolute -top-7 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full p-[3px] shadow-lg shadow-black/30"
+                  style={`background: ${gradient};`}
+                >
+                  <div class="flex h-full w-full items-center justify-center rounded-full bg-navy-950">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="text-teal-300">
+                      <path d={icons[s.icon]} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                    </svg>
+                  </div>
+                </div>
 
-    <div class="mt-12 flex flex-wrap justify-center gap-4">
-      <Button href="#product" variant="solid">See it in action →</Button>
+                <h3 class="text-center text-base font-semibold text-offwhite lg:text-left">
+                  {'n' in s ? `${s.n}. ${s.title}` : s.title}
+                </h3>
+                <p class="mt-1.5 text-center text-sm leading-relaxed text-muted lg:text-left">{s.body}</p>
+                {!isOutcome && (
+                  <span class="pointer-events-none absolute -right-3 top-1/2 hidden -translate-y-1/2 text-teal-400/50 lg:block" aria-hidden="true">→</span>
+                )}
+              </li>
+            );
+          })
+        }
+      </ol>
+
+      <!-- Feedback-loop arrow: Business Impact curves back to feed Collect again (desktop only) -->
+      <svg
+        class="pointer-events-none absolute inset-x-0 bottom-4 hidden h-16 w-full lg:block"
+        viewBox="0 0 1200 70"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="loop-arrow-gradient" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="var(--color-teal-400)" stop-opacity="0.15" />
+            <stop offset="0.5" stop-color="var(--color-teal-400)" stop-opacity="0.8" />
+            <stop offset="1" stop-color="var(--color-teal-400)" stop-opacity="0.15" />
+          </linearGradient>
+          <marker id="loop-arrow-head" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="var(--color-teal-400)" />
+          </marker>
+        </defs>
+        <path
+          d="M 1100 0 C 1100 60, 100 60, 100 0"
+          fill="none"
+          stroke="url(#loop-arrow-gradient)"
+          stroke-width="2"
+          marker-end="url(#loop-arrow-head)"
+        />
+      </svg>
+
+      <!-- Same loop-back cue, as text, when cards are stacked and the curved arrow doesn't fit -->
+      <p class="absolute inset-x-0 bottom-0 text-center text-xs font-medium text-teal-400/70 lg:hidden">
+        ↻ feeds back into Collect — always learning
+      </p>
+    </div>
+
+    <div class="mt-4 flex flex-wrap justify-center gap-4">
+      <Button href={withBase('/product')} variant="solid">See it in action →</Button>
       <Button href={withBase('/try-it-yourself')} variant="outline">Test it on your device</Button>
     </div>
   </div>

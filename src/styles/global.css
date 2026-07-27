@@ -16,6 +16,11 @@
   --color-offwhite: #f8fafc;
   --color-muted: #cbd5e1;
   --color-alert-400: #ff6b6b;
+  /* First non-teal "positive" color on the site — added for UserStory.astro's
+     timeline reveal (red=drift, green=resolved), a deliberate status-color
+     convention distinct from teal's usual "good/live" role (human review,
+     2026-07-23). Not a general-purpose success color for reuse elsewhere. */
+  --color-success-400: #22c55e;
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
@@ -55,6 +60,26 @@ body {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   Wide-screen tuning (human review, 2026-07-23). Section content tops out at
+   max-w-7xl/max-w-6xl (80rem/72rem); on very wide monitors that leaves a lot of
+   unused side margin. One centralized rule widens the cap past the 2xl
+   breakpoint (1536px) — equal CSS specificity to Tailwind's own utility
+   classes, so the later source position (this file loads after
+   `@import "tailwindcss"`) wins only where the media query matches, without
+   `!important` or touching every component. Per-heading fluid type sizing
+   (2xl:text-* variants) lives on the headings themselves, next to their other
+   responsive classes, matching how every other breakpoint is already handled.
+--------------------------------------------------------------------------- */
+@media (min-width: 1536px) {
+  .max-w-7xl {
+    max-width: 90rem; /* 1440px, up from 1280px */
+  }
+  .max-w-6xl {
+    max-width: 80rem; /* 1280px, up from 1152px */
+  }
 }
 
 /* ---------------------------------------------------------------------------

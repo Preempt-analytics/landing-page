@@ -179,6 +179,23 @@ Before pushing any non-trivial change:
      confirm it still fails open — a missing/invalid `DAGSHUB_TOKEN` must never
      break the build or show `undefined` on the page.
 
+### Standing Protocol — Verification Artifact Hygiene
+Screenshots, browser captures, and other one-off files produced only to verify
+a change — not a shipped asset — are not deliverables. Clean them up once
+they've served their purpose instead of letting them accumulate across a
+session.
+  - Write them to the harness's scratchpad/OS temp directory, never into this
+    repo's working tree (`/tmp` inside a Bash tool call on this project's
+    Windows setup resolves to a real Windows temp folder, not the repo — still
+    prefer the actual scratchpad path so this stays true regardless of shell).
+  - Delete them once you've looked at them and confirmed the result — don't
+    leave a growing pile of `*.png` verification shots for a later session to
+    trip over or clean up.
+  - If a capture is later needed as a real reference asset (e.g. for
+    `docs/IMAGE_ASSETS.md` or a design discussion), move it deliberately into
+    `design/mockups/` or similar — don't let verification exhaust and real
+    design references live in the same undifferentiated pile.
+
 ### Meta-Law — Conflict Resolution
 Laws are ordered. When they conflict, state the conflict, justify the resolution,
 and resolve in hierarchy order.
@@ -288,10 +305,14 @@ and the handover docs so they don't have to be rediscovered:
   purpose** — never swap it for a raw embed of the ML repo's
   `images/Retraining Loop.png`. That raster is a *content reference*, not a
   drop-in asset (the "align, don't pixel-copy" rule, §11).
-- **The two-verb CTA system is settled**: "See it in action" (look → `#product`)
+- **The two-verb CTA system is settled**: "See it in action" (look → `/product`)
   and "Test it on your device" (do → `/try-it-yourself`). Don't introduce a third
   synonym CTA label — it was deliberately consolidated from more (`ARCHITECTURE.md`
-  §5, panel-audit round).
+  §5, panel-audit round). **One deliberate exception (human review, 2026-07-23):**
+  `UserStory.astro`'s Morning Summary card reads "See the dashboard" instead —
+  a one-off, context-matched variant of the same "look" CTA (still targets
+  `/product`), not a new third verb introduced sitewide. Don't generalize this
+  wording to other CTAs without a similar explicit call.
 - **Illustrative numbers must stay labeled illustrative.** The Overnight Impact
   card's €24,300/etc. and the hero's `2.3M` sensor tile are narrative/marketing
   copy, not measured data — don't let a future edit drop the "Illustrative

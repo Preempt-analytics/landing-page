@@ -19,8 +19,9 @@ export const TEAM = [
 export const PROGRAM = 'neuefische AI Engineering Bootcamp · Cohort 2026';
 
 // Nav order is settled in ARCHITECTURE.md §5 — do not re-litigate.
+// 'Product' points at its own subpage (not a homepage anchor) — see product.astro.
 export const NAV_LINKS = [
-  { label: 'Product', href: '#product' },
+  { label: 'Product', href: withBase('/product') },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Solutions', href: '#solutions' },
   { label: 'Tech stack', href: '#tech-stack' },

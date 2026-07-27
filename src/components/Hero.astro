@@ -22,18 +22,18 @@ import { withBase } from '../lib/site';
         Predictive maintenance, powered by AI
       </p>
 
-      <h1 class="text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl">
+      <h1 class="text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl 2xl:text-7xl">
         <span class="text-offwhite">Predict failures.</span><br />
         <span class="text-teal-400">Prevent</span> <span class="text-offwhite">downtime.</span>
       </h1>
 
-      <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted">
+      <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted 2xl:max-w-2xl 2xl:text-xl">
         Preempt Analytics helps manufacturing teams predict machine failures
         before they happen—so you can maximize uptime and efficiency.
       </p>
 
       <div class="mt-8 flex flex-wrap gap-4">
-        <Button href="#product" variant="solid">See it in action →</Button>
+        <Button href={withBase('/product')} variant="solid">See it in action →</Button>
         <Button href={withBase('/try-it-yourself')} variant="outline">
           Test it on your device
         </Button>

@@ -1,0 +1,25 @@
+---
+// §9.1 Product Preview, now its own subpage rather than an early homepage section
+// (human review: the dashboard-specific "here's the product" content was too
+// specific to sit right after the hero, before the site had explained anything
+// about how the system works). Reuses BaseLayout + Nav + Footer like /try-it-yourself.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProductPreview from '../components/sections/ProductPreview.astro';
+import Button from '../components/Button.astro';
+import { withBase } from '../lib/site';
+---
+
+<BaseLayout
+  title="See it in action — Preempt Analytics"
+  description="A look at the Preempt Analytics maintenance control center: fleet health, machines ranked by failure probability, and live sensor readings, all in one place."
+>
+  <div class="mx-auto max-w-6xl px-5 pt-10 md:px-8">
+    <a href={withBase('/')} class="text-sm text-teal-400 hover:text-teal-300">← Back to home</a>
+  </div>
+  <ProductPreview />
+  <div class="mx-auto max-w-6xl px-5 pb-20 md:px-8">
+    <div class="flex justify-center">
+      <Button href={withBase('/try-it-yourself')} variant="solid">Test it on your device →</Button>
+    </div>
+  </div>
+</BaseLayout>
