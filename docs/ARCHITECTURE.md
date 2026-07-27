@@ -466,13 +466,22 @@ tool wear), a validation checklist card, and a business-impact card.
 - Headline/subhead verbatim: `Live Factory.` / `Real Predictions.` (teal on the
   second line, matching the hero's headline color convention). Body copy about
   continuous monitoring and drift detection, adapted from the mockup.
-- **Visual — stylized SVG placeholder, not the mockup's photoreal isometric
-  render.** That level of polish needs an external AI image tool or commissioned
-  illustration (see Asset production plan, §12). Ships today as a simplified
-  in-code graphic: geometric floor grid, glowing teal sensor pins (one
+- **Visual — stylized SVG placeholder today, a required background upgrade is
+  planned (human review, 2026-07-27).** Ships today as a simplified in-code
+  graphic: geometric floor grid, glowing teal sensor pins (one
   pulsing/highlighted), one sample alert callout card reading *"Drift Detected —
   Tool Wear Shift — 2.3 hrs to failure — View Details"* in the mockup's
   warning-red accent.
+  - **The animated signal-light overlay (pins + callout) is being kept, not
+    rebuilt.** Only the background floor/machine art is upgraded to a richer
+    generated image. That constrains the image itself: it must ship with
+    **no baked-in glowing/lit signal lights** of its own — a static light
+    under the existing animated pin at the same spot would double up or
+    clash — so machines render with only a neutral, unlit sensor-mount
+    detail, and the color/pulse stays entirely code-owned, layered on top.
+    Full prompt, exact overlay coordinates (reused, not reinvented, from
+    `LiveFactory.astro`'s own pin arrays), and the drop-in plan:
+    `docs/IMAGE_ASSETS.md` item 3.
 - **Machine type: CNC/milling silhouettes, not generic robot arms.** This
   project's dataset is a milling process — confirmed by the Product Preview
   dashboard's own "CNC-03" and "Tool Wear" language, and consistent with the
@@ -573,10 +582,16 @@ in as many words, so a reader who sees both feels reinforcement, not déjà vu.
     data."* These are narrative numbers, and the label is the single line that
     stops them reading as a real historical claim (same principle that dropped the
     fake customer logos and that labels the hero's `2.3M` tile illustrative, §5).
-  - **Center** — an **illustrated avatar/silhouette** (SVG/CSS), replacing the
-    mockup's stock photo/video-play element. No real footage exists, and a
-    stock/AI-generated photo of a person would imply a real employee the same
-    way the fake customer logos implied real customers.
+  - **Center** — currently an **illustrated avatar/silhouette** (SVG/CSS),
+    replacing the mockup's stock photo/video-play element. No real footage
+    exists, and a stock/AI-generated *photoreal* photo of a person would imply
+    a real employee the same way the fake customer logos implied real
+    customers. Human review (2026-07-27) asked for this to instead show a
+    person (e.g. the maintenance lead) actually logging into the dashboard on
+    a factory floor, so the section reads as "used in production," not
+    abstract — planned as a **generated illustration** (same non-photoreal,
+    anonymized-figure treatment as §9.2's factory scene), not a photo, to keep
+    the reasoning above intact. Full prompt/spec: `docs/IMAGE_ASSETS.md` item 4.
   - **Morning Summary** card (right) — status checkmark + "No incidents. Model
     upgraded overnight." + a **`See it in action →` CTA targeting §9.1 Product
     Preview** (`#product`). **Relabelled from "Open Dashboard"** to the page's
@@ -614,13 +629,21 @@ this?" One system, two zoom levels; **not two different systems.**
   **rebuilt in SVG/CSS aligned to the site's teal-400/navy-900 tokens**, not
   raw-embedded as an off-palette raster (panel finding re: design-system
   alignment — we align every mockup/asset to the system, we don't pixel-copy).
-- Two side panels, content verbatim — **real**, not fabricated, confirmed against
-  the project's actual stack (§4):
+- Two side panels, rendered as **bold tool name + one-line purpose description
+  per entry**, not a flat pill list — matching the reference mockup
+  (`design/mockups/Screenshot 2026-07-21 112150.png`, this section's own
+  **Source** above), which shows every tool with its own short "what it does"
+  line, e.g. *GitHub Actions — Automated CI/CD for ML*. Content verbatim —
+  **real**, not fabricated, confirmed against the project's actual stack (§4):
   - **Built With:** Python (data processing & modeling), Pandas (data analysis),
     Scikit-learn (ML modeling), NumPy (numerical computing).
   - **Powered By:** GitHub Actions (automated CI/CD for ML), DVC (data version
     control), MLflow (experiment tracking & model registry), Evidently AI (data &
     model drift monitoring).
+  - **Implemented** (name + description text, `MlopsSystem.astro`). **Still
+    open:** the mockup's real per-tool brand icon next to each line — sourced,
+    not generated, from a permissively-licensed icon set (`docs/IMAGE_ASSETS.md`
+    item 6; zero image-generation tokens needed for that part).
 - **Bottom strip — honest, capstone-true claims (panel finding, actioned).** The
   mockup's `Automated / Scalable / Reliable / Secure` (with subtext like
   "Enterprise ready" and "Built for any factory") **overclaims for a bootcamp
@@ -761,8 +784,10 @@ deliberate and labelled as such.
   tokens**, using the ML repo's `Retraining Loop.png` as the *content reference*
   (not raw-embedded — see the governing principle). Real open-source tool marks
   via a permissively-licensed icon set (e.g. Simple Icons).
-- §9.5's timeline component (horizontal → vertical responsive) + illustrated
-  avatar/silhouette.
+- §9.5's timeline component (horizontal → vertical responsive). The center
+  card's avatar is being upgraded from a pure CSS/SVG silhouette to a
+  generated illustration — see the "Still needs external sourcing" list below
+  and `docs/IMAGE_ASSETS.md` item 4.
 - §9.4's 4 benefit-tile icons, restyled for consistency.
 - §9.2's stylized CNC-mill factory placeholder.
 - All gradient/glow/particle CSS overlays, consistent with the hero's treatment
@@ -781,8 +806,12 @@ magnitude smaller. See §12.
   running (I can't record one). v1 ships the still + concept badge; the clip drops
   into the same slot later.
 - Hero macro-gears photo (open item since the hero session).
-- A future photoreal/commissioned upgrade of §9.2's factory visual (v2, not v1).
+- §9.2's factory-floor background upgrade — required, not a v2 "someday"
+  (human review, 2026-07-27); generated *without* baked-in signal lights so
+  the existing animated pin overlay drops on top unchanged. `docs/IMAGE_ASSETS.md` item 3.
 - A real logo/icon mark (open item since the hero session).
+- §9.5's center-card illustration (maintenance lead + dashboard, factory
+  setting) — new, human review 2026-07-27; `docs/IMAGE_ASSETS.md` item 4.
 
 ---
 
