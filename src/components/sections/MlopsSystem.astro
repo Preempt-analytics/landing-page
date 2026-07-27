@@ -21,8 +21,21 @@ const placed = nodes.map((n, i) => {
   return { ...n, left: 50 + R * Math.cos(a), top: 50 + R * Math.sin(a) };
 });
 
-const builtWith = ['Python', 'Pandas', 'Scikit-learn', 'NumPy'];
-const poweredBy = ['GitHub Actions', 'DVC', 'MLflow', 'Evidently AI'];
+// Name + one-line purpose per tool, matching the reference mockup
+// (design/mockups/Screenshot 2026-07-21 112150.png) — brand icons are a
+// separate, sourced-not-generated follow-up (docs/IMAGE_ASSETS.md item 6).
+const builtWith = [
+  { name: 'Python', body: 'Data processing & modeling' },
+  { name: 'Pandas', body: 'Data analysis' },
+  { name: 'Scikit-learn', body: 'ML modeling' },
+  { name: 'NumPy', body: 'Numerical computing' },
+];
+const poweredBy = [
+  { name: 'GitHub Actions', body: 'Automated CI/CD for ML' },
+  { name: 'DVC', body: 'Data version control' },
+  { name: 'MLflow', body: 'Experiment tracking & model registry' },
+  { name: 'Evidently AI', body: 'Data & model drift monitoring' },
+];
 
 const claims = [
   { title: 'Automated', body: 'No manual retraining' },
@@ -52,9 +65,12 @@ const claims = [
       <!-- Built With -->
       <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Built with</h3>
-        <ul class="flex flex-wrap gap-2">
+        <ul class="space-y-2">
           {builtWith.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-1.5 text-sm text-muted">{t}</li>
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2">
+              <p class="text-sm font-semibold text-offwhite">{t.name}</p>
+              <p class="text-xs text-muted">{t.body}</p>
+            </li>
           ))}
         </ul>
       </div>
@@ -105,9 +121,12 @@ const claims = [
       <!-- Powered By -->
       <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Powered by</h3>
-        <ul class="flex flex-wrap gap-2">
+        <ul class="space-y-2">
           {poweredBy.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-1.5 text-sm text-muted">{t}</li>
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2">
+              <p class="text-sm font-semibold text-offwhite">{t.name}</p>
+              <p class="text-xs text-muted">{t.body}</p>
+            </li>
           ))}
         </ul>
       </div>
