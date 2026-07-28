@@ -20,10 +20,15 @@ export const PROGRAM = 'neuefische AI Engineering Bootcamp · Cohort 2026';
 
 // Nav order is settled in ARCHITECTURE.md §5 — do not re-litigate.
 // 'Product' points at its own subpage (not a homepage anchor) — see product.astro.
+// The other four are anchors on the homepage itself, so they need the homepage's
+// own path in front of the hash — a bare '#how-it-works' only works when you're
+// already on the homepage; from any other page (e.g. /try-it-yourself) it tries
+// to scroll to an id that doesn't exist on that page and silently does nothing.
+const HOME = withBase('/');
 export const NAV_LINKS = [
   { label: 'Product', href: withBase('/product') },
-  { label: 'How It Works', href: '#how-it-works' },
-  { label: 'Solutions', href: '#solutions' },
-  { label: 'Tech Stack', href: '#tech-stack' },
-  { label: 'Project & Team', href: '#project-team' },
+  { label: 'How It Works', href: `${HOME}#how-it-works` },
+  { label: 'Solutions', href: `${HOME}#solutions` },
+  { label: 'Tech Stack', href: `${HOME}#tech-stack` },
+  { label: 'Project & Team', href: `${HOME}#project-team` },
 ];
