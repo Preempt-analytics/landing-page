@@ -2,11 +2,11 @@
 type: claude-handover
 schema: v1
 project: preempt-analytics-landing
-updated: 2026-07-23 (governance session — CLAUDE.md + platform-agnostic hardening)
-updated_by: Claude (governance → cross-platform fix session)
-head_sha: 3a1039e
+updated: 2026-07-27 (human-review feedback pass — IA restructure, new UX components, copy audit, timeline animation)
+updated_by: Claude (feedback-implementation session)
+head_sha: 5dae703
 branch: main
-status: green
+status: green (build passes; HEAD is a local, unpushed commit — see §3)
 ---
 
 # Claude Session Handover
@@ -15,153 +15,234 @@ status: green
 
 ```
 Project: preempt-analytics-landing — public marketing site for Preempt Analytics (predictive-maintenance ML capstone)
-State: green · branch main @ 3a1039e, pushed to origin. Build passes (npm run build verified after every change below).
-Just did: wrote CLAUDE.md (Laws/Contracts/Danger-Zones/Quick-ref, scaled from the ML repo's pattern); merged it with a real conflicting CLAUDE.md a teammate (Nate, envelopingCODE) pushed independently after hitting a genuine Windows bug; adopted his lockfile fix (rolldown-vite chain was missing the Windows native binary — mine had drifted onto it too); ran a full platform-agnostic audit and closed the two gaps it found (.gitattributes, package.json engines); fixed fetch-metrics.mjs committing to main every hour for no real reason.
-DO NEXT: no code is blocked. Human should: (1) skim CLAUDE.md — first real cross-session review since teammates are now actively editing this repo too; (2) confirm Nate is aware his original throwaway CLAUDE.md got merged into the fuller one, not silently discarded; (3) continue whatever landing-page content/section work was in progress.
-DON'T: don't try to "clean up" the ~10 existing "chore: refresh live model metrics" commits already in history — that's a rewrite of shared history nobody asked for; the fix only stops new noise. Don't assume you're the only one pushing to main — this session hit two live collisions with a teammate's session in about an hour.
-Blocked on: nothing code-related. Still open: DagsHub MLflow endpoint 404 (unconfirmed even with a token), hero photo, real logo — all pre-existing, unrelated to today.
-Ground truth: CLAUDE.md (now the standing-rules doc) + docs/ARCHITECTURE.md (the design *why*) · run §5 verify commands below before editing.
+State: green · branch main @ 5dae703, NOT pushed to origin. npm run build passes (verified repeatedly through the session).
+Just did: worked through two rounds of the human's screenshot-based review feedback: extracted the Product Preview
+section to its own /product subpage; rebuilt the HowItWorks loop diagram (gradient icon rings, feedback-loop arrow);
+added wide-screen fluid type/layout tuning; wrote docs/IMAGE_ASSETS.md (full image-asset inventory, prompt-ready);
+built two new reusable components (InfoTip.astro — hover glossary popover, BeginnersTrail.astro — hover-expand/
+click-to-pin guidance panel); overhauled try-it-yourself.astro (Docker link, git-free ZIP path, Krug/Redish copy
+audit, fixed a real "menu before docker compose" sequencing confusion); reworked UserStory.astro's timeline (AM
+times, +8min realistic retrain delay, contrast color on headings not the clock, a new CTA-label exception, and a
+scroll-triggered red→white-travel→green animated reveal); added a Verification Artifact Hygiene protocol to
+CLAUDE.md.
+DO NEXT: human should (1) review the diff — nothing was committed by Claude this session, see §3's note on the
+"5dae703 Unpushed changes" commit; (2) decide whether to push as one commit or split it; (3) verify the ZIP-
+download URL's assumed `main` branch name is correct (no network access this session to confirm — see §4);
+(4) if happy with the timeline animation and BeginnersTrail interaction, no further action needed, they're built
+and verified.
+DON'T: don't assume "5dae703 Unpushed changes" describes what's in it — it's a generic auto-commit message, not
+authored by Claude or the human describing intent. Don't re-litigate the Product Preview subpage move or the
+"See the dashboard" CTA exception — both were explicit human decisions this session, recorded in CLAUDE.md.
+Blocked on: nothing code-related. Still open (all pre-existing, carried forward): DagsHub MLflow endpoint
+confirmation, hero macro-gears photo, real logo, §9.1's in-action clip, MLOps rotating center-emblem (now spec'd
+in IMAGE_ASSETS.md but not yet built), Built-With/Powered-By real tool logos (also spec'd, not yet built).
+Ground truth: CLAUDE.md (standing rules, updated this session) + docs/ARCHITECTURE.md (design why) +
+docs/IMAGE_ASSETS.md (new — image asset inventory) · run §5 verify commands below before editing.
 ```
 
 ---
 
 ## 1. Resume here
 
-**Next action (concrete & executable):** nothing is blocked. If picking this up
-cold: skim `CLAUDE.md` (new since 2026-07-22, and already merged with a
-teammate's independent edit once — see §3), then continue whatever
-landing-page section/content work is next per `docs/ARCHITECTURE.md`'s roadmap.
+**Next action (concrete & executable):** nothing is blocked. The human asked
+several review-feedback rounds be implemented (see §2) — all done and
+`npm run build`-verified. If picking this up cold: skim this doc, then
+`git log -1 --stat` to see the actual diff before assuming anything about the
+generic "Unpushed changes" commit message (§3).
 
 **Settled — do NOT re-litigate:**
-- Everything from the 2026-07-22 handover (stack, section design, hero CTAs,
-  two-loop system, honest claim strip, dark-only, no-analytics).
-- `CLAUDE.md` exists at repo root and is the standing-rules doc (Laws →
-  Integration Contracts → Pre-Change Checklist → Danger Zones →
-  Component Quick-Reference), scaled down from the ML repo's version — not a
-  copy of it. Commit discipline is explicitly **batched**, not the ML repo's
-  "commit after every change" (a deliberate, discussed deviation).
-- **Platform-agnosticism is a first-class standing rule now**, not just a
-  nice-to-have: `CLAUDE.md`'s "Standing Protocol — Platform Agnosticism" +
-  matching Danger Zones entries. `.gitattributes` (LF everywhere) and
-  `package.json`'s `engines: { node: ">=22" }` are both in place.
-- `fetch-metrics.mjs` only writes/commits `metrics.json` when a value actually
-  changed — no more hourly no-op commits to `main`.
+- Everything from 2026-07-22 and the earlier 2026-07-23 governance session
+  (stack, section design, `CLAUDE.md` as the standing-rules doc, platform-
+  agnostic hardening, fetch-metrics no-op-commit fix).
+- **Product Preview now lives at its own `/product` subpage**, not an early
+  homepage section — an explicit human decision this session (they were
+  offered "reorder down the scroll" vs. "extract to a subpage" and chose the
+  latter). Every "See it in action" CTA (Hero, HowItWorks, UserStory, Nav,
+  Footer) and the skip-link now target `/product` / `#main-content`
+  accordingly. Don't move it back without a similarly explicit call.
+- **UserStory.astro's CTA reads "See the dashboard,"** not the site's usual
+  "See it in action" — a deliberate, human-approved one-off exception to the
+  two-verb CTA rule, recorded in `CLAUDE.md`'s Danger Zones. Don't generalize
+  this wording elsewhere without an equally explicit ask.
+- **`BeginnersTrail.astro`'s hover-expand/click-to-pin/auto-collapse
+  interaction was explicitly modeled on a reference project** the human
+  pointed at (`C:\Users\actor\Webdesign_projects\IP\Gamified Task Webb App`'s
+  distraction-capture panel) — the small client script it needs is a
+  deliberate, requested exception to this repo's usual zero-JS default, not
+  scope creep.
+- **`--color-success-400` is a new, deliberate one-off token** in
+  `global.css` — the site's first non-teal "positive" color, added
+  specifically for the UserStory timeline's red/green status semantics at the
+  human's explicit request. Not a general-purpose success color to reach for
+  elsewhere.
 
 ## 2. What changed this session
-- **Wrote `CLAUDE.md`** from scratch: 3 Laws (Intent Fidelity, Outcome
-  Integrity, Elegant Sufficiency) + Standing Protocols (Platform Agnosticism,
-  Transparency, Comments, Commit Discipline, Pre-Push Verification) + Meta-Law,
-  4 Integration Contracts specific to this repo (`site.ts`, `metrics.json`
-  shape, base path, design tokens), a Pre-Change Checklist, Danger Zones, and a
-  Component Quick-Reference — adapted from the ML repo's `CLAUDE.md` pattern
-  but scaled to a single static site instead of a 5-component coupled system.
-- **Iterated on it with the human** twice: clarified and then rewrote the First
-  Law's "fails open" reasoning to state *why* (the live outcome matters, live
-  metrics are a bonus on top — not the reverse); widened the Comments protocol
-  from "why-only" to "brief educational signposts," still short, not the ML
-  repo's mandatory two-layer version.
-- **Collided with a teammate's parallel session — twice, both resolved
-  live, nothing lost:**
-  1. A stray `src/styles/global.css` → `/styles/global.css` move surfaced in
-     someone else's session dialog (a screenshot the human showed me); traced,
-     confirmed unaffected here, advised "Restore to `src/styles/`" (matches
-     `CLAUDE.md` Contract 4, which was already written by that point).
-  2. A real push collision: origin had 9 automated metrics-bot commits plus one
-     **real commit from Nate (`envelopingCODE`)** — he'd independently hit a
-     genuine Windows bug (`npm run dev` failing with `Cannot find native
-     binding` / `@rolldown/binding-*`) and pushed his own from-scratch
-     `CLAUDE.md` plus a lockfile fix. Rebased, merged both `CLAUDE.md`s by hand
-     (kept my structure, folded his battle-tested findings — the exact
-     PowerShell 5.1 `&&`-chaining failure, the npm optional-deps native-binding
-     bug, [npm/cli#4828](https://github.com/npm/cli/issues/4828) — into the
-     Platform Agnosticism protocol and Danger Zones), and took his
-     `package-lock.json` wholesale rather than hand-merging a generated file.
-- **Verified the adopted fix for real**, not just trusted the diff: `rm -rf
-  node_modules && npm ci && npm run build` — 295 packages (vs 303 before,
-  dropped the whole rolldown chain), 0 "rolldown" hits in the new lockfile,
-  clean build.
-- **Ran a full platform-agnostic audit** of everything built 2026-07-22 at the
-  human's request (their teammate is on Windows): checked `package.json`
-  scripts for shell-specific syntax, `fetch-metrics.mjs`'s path handling, every
-  relative import's case against the actual filesystem, and the
-  `try-it-yourself.astro` command blocks. All clean *except* the lockfile
-  (already fixed above). Found two real gaps and closed both:
-  - Added `.gitattributes` — normalizes every text file to LF regardless of a
-    contributor's local `core.autocrlf`; explicit `binary` markers for images.
-    Ran `git add --renormalize .` (found nothing to change — repo was already
-    all-LF).
-  - Added `"engines": { "node": ">=22" }` to `package.json`, matching what
-    `README.md`/`deploy.yml` already required but never declared.
-- **Fixed a real, live bug in `fetch-metrics.mjs`**: `_meta.fetched_at` was
-  stamped with `new Date()` on every CI run regardless of whether any metric
-  value changed, so `deploy.yml`'s "commit if changed" step always saw a diff
-  and committed — hourly, forever, evidenced by the ~10 "chore: refresh live
-  model metrics" commits already in history. Added a `metricsEqual()`
-  value-comparison and an early return when nothing meaningful changed;
-  verified locally (`npm run fetch-metrics` → correctly fails open on the
-  still-unresolved DagsHub 404, correctly leaves `metrics.json` byte-identical,
-  `git status` shows no diff).
+
+Two rounds of human review feedback (screenshots + written notes), implemented
+in full:
+
+**Round 1:**
+- Extracted Product Preview to `src/pages/product.astro`; removed it from
+  `index.astro`'s scroll; repointed `site.ts`'s `NAV_LINKS`, `Hero.astro`,
+  `HowItWorks.astro`, `UserStory.astro`, `Footer.astro` (added a matching
+  "See it in action" footer link), and `BaseLayout.astro`'s skip-link
+  (now targets a universal `#main-content`, not a homepage-only anchor).
+- Rewrote the CNC copy in `LiveFactory.astro` (Ginny Redish pass — shorter
+  sentences, concrete language).
+- Rebuilt `HowItWorks.astro`'s loop diagram: gradient icon rings straddling
+  each card's top edge (half in/half out), a curved SVG feedback-loop arrow
+  under the row (desktop), a text loop-back cue on mobile. Gradients recombine
+  existing teal/blue tokens rather than introducing new hues (Contract 4).
+- Added centralized wide-screen tuning to `global.css` (`.max-w-7xl`/
+  `.max-w-6xl` widen past the 1536px breakpoint) plus `2xl:text-*` bumps on
+  every major heading.
+- Wrote `docs/IMAGE_ASSETS.md` from scratch — full image-asset inventory
+  (hero photo, logo, Live Factory v2, OG image, favicon, the already-finished
+  dashboard screenshot, the out-of-scope-for-image-gen in-action clip),
+  prompt-ready for an image-generation tool.
+- Built `src/components/InfoTip.astro` (CSS-only hover/focus glossary
+  popover) and wired a Docker Desktop link + tip into `try-it-yourself.astro`.
+- Built `src/components/BeginnersTrail.astro` (see interaction note above),
+  added a git-free "Download ZIP" path (GitHub archive URL — **branch name
+  `main` assumed, not verified**, see §4) alongside the existing git-clone
+  path, and fixed wording that referenced "cloning" before explaining it.
+
+**Round 2** (after the human reviewed round 1's screenshots + two actual
+mockup files in `design/mockups/`):
+- `UserStory.astro`: timestamps got `AM` suffixes; retrain/promote shifted
+  +8min (`02:20→02:28`, `02:37→02:45`) to reflect a realistic GitHub Actions
+  queue delay; headings now carry the teal contrast color instead of the
+  clock; short scannable status-label headings matching the actual mockup
+  (Drift Detected / Pipeline Triggered / Model Retrained / Model Promoted /
+  System Healthy) replaced the earlier active-voice sentence headings; body
+  copy tightened and given a narrower wrap; CTA renamed "See the dashboard"
+  (see §1).
+- Added the MLOps rotating center-emblem and Built-With/Powered-By real
+  tool-logo requirements to `IMAGE_ASSETS.md` as items 4–5, sourced by
+  actually opening `design/mockups/Screenshot 2026-07-21 112150.png` (not
+  guessed) — both flagged as **not image-generation tasks**: the emblem is a
+  CSS/SVG animation spec (there's an unused `ring-rotate` keyframe already
+  sitting in `global.css` from an earlier pass, likely intended for exactly
+  this and never wired up), the logos are real third-party marks to source
+  from Simple Icons, not to prompt-generate.
+- All new external links (Docker Desktop, ZIP download, view-source-on-GitHub)
+  got `target="_blank" rel="noopener"`.
+- Redesigned `BeginnersTrail.astro`'s interaction per the human's explicit
+  reference project (see §1) — collapsed by default, hover-expands, click
+  pins it open, auto-collapses otherwise.
+- Built a scroll-triggered, one-time animated reveal for `UserStory.astro`'s
+  timeline (opened `design/mockups/Screenshot 2026-07-21 112223.png` to get
+  the exact color/label reference): Drift Detected flashes red and holds red,
+  a white light travels node to node lighting each one, System Healthy
+  flashes green at the end. A small `IntersectionObserver` script (the same
+  low-JS-by-default-except-when-genuinely-needed pattern as `Nav.astro`'s
+  mobile menu and `BeginnersTrail.astro`) adds an `is-playing` class once;
+  without it, the timeline just shows today's plain teal dots — never a
+  broken/half-lit state.
+- Did a full Steve Krug / Ginny Redish audit of `try-it-yourself.astro` at
+  the human's request, and fixed a real sequencing bug it surfaced: "The easy
+  way" section described running a menu script and pressing a number, without
+  ever saying that script also starts the Docker stack — a reader would hit
+  it before ever seeing `docker compose up` (only introduced later, in the
+  manual-commands section) and reasonably wonder if they'd missed a step.
+  Fixed by stating explicitly the menu script "starts everything for you,"
+  and adding a line to the manual-commands section clarifying it's a complete
+  *alternative* to the sections above it, not a next step after them.
+- Added a **Standing Protocol — Verification Artifact Hygiene** section to
+  `CLAUDE.md` (screenshots/scratch files made only to verify a change get
+  deleted after, not left to accumulate) at the human's explicit ask, and
+  actually cleaned up this session's own verification screenshots
+  (`/tmp/shots`, `/tmp/verify` — this Windows box's Bash `/tmp` resolves to a
+  real temp folder, not the repo, but the new protocol says use the harness
+  scratchpad instead going forward).
+- Updated the Danger Zones' two-verb CTA entry to say `/product` (not the old
+  `#product` anchor) and to record the "See the dashboard" exception.
+
+`npm run build` was run and passed after every batch of changes, not just
+once at the end. Visual verification used headless Edge screenshots
+(`msedge --headless=new --screenshot=...`) since no `chromium-cli` or
+Playwright was available in this environment — each screenshot was deleted
+once reviewed, per the new hygiene protocol.
 
 ## 3. Un-recoverable context
 
-- **This repo now has active concurrent editors beyond this session.** Nate
-  (`envelopingCODE`) is pushing real commits directly to `main`, not just
-  running a parallel Claude session that mirrors this one. Every push this
-  session needed a `git fetch && git rebase` first, and one needed a real
-  content merge, not just a mechanical replay. **Always fetch before pushing;
-  never assume `main` hasn't moved.**
-- **Nate's original `CLAUDE.md` was not discarded, it was merged in** — his
-  Platform Agnosticism findings (the `&&`/PowerShell 5.1 bug, the
-  rolldown-vite native-binding bug + npm issue link) are now inside this
-  session's fuller `CLAUDE.md` under "Standing Protocol — Platform
-  Agnosticism" and in Danger Zones. If he looks for his original short version
-  and doesn't find it standalone, point him at those sections — the content
-  survived, the file didn't stay separate.
-- **The rolldown-vite lockfile bug was real and already live in the committed
-  lockfile** (not hypothetical) — my own `npm install` from the 2026-07-22
-  build session had drifted onto it too (53 "rolldown" references in that
-  lockfile, confirmed by grep). It would have broken `npm run dev`/`build` for
-  any Windows contributor pulling `main` before Nate's fix landed. Worth
-  remembering as a concrete argument for why the Platform Agnosticism protocol
-  isn't theoretical.
-- **`~/predictive-maintenance-demo` (the ML repo) is where Nate's GitHub
-  handle and the "Windows teammate" context come from** — confirmed via that
-  repo's own `README.md` "Team" table, already the source for this repo's
-  footer content (see the 2026-07-22 handover).
-- **Existing bot-commit history (~10 "chore: refresh…" commits) was left
-  alone on purpose.** The fix stops *new* no-op commits; it does not rewrite
-  history. Don't be tempted to squash/clean these later without asking — it's
-  shared branch history now, with a second active committer.
-- **Nothing was force-pushed.** Every collision this session was resolved with
-  `git fetch` + `git rebase` (clean, or hand-resolved on real conflicts) +
-  a normal push. No `--force` used anywhere.
+- **A commit appeared at HEAD that Claude did not intentionally create.**
+  `5dae703`, message "Unpushed changes", author `envelopingCODE
+  <envelopingCODE@pm.me>` (the human's own git identity), timestamp
+  2026-07-27 11:07:55 — containing the *entire* diff described in §2 (18
+  files). No `git commit` was run via any tool call this session; this looks
+  like an automatic checkpoint/hook external to Claude's own actions, not a
+  deliberate commit. **Flagged to the human directly; they chose "leave it
+  as-is"** rather than reword or investigate the cause. A future session
+  should not assume the message describes the contents, and should not be
+  surprised if the same thing happens again — it wasn't chased down.
+- **The ZIP-download URL is an educated guess, not a verified fact.** No
+  network access was available this session (`curl`, `WebFetch`, and `gh`
+  all failed to reach GitHub) to confirm the ML repo's default branch is
+  `main`. The URL `${REPO_URL}/archive/refs/heads/main.zip` in
+  `try-it-yourself.astro` assumes it is (a safe-ish bet — GitHub's default
+  since Oct 2020 — but genuinely unconfirmed). The adjacent "or view the
+  source on GitHub" link was added specifically as a fallback in case this
+  guess is wrong. Worth an actual `curl -I` check once network access exists.
+- **Two mockup files in `design/mockups/` were opened and read directly this
+  session** to source exact copy/color/layout, not guessed from the human's
+  prose alone: `Screenshot 2026-07-21 112150.png` (MLOps System diagram —
+  rotating center emblem, Built With/Powered By tool logos) and
+  `Screenshot 2026-07-21 112223.png` (UserStory timeline — exact status
+  labels, AM suffixes, teal contrast-on-headings pattern). Both are now the
+  ground truth backing the corresponding `IMAGE_ASSETS.md` entries and the
+  `UserStory.astro` rewrite — if either mockup is later revised, those
+  downstream artifacts should be revisited too.
+- **Carried forward from the earlier 2026-07-23 governance session** (still
+  true, not re-verified this session): this repo has active concurrent
+  editors beyond any single Claude session — always `git fetch` before
+  pushing. The git identity on this machine (`envelopingCODE`) is Nate, one
+  of the two teammates listed in `site.ts`'s `TEAM` constant (the other is
+  Ivo, `@undorigo`) — his platform-agnostic findings from that session are
+  folded into `CLAUDE.md`'s Standing Protocols and Danger Zones, not kept as
+  a separate file. The rolldown-vite lockfile bug was real and already
+  fixed; don't reintroduce it by regenerating the lockfile carelessly (see
+  `CLAUDE.md` Danger Zones).
 
 ## 4. Open questions — need a human, not a guess
-- [ ] Let Nate know his `CLAUDE.md` was merged, not overwritten (see §3) —
-      purely a courtesy heads-up, not a technical blocker.
-- [ ] Carried over, unchanged from 2026-07-22: DagsHub MLflow endpoint 404
-      (unconfirmed whether it works even with a real token — test once
-      `DAGSHUB_TOKEN` is actually set), hero macro-gears photo, real logo/icon,
-      §9.1's in-action clip, Pages/branch-protection setup.
-- [ ] Nothing new and platform-agnostic-related is outstanding — the audit
-      this session was thorough and closed what it found.
+
+- [ ] **Commit hygiene:** the human chose to leave "5dae703 Unpushed changes"
+      as-is rather than reword/split it. Still worth deciding before pushing
+      to `origin` whether that generic message is acceptable in shared
+      history, or whether to amend it then (amending is still safe pre-push).
+- [ ] **Verify the ZIP download URL** once network access exists — confirm
+      `predictive-maintenance-demo`'s default branch really is `main`.
+- [ ] **Built-With/Powered-By logo color** (flagged in `IMAGE_ASSETS.md`
+      item 5): keep tool logos in authentic brand colors (as the mockup
+      shows), or recolor to the teal palette? Not decided, don't assume.
+- [ ] **MLOps rotating center-emblem** (`IMAGE_ASSETS.md` item 4) is spec'd
+      but not built — the unused `ring-rotate` keyframe in `global.css` is
+      likely intended for it. A reasonable next task if picked up, but wasn't
+      asked for explicitly this session (only the doc entry was).
+- [ ] Carried over, unchanged: DagsHub MLflow endpoint confirmation, hero
+      macro-gears photo, real logo/icon, §9.1's in-action clip,
+      Pages/branch-protection setup.
 
 ---
 
 ## 5. Ground truth — verify, don't trust this doc
 
 ```bash
-git fetch origin && git log --oneline -5     # tip = 3a1039e or later?
-git status                                    # clean?
-rm -rf node_modules && npm ci && npm run build   # must pass; watch package count (~295, not ~303)
-grep -c rolldown package-lock.json            # expect 0
-npm run fetch-metrics                         # expect "No metric changes" + git status clean after
+git log -1 --stat                              # HEAD should be 5dae703 with the 18-file diff described in §2
+git status                                      # expect clean (nothing uncommitted)
+git log --oneline -5                            # confirm 5dae703 hasn't been pushed/rebased since
+npm run build                                   # must pass — verified repeatedly this session
+grep -n "success-400" src/styles/global.css     # confirm the new token is present
+ls src/components/InfoTip.astro src/components/BeginnersTrail.astro src/pages/product.astro docs/IMAGE_ASSETS.md
 ```
-- **Branch / commit:** `main` @ `3a1039e`, pushed to `origin`.
-- **Build:** passes. Lockfile confirmed clean of the rolldown chain.
-- **Uncommitted work:** none.
-- **Canonical *why*:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) (design)
-  + [`CLAUDE.md`](../CLAUDE.md) (standing engineering rules, new this session).
+- **Branch / commit:** `main` @ `5dae703`, **not pushed** to `origin`.
+- **Build:** passes (`npm run build`, verified after every batch of edits).
+- **Uncommitted work:** none — everything from this session is in `5dae703`
+  (see §3 for the caveat on how that commit came to exist).
+- **Canonical *why*:** [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md)
+  (design) + [`CLAUDE.md`](../CLAUDE.md) (standing engineering rules) +
+  [`docs/IMAGE_ASSETS.md`](../docs/IMAGE_ASSETS.md) (new — image asset
+  inventory, prompt-ready for an image-gen tool).
 
 ---
 
@@ -169,8 +250,11 @@ npm run fetch-metrics                         # expect "No metric changes" + git
 
 **Outgoing session** (before standup / lunch / EOD):
 1. Update frontmatter + context block + §1 next action.
-2. Create a **new dated** handover (`YYYY-MM-DD-…`) — never overwrite prior days'.
-3. `git fetch` first — this repo now has more than one active committer.
+2. Create a **new dated** handover (`YYYY-MM-DD-…`) — never overwrite prior
+   days'. (This file updates the *same* 2026-07-23 doc rather than adding a
+   same-day duplicate, since no multi-per-day naming convention exists yet —
+   worth establishing one if same-day handovers become routine.)
+3. `git fetch` first — this repo has more than one active committer.
 4. `git commit` → `git push` (rebase onto any new remote commits first).
 
 **Incoming session** (first message of the day):
@@ -179,10 +263,11 @@ npm run fetch-metrics                         # expect "No metric changes" + git
 > me before editing."
 
 **Guardrails**
-- **Single writer** *for this file* — but not for the repo anymore (see §3).
-  Coordinate the handover doc; expect `main` itself to move between sessions.
-- **Staleness guard.** If `updated` >1 working day old or `head_sha` ≠ `origin`,
-  trust §5's live commands over anything written here.
+- **Single writer** *for this file* — but not for the repo (see §3 in the
+  earlier governance-session content, still true). Coordinate the handover
+  doc; expect `main` itself to move between sessions.
+- **Staleness guard.** If `updated` >1 working day old or `head_sha` ≠
+  `origin`, trust §5's live commands over anything written here.
 - **Right-tier rule.** Durable *design why* → `ARCHITECTURE.md`. Durable
-  *engineering rules* → `CLAUDE.md`. History → `git log`. Only *current state +
-  next action* → here.
+  *engineering rules* → `CLAUDE.md`. Image-asset specs → `IMAGE_ASSETS.md`.
+  History → `git log`. Only *current state + next action* → here.
