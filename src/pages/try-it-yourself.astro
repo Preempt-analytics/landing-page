@@ -23,12 +23,12 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     <h1 class="mt-6 text-4xl font-bold tracking-tight text-offwhite sm:text-5xl">
       Run Preempt Analytics on your own machine.
     </h1>
-    <p class="mt-5 text-lg leading-relaxed text-muted">
+    <p class="mt-6 text-lg leading-relaxed text-muted">
       Everything runs inside Docker — no Python, no ML knowledge needed. Just
       one prerequisite and a couple of minutes.
     </p>
 
-    <BeginnersTrail title="Never done anything like this before? Here's the whole path." open={true}>
+    <BeginnersTrail title="Never done anything like this before? Here's the whole path.">
       <p>You don't need to know how to code. The whole journey is three steps:</p>
       <p>
         <strong>1. Install Docker Desktop</strong> (below) — one app, like installing
@@ -42,7 +42,7 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </BeginnersTrail>
 
     <!-- Prerequisite -->
-    <div class="mt-6 rounded-xl border border-white/10 bg-navy-800/40 p-5">
+    <div class="mt-10 rounded-xl border border-white/10 bg-navy-800/40 p-5">
       <p class="text-sm font-semibold text-offwhite">
         You need one thing:
         <a
@@ -66,9 +66,9 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </div>
 
     <!-- Get the code: git-free ZIP path first, git second -->
-    <h2 class="mt-12 text-xl font-semibold text-offwhite">Get the code onto your computer</h2>
-    <p class="mt-2 text-muted">Two ways to do this — pick whichever feels easier.</p>
-    <div class="mt-4 flex flex-wrap items-center gap-3">
+    <h2 class="mt-16 text-xl font-semibold text-offwhite">Get the code onto your computer</h2>
+    <p class="mt-3 text-muted">Two ways to do this — pick whichever feels easier.</p>
+    <div class="mt-5 flex flex-wrap items-center gap-3">
       <a
         href={ZIP_URL}
         target="_blank"
@@ -81,7 +81,7 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
         or view the source on GitHub →
       </a>
     </div>
-    <p class="mt-3 text-sm text-muted">
+    <p class="mt-4 text-sm text-muted">
       Unzip it anywhere — that folder is your project folder for everything
       below. Using git instead? The full clone command is further down this
       page.
@@ -106,14 +106,14 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </BeginnersTrail>
 
     <!-- Friendly path first -->
-    <h2 class="mt-12 text-xl font-semibold text-offwhite">The easy way — a menu, no commands to remember</h2>
-    <p class="mt-2 text-muted">
+    <h2 class="mt-16 text-xl font-semibold text-offwhite">The easy way — a menu, no commands to remember</h2>
+    <p class="mt-3 text-muted">
       Once you have the project folder on your computer (see above), run one
       script. It starts everything for you — you won't need to run any Docker
       commands yourself. Then press a number to simulate sensor readings, open
       the drift report, or watch the pipeline retrain itself.
     </p>
-    <div class="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+    <div class="mt-5 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
       <pre class="text-sm text-teal-200"><code># Mac / Linux
 ./preempt.sh
 
@@ -122,23 +122,23 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </div>
 
     <!-- Manual path second -->
-    <h2 class="mt-12 text-xl font-semibold text-offwhite">Prefer to type it? Three commands</h2>
-    <p class="mt-2 text-muted">
+    <h2 class="mt-16 text-xl font-semibold text-offwhite">Prefer to type it? Three commands</h2>
+    <p class="mt-3 text-muted">
       This replaces everything above — get the code and start the stack in
       one go, no menu needed.
     </p>
-    <div class="mt-4 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+    <div class="mt-5 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
       <pre class="text-sm text-teal-200"><code>git clone https://github.com/Preempt-Analytics-Demo/predictive-maintenance-demo.git
 cd predictive-maintenance-demo
 docker compose up -d</code></pre>
     </div>
-    <p class="mt-3 text-sm text-muted">
+    <p class="mt-4 text-sm text-muted">
       From there you can generate sensor readings and watch drift detection trigger
       an automatic retraining run — the full walkthrough lives in the README.
     </p>
 
     <!-- Shared-resource expectation -->
-    <div class="mt-8 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5">
+    <div class="mt-10 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5">
       <p class="text-sm text-muted">
         <span class="font-semibold text-teal-300">Heads up:</span> retraining runs on a
         shared demo pipeline (about 10 runs/hour for everyone combined). If it's busy,
@@ -146,7 +146,7 @@ docker compose up -d</code></pre>
       </p>
     </div>
 
-    <div class="mt-10">
+    <div class="mt-12">
       <a
         href={REPO_URL}
         rel="noopener"

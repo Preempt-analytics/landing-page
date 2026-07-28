@@ -31,6 +31,13 @@ const { title, open = false } = Astro.props;
     </span>
     <span class="trail-label">Beginner's trail</span>
     <span class="trail-title">{title}</span>
+    <span class="trail-hint">
+      <svg viewBox="0 0 16 16" width="11" height="11" aria-hidden="true">
+        <path d="M4 2.2 12 8.6l-3.3.7L7.5 13 4 2.2z" fill="currentColor" />
+        <path d="M11.2 2.3v1.3M14.3 5.4h-1.3M13.5 3.2l-0.95 0.95" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+      </svg>
+      click to stay open
+    </span>
     <svg class="trail-chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M6 9l6 6 6-6" />
     </svg>
@@ -51,44 +58,50 @@ const { title, open = false } = Astro.props;
   const HOVER_OPEN_DELAY = 150;
   const HOVER_CLOSE_DELAY = 450;
 
-  document.querySelectorAll<HTMLElement>('[data-trail]').forEach((trail) => {
-    const toggle = trail.querySelector<HTMLButtonElement>('[data-trail-toggle]');
-    if (!toggle) return;
+  // Bound to astro:page-load, not top-level: this component lives inside
+  // <main>, which isn't transition:persist-ed, so a fresh (unbound) instance
+  // arrives on every client-side navigation to this page, not just the first.
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('[data-trail]').forEach((trail) => {
+      const toggle = trail.querySelector<HTMLButtonElement>('[data-trail-toggle]');
+      if (!toggle || toggle.dataset.trailBound === 'true') return;
+      toggle.dataset.trailBound = 'true';
 
-    let pinned = trail.dataset.pinned === 'true';
-    let openTimer: ReturnType<typeof setTimeout> | undefined;
-    let closeTimer: ReturnType<typeof setTimeout> | undefined;
+      let pinned = trail.dataset.pinned === 'true';
+      let openTimer: ReturnType<typeof setTimeout> | undefined;
+      let closeTimer: ReturnType<typeof setTimeout> | undefined;
 
-    function setOpen(isOpen: boolean) {
-      trail.classList.toggle('is-open', isOpen);
-      toggle!.setAttribute('aria-expanded', String(isOpen));
-    }
-
-    trail.addEventListener('mouseenter', () => {
-      clearTimeout(closeTimer);
-      if (!trail.classList.contains('is-open')) {
-        openTimer = setTimeout(() => setOpen(true), HOVER_OPEN_DELAY);
+      function setOpen(isOpen: boolean) {
+        trail.classList.toggle('is-open', isOpen);
+        toggle!.setAttribute('aria-expanded', String(isOpen));
       }
-    });
 
-    trail.addEventListener('mouseleave', () => {
-      clearTimeout(openTimer);
-      if (!pinned) {
-        closeTimer = setTimeout(() => setOpen(false), HOVER_CLOSE_DELAY);
-      }
-    });
+      trail.addEventListener('mouseenter', () => {
+        clearTimeout(closeTimer);
+        if (!trail.classList.contains('is-open')) {
+          openTimer = setTimeout(() => setOpen(true), HOVER_OPEN_DELAY);
+        }
+      });
 
-    toggle.addEventListener('click', () => {
-      pinned = !pinned;
-      trail.dataset.pinned = String(pinned);
-      setOpen(pinned || trail.matches(':hover'));
+      trail.addEventListener('mouseleave', () => {
+        clearTimeout(openTimer);
+        if (!pinned) {
+          closeTimer = setTimeout(() => setOpen(false), HOVER_CLOSE_DELAY);
+        }
+      });
+
+      toggle.addEventListener('click', () => {
+        pinned = !pinned;
+        trail.dataset.pinned = String(pinned);
+        setOpen(pinned || trail.matches(':hover'));
+      });
     });
   });
 </script>
 
 <style>
   .trail {
-    margin-top: 1rem;
+    margin-top: 2rem;
     border: 1px dashed rgba(45, 212, 191, 0.35);
     border-radius: 0.75rem;
     background: rgba(45, 212, 191, 0.04);
@@ -124,10 +137,27 @@ const { title, open = false } = Astro.props;
     font-weight: 600;
     color: var(--color-offwhite);
   }
+  /* Hints at the hover-preview/click-to-pin behavior above — otherwise a
+     reader who hovers, starts reading, then looks away has the panel
+     collapse on them with no idea why. Only shown during that hover-preview
+     window: hidden while closed (nothing to explain yet) and hidden again
+     once actually pinned open (the instruction is moot at that point). */
+  .trail-hint {
+    display: none;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.6rem;
+    color: var(--color-muted);
+    opacity: 0.7;
+  }
+  .trail.is-open:not([data-pinned='true']) .trail-hint {
+    display: inline-flex;
+  }
   .trail-chevron {
     flex-shrink: 0;
     color: var(--color-muted);
-    transition: transform 0.2s ease;
+    transition: transform var(--dur-base) var(--ease-ios);
   }
   .trail.is-open .trail-chevron {
     transform: rotate(180deg);
@@ -136,7 +166,7 @@ const { title, open = false } = Astro.props;
     max-height: 0;
     overflow: hidden;
     opacity: 0;
-    transition: max-height 0.35s ease, opacity 0.25s ease;
+    transition: max-height var(--dur-slow) var(--ease-ios), opacity var(--dur-base) var(--ease-ios);
   }
   .trail.is-open .trail-body {
     max-height: 32rem;
