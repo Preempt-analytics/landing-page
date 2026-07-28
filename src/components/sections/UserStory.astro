@@ -42,7 +42,13 @@ const impact = [
          IntersectionObserver script (below) to trigger it once; without JS (or
          once it's played) it just holds today's plain teal dots / settled colors
          — never a broken or half-lit state. -->
-    <ol class="timeline relative mt-14 grid gap-8 lg:grid-cols-5 lg:gap-4" data-timeline>
+    <!-- lg:gap-0 is load-bearing: .timeline-glow's left:10/30/50/70/90% assumes
+         5 equal-width, gap-less columns. Any nonzero column gap eats pixels
+         unevenly (the middle column stays exactly centered, the others drift),
+         so the glow orb stops lining up with its dot everywhere but the
+         center. Column spacing comes from each item's own max-w-[9rem] + mx-auto
+         instead. -->
+    <ol class="timeline relative mt-14 grid gap-8 lg:grid-cols-5 lg:gap-0" data-timeline>
       <div class="absolute left-0 right-0 top-[7px] hidden h-px bg-gradient-to-r from-transparent via-teal-400/40 to-transparent lg:block" aria-hidden="true"></div>
       <span class="timeline-glow" aria-hidden="true"></span>
       {
