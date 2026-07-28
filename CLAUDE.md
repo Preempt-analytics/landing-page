@@ -322,8 +322,8 @@ and the handover docs so they don't have to be rediscovered:
   last-committed `metrics.json` values and log a warning — never break the build,
   never render `undefined`.
 - **Nav order/labels are settled**: `Product · How It Works · Solutions ·
-  Tech stack · Project & team`. Don't relitigate without a new mockup-driven
-  reason — see `ARCHITECTURE.md` §5.
+  Tech Stack · Project & Team` (capitalization fixed 2026-07-28, human review).
+  Don't relitigate without a new mockup-driven reason — see `ARCHITECTURE.md` §5.
 - **Case-sensitive imports.** An import that works locally on a Mac's
   case-insensitive filesystem can still break the build in CI, since GitHub
   Actions' Ubuntu runner is case-sensitive. Match file-path case exactly.

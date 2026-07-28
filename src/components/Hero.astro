@@ -4,25 +4,35 @@ import StatRow from './StatRow.astro';
 import { withBase } from '../lib/site';
 ---
 
-<section class="relative overflow-hidden">
-  <!--
-    Full-bleed hero photo, right side, mirrors design/mockups/Screenshot 2026-07-21 112341.png:
-    a background layer behind the copy, not a boxed/bordered image. Two gradient divs (not a
-    single photo) fade it into navy-950 on its left and bottom edges so it blends with the page
-    instead of reading as a separate card. Desktop-only (§ mobile hides it — see below).
+<section class="relative z-0 overflow-hidden">
+  <!-- `z-0` matters, not just cosmetic: `position:relative` alone doesn't create a
+       stacking context without an explicit z-index, so the negative-z layers below
+       would otherwise escape it and paint behind the page's own background instead
+       of just behind this section's content — confirmed by direct DOM inspection,
+       2026-07-28. This was silently hiding the photo below entirely. -->
 
-    PREVIEW ASSET: this is prototype-1-hero-image.png (design/visual-assets/), not the approved
-    macro-gears photo from docs/IMAGE_ASSETS.md item 1 — swap the src below once one is chosen.
+  <!--
+    Full-bleed hero photo, mirrors design/mockups/Screenshot 2026-07-21 112341.png:
+    a background layer behind the copy, not a boxed/bordered image. Full-width behind
+    the copy below lg — a near-opaque wash there, so the mobile view reads as faint
+    texture, not a distinct photo (human review, 2026-07-28). From lg, narrows to the
+    right 62% with the left/bottom fades below, so the photo reads clearly there,
+    matching the mockup. Two gradient divs (not the photo itself) fade it into navy-950.
+
+    ASSET: prototype-1-hero-image.png (design/visual-assets/), confirmed by human
+    review 2026-07-28 as the image to use here.
   -->
-  <div class="pointer-events-none absolute inset-y-0 right-0 -z-20 hidden w-[62%] lg:block" aria-hidden="true">
+  <div class="pointer-events-none absolute inset-0 -z-20 lg:left-auto lg:w-[62%]" aria-hidden="true">
     <img
       src={withBase('/images/hero/prototype-1-hero-image.png')}
       alt=""
       class="h-full w-full object-cover"
     />
-    <!-- fade into the page background on the left edge -->
+    <!-- near-opaque wash below lg — the photo is felt, not seen, on narrow screens -->
+    <div class="absolute inset-0 bg-navy-950/85 lg:hidden"></div>
+    <!-- fade into the page background on the left edge (desktop only) -->
     <div
-      class="absolute inset-0"
+      class="absolute inset-0 hidden lg:block"
       style="background: linear-gradient(to right, var(--color-navy-950) 0%, transparent 42%);"
     >
     </div>

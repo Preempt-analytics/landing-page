@@ -1,7 +1,9 @@
 ---
 // §9.6 The MLOps System — the DEEP half of the two-loop design, positioned late for
 // the interested reader. Same system as §9.3, one level deeper. Real pipeline labels,
-// honest capstone-true claim strip. Circle on desktop, vertical list on mobile (§12).
+// honest capstone-true claim strip. Circle diagram at every breakpoint (human review,
+// 2026-07-28: kept as a circle even on mobile, not swapped for a text list — the
+// diagram itself just scales down; see the responsive tile sizing below).
 import Button from '../Button.astro';
 import { withBase } from '../../lib/site';
 
@@ -19,6 +21,20 @@ const R = 42;
 const placed = nodes.map((n, i) => {
   const a = (-90 + i * 60) * (Math.PI / 180);
   return { ...n, left: 50 + R * Math.cos(a), top: 50 + R * Math.sin(a) };
+});
+
+// Connecting arrows between consecutive nodes, following the same circle (missing
+// entirely before human review, 2026-07-28 — see technical_process.png). Each arc
+// is trimmed a few degrees at both ends so it doesn't run under the node tiles.
+const ARC_TRIM_DEG = 10;
+const arcs = nodes.map((_, i) => {
+  const a0 = (-90 + i * 60 + ARC_TRIM_DEG) * (Math.PI / 180);
+  const a1 = (-90 + (i + 1) * 60 - ARC_TRIM_DEG) * (Math.PI / 180);
+  const x0 = 50 + R * Math.cos(a0);
+  const y0 = 50 + R * Math.sin(a0);
+  const x1 = 50 + R * Math.cos(a1);
+  const y1 = 50 + R * Math.sin(a1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 });
 
 // Name + one-line purpose per tool, matching the reference mockup
@@ -75,16 +91,14 @@ const claims = [
         </ul>
       </div>
 
-      <!-- Circular diagram (desktop) / vertical list (mobile) -->
+      <!-- Circular diagram — same layout at every breakpoint (human review, 2026-07-28:
+           no separate mobile text-list fallback). The container and node tiles scale
+           down together so it stays a circle even on a narrow phone. -->
       <div>
-        <!-- desktop circle -->
-        <div class="relative mx-auto hidden aspect-square w-full max-w-md lg:block">
-          <svg class="absolute inset-0 h-full w-full" viewBox="0 0 100 100" fill="none" aria-hidden="true">
-            <circle cx="50" cy="50" r="42" stroke="rgba(45,212,191,0.25)" stroke-width="0.5" stroke-dasharray="2 2" />
-          </svg>
+        <div class="relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md">
           <!-- center mark -->
-          <div class="absolute left-1/2 top-1/2 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950">
-            <svg viewBox="0 0 32 32" width="30" height="30" fill="none" aria-hidden="true">
+          <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 sm:h-16 sm:w-16 md:h-20 md:w-20">
+            <svg class="h-4 w-4 sm:h-6 sm:w-6 md:h-[30px] md:w-[30px]" viewBox="0 0 32 32" fill="none" aria-hidden="true">
               <path d="M16 3 L29 28 L3 28 Z" stroke="var(--color-teal-400)" stroke-width="2" stroke-linejoin="round" />
               <path d="M16 13 L23 26 L9 26 Z" fill="var(--color-teal-400)" opacity="0.9" />
             </svg>
@@ -92,30 +106,30 @@ const claims = [
           {
             placed.map((n, i) => (
               <div
-                class="absolute w-32 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-2.5 text-center"
+                class="absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5"
                 style={`left:${n.left}%; top:${n.top}%;`}
               >
-                <p class="text-xs font-semibold text-teal-300">{i + 1}. {n.title}</p>
-                <p class="mt-0.5 text-[0.65rem] leading-tight text-muted/80">{n.body}</p>
+                <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs">{i + 1}. {n.title}</p>
+                <p class="mt-0.5 hidden text-[0.65rem] leading-tight text-muted/80 sm:block">{n.body}</p>
               </div>
             ))
           }
+          <!-- Arrows render last (on top of the tiles, human review 2026-07-28 — they were
+               previously painting underneath and reading as hidden/invisible against the
+               tiles' opaque backgrounds). pointer-events-none so they don't block clicks. -->
+          <svg class="pointer-events-none absolute inset-0 h-full w-full overflow-visible" viewBox="0 0 100 100" fill="none" aria-hidden="true">
+            <defs>
+              <marker id="mlops-arrow-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+                <path d="M0 0 L10 5 L0 10 Z" fill="var(--color-teal-400)" />
+              </marker>
+            </defs>
+            {
+              arcs.map((d) => (
+                <path d={d} stroke="var(--color-teal-400)" stroke-opacity="0.85" stroke-width="0.8" marker-end="url(#mlops-arrow-head)" />
+              ))
+            }
+          </svg>
         </div>
-
-        <!-- mobile linearized list -->
-        <ol class="space-y-2 lg:hidden">
-          {
-            nodes.map((n, i) => (
-              <li class="flex items-start gap-3 rounded-lg border border-white/10 bg-navy-800/50 p-3">
-                <span class="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-400/15 text-xs font-bold text-teal-300">{i + 1}</span>
-                <div>
-                  <p class="text-sm font-semibold text-offwhite">{n.title}</p>
-                  <p class="text-xs text-muted">{n.body}</p>
-                </div>
-              </li>
-            ))
-          }
-        </ol>
       </div>
 
       <!-- Powered By -->

@@ -24,6 +24,6 @@ export const NAV_LINKS = [
   { label: 'Product', href: withBase('/product') },
   { label: 'How It Works', href: '#how-it-works' },
   { label: 'Solutions', href: '#solutions' },
-  { label: 'Tech stack', href: '#tech-stack' },
-  { label: 'Project & team', href: '#project-team' },
+  { label: 'Tech Stack', href: '#tech-stack' },
+  { label: 'Project & Team', href: '#project-team' },
 ];
