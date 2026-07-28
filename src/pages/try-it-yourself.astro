@@ -25,7 +25,7 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </h1>
     <p class="mt-6 text-lg leading-relaxed text-muted">
       Everything runs inside Docker — no Python, no ML knowledge needed. Just
-      one prerequisite and a couple of minutes.
+      one prerequisite, then some waiting while things download.
     </p>
 
     <BeginnersTrail title="Never done anything like this before? Here's the whole path.">
@@ -35,10 +35,14 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
         any other program.<br />
         <strong>2. Get the code onto your computer</strong> — click a
         "Download ZIP" button, no typing required.<br />
-        <strong>3. Run the menu script</strong> and press a number — it starts
-        everything for you.
+        <strong>3. Open a terminal in that folder and run the menu script</strong> —
+        press <strong>6</strong> first to turn everything on, then any other
+        number to try something.
       </p>
-      <p>That's the whole thing. Nothing below requires typing commands unless you want to.</p>
+      <p>
+        That's the whole thing — no Docker commands to memorize, just one line
+        to launch the menu and a number to press after that.
+      </p>
     </BeginnersTrail>
 
     <!-- Prerequisite -->
@@ -86,6 +90,13 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
       below. Using git instead? The full clone command is further down this
       page.
     </p>
+    <p class="mt-3 text-sm text-muted">
+      <strong class="text-teal-300">One limit of the ZIP download:</strong>
+      it's fine for the smoke test (menu option 1), but the automatic
+      retraining demo (option 2) needs git's own history to push its
+      trigger — if that's the part you want to see end-to-end, use the
+      git-clone method further down this page instead.
+    </p>
 
     <BeginnersTrail title="What's GitHub? What does &ldquo;cloning&rdquo; mean?">
       <p>
@@ -108,10 +119,9 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     <!-- Friendly path first -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">The easy way — a menu, no commands to remember</h2>
     <p class="mt-3 text-muted">
-      Once you have the project folder on your computer (see above), run one
-      script. It starts everything for you — you won't need to run any Docker
-      commands yourself. Then press a number to simulate sensor readings, open
-      the drift report, or watch the pipeline retrain itself.
+      Once you have the project folder on your computer (see above), open a
+      terminal in that folder and run one script below. It replaces every
+      Docker command with a numbered menu.
     </p>
     <div class="mt-5 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
       <pre class="text-sm text-teal-200"><code># Mac / Linux
@@ -120,6 +130,12 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
 # Windows
 .\preempt.ps1</code></pre>
     </div>
+    <p class="mt-4 text-sm text-muted">
+      <strong class="text-offwhite">Press 6 first</strong> — that turns on
+      the background services (once per session is enough). After that,
+      press 1 or 2 to simulate sensor readings, 3 to open the drift report,
+      or 4/5 to watch things happen live.
+    </p>
 
     <!-- Manual path second -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">Prefer to type it? Three commands</h2>
@@ -141,8 +157,9 @@ docker compose up -d</code></pre>
     <div class="mt-10 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5">
       <p class="text-sm text-muted">
         <span class="font-semibold text-teal-300">Heads up:</span> retraining runs on a
-        shared demo pipeline (about 10 runs/hour for everyone combined). If it's busy,
-        your data still uploads and your run simply queues — nothing is broken.
+        shared demo pipeline (about 10 runs/hour for everyone combined). If that limit's
+        been hit, your data still uploads — this run's retraining is skipped rather than
+        queued, and the limit frees up again on a rolling basis. Nothing is broken.
       </p>
     </div>
 
