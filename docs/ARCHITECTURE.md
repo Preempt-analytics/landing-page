@@ -170,13 +170,13 @@ walkthrough where immediate reflection matters, either manually fire this repo's
 
 **Nav** — kept from "corporate" wholesale (explicit instruction: keep corporate's copy/framing):
 - Logo: "Preempt Analytics" wordmark + triangle/A icon (placeholder — see open items).
-- Links, exact order (**provisional** — adapted from corporate's generic SaaS labels
-  to what this project actually has to show; revisit once the linked pages/sections
-  are themselves designed): `Product · How It Works · Solutions · Tech stack · Project & team`.
-  `Resources`/`Company` (generic B2B-SaaS placeholders) became `Tech stack` and
-  `Project & team` since this is a capstone project site, not a company with generic
-  resources/company pages — `Tech stack` can point at the real MLflow/DagsHub/XGBoost/
-  Evidently/DVC pipeline, `Project & team` at the people and bootcamp context behind it.
+- Links, exact order (capitalization fixed 2026-07-28; adapted from corporate's
+  generic SaaS labels to what this project actually has to show): `Product ·
+  How It Works · Solutions · Tech Stack · Project & Team`.
+  `Resources`/`Company` (generic B2B-SaaS placeholders) became `Tech Stack` and
+  `Project & Team` since this is a capstone project site, not a company with generic
+  resources/company pages — `Tech Stack` can point at the real MLflow/DagsHub/XGBoost/
+  Evidently/DVC pipeline, `Project & Team` at the people and bootcamp context behind it.
 - Cyberpunk's "Book a Demo" nav pill is dropped — the hero already has two CTAs; a third competing one dilutes rather than reinforces.
 
 **Headline & body — verbatim from "corporate":**
@@ -406,7 +406,7 @@ Same process as the hero: merge into one spec, flag trust/consistency issues the
 same way the hero's fake-logo-strip and stat-tile-coloring issues were caught.
 
 Page order below matches the settled nav order (`Product · How It Works ·
-Solutions · Tech stack · Project & team`) so that anchor-link clicks always jump
+Solutions · Tech Stack · Project & Team`) so that anchor-link clicks always jump
 forward down the page.
 
 ### 9.1 Product Preview
@@ -560,9 +560,13 @@ in as many words, so a reader who sees both feels reinforcement, not déjà vu.
   dropped).
 - **Tense/voice fix (panel finding, actioned).** The mockup's subhead
   ("The system *watched* over the factory all night") is past tense under a
-  present-tense headline — a jarring mismatch. Rewrite to present, active voice:
-  **`The system watches over the factory all night.`** Keep the timeline beats in
-  crisp active voice too (see below).
+  present-tense headline — a jarring mismatch. Rewrite to present, active voice.
+  **Scope fix (human review, 2026-07-28):** the first present-tense draft,
+  *"The system watches over the factory all night,"* could read as the system
+  operating the machines themselves — it only analyzes tool/sensor health
+  overnight (cheaper compute, results ready by morning), it doesn't run them.
+  Current copy: **`The system monitors your machines all night.`** Keep the
+  timeline beats in crisp active voice too (see below).
 - 5-point horizontal timeline, active-voice beats (timestamps verbatim):
   **Detects drift** (02:16) → **Triggers the pipeline** (02:16) → **Retrains the
   model** (02:20) → **Promotes the winner** (02:37) → **Reports all-clear**
