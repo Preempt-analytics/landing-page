@@ -83,11 +83,13 @@ const machines = [
             <span class={`sensor-pin ${m.alert ? 'sensor-pin--alert' : ''}`} style={`animation-delay: ${m.delay};`} aria-hidden="true" />
             {!m.alert && (
               <span class="machine-card machine-card--healthy">
-                <span class="machine-card-status">
-                  <span class="machine-card-dot" aria-hidden="true" />
-                  No drift detected
+                <span class="machine-card-header">
+                  <span class="machine-card-status">
+                    <span class="machine-card-dot" aria-hidden="true" />
+                    No drift detected
+                  </span>
+                  <span class="machine-card-name">{m.name}</span>
                 </span>
-                <span class="machine-card-title">{m.name}</span>
                 <span class="machine-card-detail">Nominal — no anomalies</span>
               </span>
             )}
@@ -103,11 +105,14 @@ const machines = [
            folded into the hover-only .machine-card treatment above, so a
            visitor who never hovers anything still sees the section's point. -->
       <div class="tile-hover absolute left-[47%] top-[3%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
-        <p class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
-          <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
-          Drift detected
+        <p class="flex items-center justify-between gap-1.5">
+          <span class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
+            <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
+            Drift detected
+          </span>
+          <span class="text-[0.6rem] font-medium text-muted/60">CNC-01</span>
         </p>
-        <p class="mt-1 text-sm font-semibold text-offwhite">CNC-01 · Tool Wear Shift</p>
+        <p class="mt-1 text-sm font-semibold text-offwhite">Tool Wear Shift</p>
         <p class="text-xs text-muted">2.3 hrs to failure</p>
       </div>
     </div>
@@ -200,6 +205,15 @@ const machines = [
     transform: translate(-50%, 0) scale(1);
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
   }
+  /* Header row: status on the left (the point of the card), machine name
+     small/muted in the upper-right corner — a label for context, not
+     competing with the status for attention (human-requested, 2026-07-28). */
+  .machine-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
   .machine-card-status {
     display: flex;
     align-items: center;
@@ -217,15 +231,16 @@ const machines = [
     border-radius: 9999px;
     background-color: var(--color-success-400);
   }
-  .machine-card-title {
-    display: block;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--color-offwhite);
+  .machine-card-name {
+    flex-shrink: 0;
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    opacity: 0.7;
   }
   .machine-card-detail {
     display: block;
+    margin-top: 0.25rem;
     font-size: 0.75rem;
     color: var(--color-muted);
   }
