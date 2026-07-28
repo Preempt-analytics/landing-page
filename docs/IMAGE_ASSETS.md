@@ -102,7 +102,7 @@ decided.
 | 1 | Hero background photo | Yes | Required |
 | 2 | Logo / brand mark | Yes (vector) | Required |
 | 3 | Live Factory background upgrade | Yes | Required |
-| 4 | "While the employees sleep" center illustration | Yes | Required |
+| 4 | "While the employees sleep" center illustration | **No** — done | Required |
 | 5 | MLOps rotating center emblem | **No** — CSS/SVG build | Nice-to-have |
 | 6 | Built With / Powered By tool marks | **No** — sourced from Simple Icons, not generated; descriptions already implemented | Nice-to-have (icons only) |
 | 7 | OG / social-preview image | Yes, if pursued | Optional — open decision, don't generate until the reuse-vs-new-image question is settled |
@@ -292,14 +292,17 @@ part of this prompt-only pass.
 
 ## 4. "While the employees sleep" — center illustration
 
-**Status:** not yet built. [UserStory.astro](../src/components/sections/UserStory.astro)'s
-center card currently renders an abstract teal circle/silhouette SVG
-(ARCHITECTURE §9.5, §11) — a deliberate placeholder chosen specifically to
-avoid a fabricated-employee photo. Human review (2026-07-27, screenshot
-`Bildschirmfoto 2026-07-27 um 11.19.52.png`) flagged that the section reads as
-abstract rather than showing the system is actually used on a factory floor,
-and asked for an image of a person (e.g. the maintenance lead) logging into
-the Preempt Analytics dashboard in a factory setting.
+**Status:** DONE (2026-07-28). Generated per the prompt below
+(`design/visual-assets/maintanence-lead.png`), copied into
+`src/assets/maintenance-lead.png`, and wired into
+[UserStory.astro](../src/components/sections/UserStory.astro)'s center card via
+`astro:assets`' `<Image>` (same pattern as item 9's dashboard screenshot),
+replacing the abstract teal circle/silhouette SVG placeholder. Previously:
+Human review (2026-07-27, screenshot `Bildschirmfoto 2026-07-27 um
+11.19.52.png`) flagged that the section read as abstract rather than showing
+the system is actually used on a factory floor, and asked for an image of a
+person (e.g. the maintenance lead) logging into the Preempt Analytics
+dashboard in a factory setting.
 
 **Flagged before generating (Zeroth Law):** this sits right next to Governing
 rule #3 above ("no stock-photo employees... illustration/silhouette only where

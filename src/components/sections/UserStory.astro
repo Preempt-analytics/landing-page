@@ -3,6 +3,10 @@
 // Present-tense, active-voice timeline. Overnight Impact numbers are illustrative
 // and labelled as such. Part of #solutions.
 import { withBase } from '../../lib/site';
+import { Image } from 'astro:assets';
+// Faceless illustration, not a stock photo of a real employee (see the
+// no-fabricated-people rule in docs/IMAGE_ASSETS.md item 4 and ARCHITECTURE §9.5).
+import maintenanceLead from '../../assets/maintenance-lead.png';
 
 // Timeline copy + timestamps (human review, 2026-07-23): short, scannable status
 // labels carry the contrast color (Krug — the label is what a scanning eye needs,
@@ -67,8 +71,11 @@ const impact = [
 
     <!-- 3-column: impact / avatar / summary -->
     <div class="mt-16 grid gap-6 lg:grid-cols-3">
-      <!-- Overnight Impact -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-6">
+      <!-- Overnight Impact. justify-center: the center card's height is now driven
+           by the maintenance-lead photo (taller than this card's own content), so
+           this content is vertically centered in the stretched grid cell instead
+           of pinning to the top and leaving dead space below. -->
+      <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
         <div class="mb-4 flex items-center justify-between">
           <h3 class="text-lg font-semibold text-offwhite">Overnight Impact</h3>
           <span class="rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
@@ -92,22 +99,28 @@ const impact = [
         </p>
       </div>
 
-      <!-- Avatar / silhouette (no photo of a real person) -->
-      <div class="flex flex-col items-center justify-center rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 p-6 text-center">
-        <svg width="88" height="88" viewBox="0 0 96 96" fill="none" aria-hidden="true">
-          <circle cx="48" cy="48" r="46" stroke="rgba(45,212,191,0.35)" stroke-width="1.5" />
-          <circle cx="48" cy="38" r="14" fill="rgba(45,212,191,0.5)" />
-          <path d="M24 74c2-13 12-20 24-20s22 7 24 20" fill="rgba(45,212,191,0.5)" />
-        </svg>
-        <p class="mt-4 text-sm text-muted">The team rests. The pipeline doesn't.</p>
+      <!-- Illustration: anonymous maintenance lead, faceless/seen-from-behind,
+           checking an abstract dashboard on a factory floor (no photo of a
+           real person — docs/IMAGE_ASSETS.md item 4). -->
+      <div class="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 text-center">
+        <Image
+          src={maintenanceLead}
+          alt="A maintenance lead, seen from behind with no identifiable face, checking an abstract glowing dashboard on a tablet on a factory floor at night."
+          widths={[320, 480]}
+          sizes="(min-width: 1024px) 33vw, 90vw"
+          class="aspect-square w-full object-cover"
+        />
+        <p class="p-6 text-sm text-muted">The team rests. The pipeline doesn't.</p>
       </div>
 
       <!-- Morning Summary. CTA deliberately reads "See the dashboard" rather than the
            site's standard "See it in action" (human review, 2026-07-23) — this one
            button mirrors the exact action the maintenance lead takes in the story
            beat above it, an intentional one-off exception to the settled two-verb
-           CTA label, not a new third verb introduced sitewide. -->
-      <div class="flex flex-col rounded-xl border border-white/10 bg-navy-800/40 p-6">
+           CTA label, not a new third verb introduced sitewide. justify-center
+           for the same reason as the Overnight Impact card: keeps content
+           centered in the taller, photo-driven row instead of top-pinned. -->
+      <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
         <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
         <div class="mt-4 flex items-center gap-3">
           <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400">
@@ -299,7 +312,10 @@ const impact = [
   }
 
   /* Pipeline Triggered / Model Retrained / Model Promoted: the traveling light
-     arrives, flashes white, settles into the site's usual "lit" teal. */
+     arrives, flashes white, and settles white too — a neutral "in progress"
+     color deliberately distinct from the two colored states that bookend the
+     story (Drift Detected's red, System Healthy's green), so those two read
+     as the meaningful states rather than blending into a five-dot rainbow. */
   @keyframes timeline-dot-lit {
     0% {
       border-color: var(--color-teal-400);
@@ -316,9 +332,9 @@ const impact = [
       transform: scale(1.75);
     }
     100% {
-      border-color: var(--color-teal-400);
-      background-color: var(--color-teal-400);
-      box-shadow: 0 0 8px 3px color-mix(in srgb, var(--color-teal-400) 60%, transparent);
+      border-color: #fff;
+      background-color: #fff;
+      box-shadow: 0 0 8px 3px rgba(255, 255, 255, 0.5);
       transform: scale(1);
     }
   }

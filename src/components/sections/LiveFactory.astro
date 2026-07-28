@@ -36,8 +36,26 @@ import { withBase } from '../../lib/site';
         />
       </div>
 
-      <!-- Drift callout card (UI overlay, independent of the photo underneath) -->
-      <div class="absolute left-[58%] top-[22%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
+      <!-- Sensor-light overlay: each pin sits on that machine's actual antenna/
+           mount stub in the photo (coordinates read directly off
+           cnc-factory-floor.png, not the old placeholder-SVG percentages).
+           4 teal = healthy; the back-center machine is red — the card below
+           sits immediately above it, close enough that proximity alone
+           says which machine it's about (no leader line needed: a long
+           diagonal across the whole scene makes the viewer trace a line
+           to find the answer, where sitting right next to it gives the
+           answer for free — Krug/Redish, human review 2026-07-28). -->
+      <span class="sensor-pin" style="left: 27.7%; top: 30.8%; animation-delay: -0.6s;" aria-hidden="true"></span>
+      <span class="sensor-pin sensor-pin--alert" style="left: 61.5%; top: 24.4%;" aria-hidden="true"></span>
+      <span class="sensor-pin" style="left: 80.1%; top: 26.9%; animation-delay: -1.7s;" aria-hidden="true"></span>
+      <span class="sensor-pin" style="left: 39.1%; top: 56.2%; animation-delay: -0.9s;" aria-hidden="true"></span>
+      <span class="sensor-pin" style="left: 67.1%; top: 56.6%; animation-delay: -2.1s;" aria-hidden="true"></span>
+
+      <!-- Drift callout card (UI overlay, independent of the photo underneath).
+           Sits directly above the alerting machine, its bottom edge almost
+           touching that pin and clearly closer to it than to the left or
+           right machine — proximity alone disambiguates which one it means. -->
+      <div class="absolute left-[47%] top-[3%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
         <p class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
           <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
           Drift detected
@@ -48,3 +66,25 @@ import { withBase } from '../../lib/site';
     </div>
   </div>
 </section>
+
+<style>
+  /* Reuses global.css's pulse-pin keyframe (already stubbed in, never wired
+     up until now). Per-pin animation-delay is negative so each starts
+     mid-cycle at a different phase — five sensors pulsing in lockstep would
+     read as one fake blinking light, not five independent machines. */
+  .sensor-pin {
+    position: absolute;
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    background-color: var(--color-teal-400);
+    box-shadow: 0 0 10px 3px color-mix(in srgb, var(--color-teal-400) 70%, transparent);
+    animation: pulse-pin 2.6s ease-in-out infinite;
+  }
+  .sensor-pin--alert {
+    background-color: var(--color-alert-400);
+    box-shadow: 0 0 12px 4px color-mix(in srgb, var(--color-alert-400) 75%, transparent);
+    animation-duration: 1.4s;
+  }
+</style>
