@@ -23,18 +23,24 @@ const placed = nodes.map((n, i) => {
   return { ...n, left: 50 + R * Math.cos(a), top: 50 + R * Math.sin(a) };
 });
 
-// Connecting arrows between consecutive nodes, following the same circle (missing
-// entirely before human review, 2026-07-28 — see technical_process.png). Each arc
-// is trimmed a few degrees at both ends so it doesn't run under the node tiles.
-const ARC_TRIM_DEG = 10;
+// Connecting arrows between consecutive nodes (missing entirely before human
+// review, 2026-07-28 — see technical_process.png). Drawn on a smaller INNER
+// ring (not the R=42 ring the node tiles sit on) — human review, 2026-07-28:
+// painting them on the node ring (even on top, z-order-wise) meant the arc
+// line ran straight across each tile's own text, which read as broken/messy.
+// At this inner radius they curve through the open space between the center
+// mark and the tiles instead, clear of every tile's footprint at every
+// breakpoint (checked against the smallest tile size too).
+const ARC_R = 26;
+const ARC_TRIM_DEG = 4;
 const arcs = nodes.map((_, i) => {
   const a0 = (-90 + i * 60 + ARC_TRIM_DEG) * (Math.PI / 180);
   const a1 = (-90 + (i + 1) * 60 - ARC_TRIM_DEG) * (Math.PI / 180);
-  const x0 = 50 + R * Math.cos(a0);
-  const y0 = 50 + R * Math.sin(a0);
-  const x1 = 50 + R * Math.cos(a1);
-  const y1 = 50 + R * Math.sin(a1);
-  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${R} ${R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  const x0 = 50 + ARC_R * Math.cos(a0);
+  const y0 = 50 + ARC_R * Math.sin(a0);
+  const x1 = 50 + ARC_R * Math.cos(a1);
+  const y1 = 50 + ARC_R * Math.sin(a1);
+  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${ARC_R} ${ARC_R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
 });
 
 // Name + one-line purpose per tool, matching the reference mockup

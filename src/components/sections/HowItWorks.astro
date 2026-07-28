@@ -22,7 +22,7 @@ const outcome = { title: 'Business Impact', body: 'Increase uptime. Lower costs.
 const icons: Record<string, string> = {
   pulse: 'M3 12h3l2-6 4 12 2-6h4',
   brain: 'M9 3a3 3 0 0 0-3 3 3 3 0 0 0-1 5 3 3 0 0 0 2 5 3 3 0 0 0 6 0V4a3 3 0 0 0-3-1zm6 0a3 3 0 0 1 3 3 3 3 0 0 1 1 5 3 3 0 0 1-2 5',
-  search: 'M11 4a7 7 0 1 0 4.2 12.6L21 21m-4.5-9.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z',
+  search: 'M4 11a7 7 0 1 0 14 0 7 7 0 1 0-14 0zM16 16l5 5',
   refresh: 'M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2M20 4v4h-4M4 20v-4h4',
   check: 'M20 6 9 17l-5-5',
   chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
@@ -51,15 +51,24 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
 
     <!-- Loop: 6 cards, horizontal row at lg, single column below that (human review,
          2026-07-28: no intermediate 2-col tablet break — the row either fits on one
-         line or stacks, never splits awkwardly into two columns). -->
+         line or stacks, never splits awkwardly into two columns). Stacked gap bumped
+         to gap-y-20 (human review, 2026-07-28): the next card's icon ring extends 28px
+         above its own top edge, so the old gap-y-10 (40px) left only ~12px of true
+         open space for the connector arrow before it entered the ring's own "air
+         space" — 80px leaves a clean ~52px gap for the arrow, clear of the ring. -->
     <div class="relative mt-16 pb-14 lg:pb-28 lg:pt-28">
-      <ol class="grid gap-x-4 gap-y-10 lg:grid-cols-6 lg:gap-y-4">
+      <!-- Wraps just the <ol> (not the padded lg-only arc space around it) so the
+           mobile loop-back arrow below, sized via inset-y-0, exactly matches the
+           stack's real height — however tall 6 cards of varying body-text length
+           actually render (human review, 2026-07-28). -->
+      <div class="relative">
+      <ol class="grid gap-x-4 gap-y-20 lg:grid-cols-6 lg:gap-y-4">
         {
           [...steps, outcome].map((s, i) => {
             const isOutcome = i === steps.length;
             const gradient = isOutcome ? outcomeGradient : ringGradients[i];
             return (
-              <li class={`relative rounded-xl border pt-9 p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
+              <li class={`relative max-lg:w-[60%] max-lg:justify-self-center rounded-xl border pt-9 p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
                 <div
                   class="absolute -top-7 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full p-[3px] shadow-lg shadow-black/30"
                   style={`background: ${gradient};`}
@@ -76,21 +85,116 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
                 </h3>
                 <p class="mt-1.5 text-center text-sm leading-relaxed text-muted lg:text-left">{s.body}</p>
                 {!isOutcome && (
-                  <!-- Connector arrow: a gap-width box centered exactly on the gutter
-                       (left-full + w-4 matching gap-x-4), so the icon lands centered
-                       between tiles regardless of viewport width (human review,
-                       2026-07-28: the old text-glyph arrow was small/hard to see). -->
-                  <span class="pointer-events-none absolute left-full top-1/2 z-10 hidden h-8 w-4 -translate-y-1/2 items-center justify-center lg:flex" aria-hidden="true">
-                    <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-                      <path d="M1 7h13M9 1l7 6-7 6" stroke="var(--color-teal-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                    </svg>
-                  </span>
+                  <>
+                    <!-- Horizontal connector (lg row layout): a gap-width box centered
+                         exactly on the gutter (left-full + w-4 matching gap-x-4), so the
+                         icon lands centered between tiles regardless of viewport width
+                         (human review, 2026-07-28: the old text-glyph arrow was small/
+                         hard to see). -->
+                    <span class="pointer-events-none absolute left-full top-1/2 z-10 hidden h-8 w-4 -translate-y-1/2 items-center justify-center lg:flex" aria-hidden="true">
+                      <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
+                        <path d="M1 7h13M9 1l7 6-7 6" stroke="var(--color-teal-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                    <!-- Vertical connector (stacked layout below lg): same idea, rotated.
+                         Sits in the first ~half of the gap-y-20 gutter (mt-4, h-7) so it
+                         stays clear of the NEXT card's icon ring, which extends 28px above
+                         its own top edge and otherwise overlaps the arrow (human review,
+                         2026-07-28 — the first version violated the ring's "air space"). -->
+                    <span class="pointer-events-none absolute left-1/2 top-full z-10 mt-4 flex h-7 w-8 -translate-x-1/2 items-center justify-center lg:hidden" aria-hidden="true">
+                      <svg width="14" height="18" viewBox="0 0 14 18" fill="none">
+                        <path d="M7 1v13M1 9l6 7 6-7" stroke="var(--color-teal-400)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  </>
                 )}
               </li>
             );
           })
         }
       </ol>
+
+      <!-- Mobile pair of gutter arrows, mirroring the desktop's top/bottom arcs —
+           freed up by capping each card to 60% width and centering it, leaving a
+           gutter on BOTH sides (human review, 2026-07-28, replacing the earlier
+           68%-left-aligned/right-gutter-only version).
+
+           Fix (human review, 2026-07-28): `h-full` is load-bearing, not decorative.
+           An SVG is a "replaced element" — with only `inset-y-0` (top:0/bottom:0)
+           and no explicit height, browsers size it from the viewBox's own intrinsic
+           aspect ratio (width × 10, since the viewBox here is 30:300) instead of
+           actually stretching to fill the parent. That silently produced a box far
+           taller than the real card stack at wider widths (confirmed: height was
+           exactly width×10 at every breakpoint tested, up to 3000px+ tall at
+           tablet width) — long enough to visibly run into the sections below.
+           `h-full` gives the SVG an explicit, definite height, so it actually
+           stretches to match this wrapper (sized by the `<ol>` alone) instead.
+
+           Slenderness (human review, 2026-07-28): stroke-width dropped from 2 to
+           0.6 — at this viewBox's stretch factor the old value rendered as a thick,
+           "bulky" line rather than a slender connector.
+
+           Nominal viewBox is narrow/tall to roughly match each gutter's real
+           proportions; preserveAspectRatio="none" stretches it to whatever height
+           6 stacked cards actually render at (dynamic — depends on each card's body
+           text length), and overflow-visible lets the curve's ends reach sideways,
+           into the cards, past each gutter's own narrow box. -->
+
+      <!-- Left gutter: feed-forward, Collect → Business Impact (mirrors the desktop
+           top arc's direction) — arrowhead arrives pointing right, into Business
+           Impact. -->
+      <svg
+        class="pointer-events-none absolute left-0 top-0 h-full w-[19%] overflow-visible lg:hidden"
+        viewBox="0 0 30 300"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="loop-arrow-gradient-mobile-fwd" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--color-teal-400)" stop-opacity="0.9" />
+            <stop offset="0.5" stop-color="var(--color-teal-400)" stop-opacity="0.8" />
+            <stop offset="1" stop-color="var(--color-teal-400)" stop-opacity="0.15" />
+          </linearGradient>
+          <marker id="loop-arrow-head-mobile-fwd" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="var(--color-teal-400)" />
+          </marker>
+        </defs>
+        <path
+          d="M 38 8 C 16 8, 10 15, 10 35 L 10 255 C 10 275, 16 291, 38 291"
+          fill="none"
+          stroke="url(#loop-arrow-gradient-mobile-fwd)"
+          stroke-width="0.6"
+          marker-end="url(#loop-arrow-head-mobile-fwd)"
+        />
+      </svg>
+
+      <!-- Right gutter: loop-back, Business Impact → Collect — arrowhead arrives
+           pointing left, into Collect. -->
+      <svg
+        class="pointer-events-none absolute right-0 top-0 h-full w-[19%] overflow-visible lg:hidden"
+        viewBox="0 0 30 300"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="loop-arrow-gradient-mobile-back" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--color-teal-400)" stop-opacity="0.15" />
+            <stop offset="0.5" stop-color="var(--color-teal-400)" stop-opacity="0.8" />
+            <stop offset="1" stop-color="var(--color-teal-400)" stop-opacity="0.9" />
+          </linearGradient>
+          <marker id="loop-arrow-head-mobile-back" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="4" markerHeight="4" markerUnits="userSpaceOnUse" orient="auto-start-reverse">
+            <path d="M0 0 L10 5 L0 10 Z" fill="var(--color-teal-400)" />
+          </marker>
+        </defs>
+        <path
+          d="M -8 291 C 14 291, 20 275, 20 255 L 20 35 C 20 15, 14 8, -8 8"
+          fill="none"
+          stroke="url(#loop-arrow-gradient-mobile-back)"
+          stroke-width="0.6"
+          marker-end="url(#loop-arrow-head-mobile-back)"
+        />
+      </svg>
+      </div>
 
       <!-- Feed-forward arrow: Collect (top-left) arcs over the top into Business Impact
            (top-right) — matches simplified_process.png's top arc (human review,
@@ -146,9 +250,10 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
         />
       </svg>
 
-      <!-- Same loop-back cue, as text, when cards are stacked and the curved arrows don't fit -->
-      <p class="absolute inset-x-0 bottom-0 text-center text-xs font-medium text-teal-400/70 lg:hidden">
-        ↻ feeds back into Collect — always learning
+      <!-- Text confirmation of what the side arrow above already shows visually —
+           kept short since the arrow (not this caption) now carries the meaning. -->
+      <p class="mt-3 text-center text-xs font-medium text-teal-400/70 lg:hidden">
+        feeds back into Collect — always learning
       </p>
     </div>
 
