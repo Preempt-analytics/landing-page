@@ -19,10 +19,27 @@
   /* First non-teal "positive" color on the site — added for UserStory.astro's
      timeline reveal (red=drift, green=resolved), a deliberate status-color
      convention distinct from teal's usual "good/live" role (human review,
-     2026-07-23). Not a general-purpose success color for reuse elsewhere. */
+     2026-07-23). Widened 2026-07-28 to LiveFactory.astro's per-machine
+     "No drift detected" hover cards — the exact same red=drift/green=resolved
+     convention, not an unrelated reuse, so this is no longer UserStory-only. */
   --color-success-400: #22c55e;
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ---------------------------------------------------------------------------
+   Motion tokens — one shared scale so every hover/press/reveal effect site-wide
+   reads as one consistent system instead of drifting per-component (same rule
+   as the color tokens above). --ease-ios matches Apple's standard decelerate
+   curve (sheets, pushes); --ease-ios-in-out is for symmetric hover transitions.
+--------------------------------------------------------------------------- */
+:root {
+  --dur-fast: 150ms;
+  --dur-base: 250ms;
+  --dur-slow: 400ms;
+  --ease-ios: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-ios-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --shadow-glow-teal: 0 10px 30px -8px color-mix(in srgb, var(--color-teal-400) 45%, transparent);
 }
 
 /* ---------------------------------------------------------------------------
@@ -85,13 +102,87 @@ body {
 /* ---------------------------------------------------------------------------
    Motion — one blanket rule so every animated component inherits it (§12).
 --------------------------------------------------------------------------- */
+/* Sensor pins are centered on their coordinate via `transform: translate(-50%,
+   -50%)` on .sensor-pin itself — every keyframe stop below has to repeat that
+   same translate alongside its own scale, because an animated `transform` is
+   the single interpolated value, not additive with the element's own base
+   transform. The previous version of this keyframe only set `scale(...)` with
+   no translate, so the instant the animation started the centering offset
+   was silently dropped and the dot visibly jumped to its un-centered
+   top-left corner before scaling from there — read as a shake/twitch rather
+   than a smooth pulse. Amplitude/duration are also intentionally gentle
+   (scale 1→1.12, not 1→1.35) for a slow, sophisticated "breathing" glow
+   rather than an urgent blink. */
 @keyframes pulse-pin {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.45; transform: scale(1.35); }
+  0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 0.75; transform: translate(-50%, -50%) scale(1.12); }
 }
 
 @keyframes ring-rotate {
   to { transform: rotate(360deg); }
+}
+
+/* Generic scroll-reveal primitive: any element marked data-reveal starts
+   faded/offset and settles once JS (BaseLayout's shared IntersectionObserver)
+   adds .is-visible. The <noscript> block there forces visibility for
+   no-JS visitors, so this never strands content invisible. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity var(--dur-slow) var(--ease-ios), transform var(--dur-slow) var(--ease-ios);
+}
+[data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Load-triggered (not scroll-triggered) fade-up for above-the-fold content
+   like Hero.astro, which is already in view on first paint. Pair with an
+   inline `style="animation-delay: …"` per element for a staggered cascade. */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+.hero-fade-in {
+  animation: fade-up var(--dur-slow) var(--ease-ios) both;
+}
+
+/* Shared hover-lift for plain (non-centering-transform) card/tile grids —
+   StatCard, Benefits, HowItWorks, LiveFactory's callout, ProductPreview's
+   frame — one definition so the "lift" feel reads as one system instead of
+   a slightly different shadow/duration per component. Hover-only effects are
+   gated behind (hover: hover) so touch devices don't get a lift stuck on
+   after a tap; :active press feedback still applies everywhere. Not used by
+   MlopsSystem's circular node tiles, which already carry their own
+   -translate-x/y-1/2 centering transform and need a bespoke rule instead of
+   this one (see that component's own scoped style). */
+.tile-hover {
+  transition: transform var(--dur-base) var(--ease-ios), box-shadow var(--dur-base) var(--ease-ios),
+    border-color var(--dur-base) var(--ease-ios);
+}
+@media (hover: hover) and (pointer: fine) {
+  .tile-hover:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--color-teal-400) 40%, transparent);
+    box-shadow: 0 16px 40px -20px rgba(0, 0, 0, 0.55);
+  }
+}
+.tile-hover:active {
+  transform: translateY(-1px) scale(0.99);
+}
+
+/* When both .tile-hover and [data-reveal] land on the same element (Benefits
+   tiles, HowItWorks cards), their two `transition` shorthands above would
+   otherwise clobber each other — the later one in source order fully
+   replaces the earlier one's property list rather than merging with it,
+   which would silently drop opacity's transition entirely. This explicit
+   union (higher specificity than either rule alone, so it wins regardless of
+   source order) is the one place that combination's full transition list is
+   authored. */
+.tile-hover[data-reveal] {
+  transition-property: opacity, transform, box-shadow, border-color;
+  transition-duration: var(--dur-slow), var(--dur-base), var(--dur-base), var(--dur-base);
+  transition-timing-function: var(--ease-ios), var(--ease-ios), var(--ease-ios), var(--ease-ios);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -101,5 +192,13 @@ body {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+  /* Belt-and-suspenders: View Transition pseudo-elements live outside the
+     normal DOM tree Astro renders, so make the reduced-motion intent explicit
+     here rather than relying solely on the universal selector above. */
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

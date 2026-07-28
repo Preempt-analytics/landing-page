@@ -69,7 +69,7 @@ const claims = [
 
 <section id="tech-stack" class="scroll-mt-20 border-t border-white/5 bg-navy-900 py-20">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
-    <div class="mx-auto max-w-2xl text-center">
+    <div class="mx-auto max-w-2xl text-center" data-reveal>
       <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
         For the technical reader
       </p>
@@ -85,11 +85,11 @@ const claims = [
 
     <div class="mt-14 grid gap-8 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-center">
       <!-- Built With -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5" data-reveal>
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Built with</h3>
         <ul class="space-y-2">
           {builtWith.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2">
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60">
               <p class="text-sm font-semibold text-offwhite">{t.name}</p>
               <p class="text-xs text-muted">{t.body}</p>
             </li>
@@ -100,7 +100,7 @@ const claims = [
       <!-- Circular diagram — same layout at every breakpoint (human review, 2026-07-28:
            no separate mobile text-list fallback). The container and node tiles scale
            down together so it stays a circle even on a narrow phone. -->
-      <div>
+      <div data-reveal style="transition-delay: 80ms">
         <div class="relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md">
           <!-- center mark -->
           <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 sm:h-16 sm:w-16 md:h-20 md:w-20">
@@ -112,7 +112,7 @@ const claims = [
           {
             placed.map((n, i) => (
               <div
-                class="absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5"
+                class="mlops-node absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5"
                 style={`left:${n.left}%; top:${n.top}%;`}
               >
                 <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs">{i + 1}. {n.title}</p>
@@ -139,11 +139,11 @@ const claims = [
       </div>
 
       <!-- Powered By -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5">
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5" data-reveal style="transition-delay: 140ms">
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Powered by</h3>
         <ul class="space-y-2">
           {poweredBy.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2">
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60">
               <p class="text-sm font-semibold text-offwhite">{t.name}</p>
               <p class="text-xs text-muted">{t.body}</p>
             </li>
@@ -153,7 +153,7 @@ const claims = [
     </div>
 
     <!-- Honest, capstone-true claim strip -->
-    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4" data-reveal>
       {
         claims.map((c) => (
           <div class="text-center sm:text-left">
@@ -169,3 +169,26 @@ const claims = [
     </div>
   </div>
 </section>
+
+<style>
+  /* Bespoke hover rule, not the shared .tile-hover utility: these node tiles
+     already carry a -translate-x/y-1/2 centering transform (they're placed by
+     percentage around a circle), and .tile-hover's plain `translateY(-4px)`
+     would replace that transform outright rather than combine with it —
+     scale (a "pop", not a "lift") reads better on a radially-placed node
+     anyway, so it gets its own rule instead of forcing the shared one to fit. */
+  .mlops-node {
+    transition: transform var(--dur-base) var(--ease-ios), border-color var(--dur-base) var(--ease-ios),
+      background-color var(--dur-base) var(--ease-ios);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .mlops-node:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      border-color: color-mix(in srgb, var(--color-teal-400) 50%, transparent);
+      background-color: var(--color-navy-700);
+    }
+  }
+  .mlops-node:active {
+    transform: translate(-50%, -50%) scale(1.03);
+  }
+</style>

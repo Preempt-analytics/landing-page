@@ -9,9 +9,11 @@ interface Props {
 const { href, variant = 'solid', class: className = '' } = Astro.props;
 
 const base =
-  'inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold tracking-wide transition-colors duration-200';
+  'inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold tracking-wide ' +
+  'transition-[color,background-color,transform,box-shadow] duration-[var(--dur-base)] ease-[var(--ease-ios)] ' +
+  'hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.97] active:duration-[var(--dur-fast)]';
 const variants = {
-  solid: 'bg-teal-400 text-navy-950 hover:bg-teal-300',
+  solid: 'bg-teal-400 text-navy-950 hover:bg-teal-300 hover:shadow-[var(--shadow-glow-teal)]',
   outline:
     'border border-teal-400 text-teal-400 hover:bg-teal-400/10',
 };

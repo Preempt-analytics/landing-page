@@ -150,8 +150,14 @@ const impact = [
 <script>
   // Plays the timeline reveal once, the first time it's ~40% visible — a story
   // beat, not a decoration that should replay every time someone scrolls past.
-  const timeline = document.querySelector<HTMLElement>('[data-timeline]');
-  if (timeline) {
+  // Bound to astro:page-load, not top-level: this section lives inside <main>,
+  // which isn't transition:persist-ed, so a fresh <script> arrives every time
+  // a visitor navigates back to "/" via a client-side transition, not just on
+  // the first hard load — astro:page-load fires in both cases.
+  document.addEventListener('astro:page-load', () => {
+    const timeline = document.querySelector<HTMLElement>('[data-timeline]');
+    if (!timeline || timeline.classList.contains('is-playing')) return;
+
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(
         (entries) => {
@@ -169,7 +175,7 @@ const impact = [
       // No IntersectionObserver support — skip straight to the settled end state.
       timeline.classList.add('is-playing');
     }
-  }
+  });
 </script>
 
 <style>

@@ -55,36 +55,48 @@ import { withBase } from '../lib/site';
   </div>
 
   <div class="mx-auto max-w-7xl px-5 py-16 md:px-8 md:py-24">
-    <!-- Copy block -->
+    <!-- Copy block. Above-the-fold and already in view at first paint, so this
+         uses a load-triggered staggered fade-up (.hero-fade-in) rather than the
+         scroll-triggered [data-reveal] mechanism used everywhere below the fold —
+         there's nothing to "scroll into view" here. -->
     <div class="max-w-2xl">
-      <p class="mb-5 text-xs font-semibold uppercase tracking-[0.22em] text-blue-500">
+      <p
+        class="hero-fade-in mb-5 text-xs font-semibold uppercase tracking-[0.22em] text-blue-500"
+        style="animation-delay: 0ms"
+      >
         Predictive maintenance, powered by AI
       </p>
 
-      <h1 class="text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl 2xl:text-7xl">
+      <h1
+        class="hero-fade-in text-5xl font-bold leading-[1.05] tracking-tight sm:text-6xl 2xl:text-7xl"
+        style="animation-delay: 60ms"
+      >
         <span class="text-offwhite">Predict failures.</span><br />
         <span class="text-teal-400">Prevent</span> <span class="text-offwhite">downtime.</span>
       </h1>
 
-      <p class="mt-6 max-w-xl text-lg leading-relaxed text-muted 2xl:max-w-2xl 2xl:text-xl">
+      <p
+        class="hero-fade-in mt-6 max-w-xl text-lg leading-relaxed text-muted 2xl:max-w-2xl 2xl:text-xl"
+        style="animation-delay: 140ms"
+      >
         Preempt Analytics helps manufacturing teams predict machine failures
         before they happen—so you can maximize uptime and efficiency.
       </p>
 
-      <div class="mt-8 flex flex-wrap gap-4">
+      <div class="hero-fade-in mt-8 flex flex-wrap gap-4" style="animation-delay: 220ms">
         <Button href={withBase('/product')} variant="solid">See it in action →</Button>
         <Button href={withBase('/try-it-yourself')} variant="outline">
           Test it on your device
         </Button>
       </div>
 
-      <p class="mt-5 text-xs text-muted/60">
+      <p class="hero-fade-in mt-5 text-xs text-muted/60" style="animation-delay: 280ms">
         A capstone project showcase, running on simulated CNC sensor data.
       </p>
     </div>
 
     <!-- Stat row sits on the dark/faded area, wider than the copy block, as in the mockup -->
-    <div class="mt-10 max-w-4xl">
+    <div class="hero-fade-in mt-10 max-w-4xl" style="animation-delay: 340ms">
       <StatRow />
     </div>
   </div>

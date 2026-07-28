@@ -9,7 +9,7 @@ import dashboard from '../../assets/dashboard.png';
 
 <section id="product" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
   <div class="mx-auto max-w-6xl px-5 md:px-8">
-    <div class="mx-auto max-w-2xl text-center">
+    <div class="mx-auto max-w-2xl text-center" data-reveal>
       <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
         The product
       </p>
@@ -23,8 +23,8 @@ import dashboard from '../../assets/dashboard.png';
     </div>
 
     <!-- Framed concept preview -->
-    <figure class="relative mx-auto mt-12 max-w-5xl">
-      <div class="overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
+    <figure class="relative mx-auto mt-12 max-w-5xl" data-reveal>
+      <div class="group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
         <!-- browser chrome -->
         <div class="flex items-center gap-2 border-b border-white/10 bg-navy-800/60 px-4 py-2.5">
           <span class="h-3 w-3 rounded-full bg-alert-400/70"></span>
@@ -37,7 +37,7 @@ import dashboard from '../../assets/dashboard.png';
           alt="Preempt Analytics maintenance dashboard: an Overall Fleet Health tile at 94%, a Priority Maintenance Queue ranking machines such as Press-07 (97% failure probability, critical) and CNC-03 (89%, high), a failure-probability trend chart, and live sensor tiles for temperature, vibration, rotational speed, torque and tool wear."
           widths={[640, 960, 1280]}
           sizes="(max-width: 1024px) 100vw, 1024px"
-          class="block w-full select-none"
+          class="block w-full select-none transition-transform duration-[var(--dur-slow)] ease-[var(--ease-ios)] group-hover:scale-[1.02]"
           draggable="false"
         />
       </div>

@@ -1,4 +1,5 @@
 ---
+import { ClientRouter } from 'astro:transitions';
 import '../styles/global.css';
 import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
@@ -36,6 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="theme-color" content="#0a0f1a" />
     <meta name="color-scheme" content="dark" />
+    <ClientRouter />
   </head>
   <body id="top">
     <a
@@ -49,5 +51,42 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
       <slot />
     </main>
     <Footer />
+
+    <noscript>
+      <style>
+        [data-reveal] { opacity: 1 !important; transform: none !important; }
+      </style>
+    </noscript>
+
+    <script>
+      // Shared scroll-reveal for every [data-reveal] element site-wide. Bound to
+      // astro:page-load (fires on first load AND every client-side transition)
+      // rather than running at module top-level: <main>'s content is never
+      // transition:persist-ed, so a fresh set of data-reveal nodes arrives on
+      // every navigation, and Astro skips re-executing an already-loaded script
+      // file on revisit — astro:page-load is the documented fix for that.
+      document.addEventListener('astro:page-load', () => {
+        const els = document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-visible)');
+        if (!els.length) return;
+
+        if (!('IntersectionObserver' in window)) {
+          els.forEach((el) => el.classList.add('is-visible'));
+          return;
+        }
+
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+                observer.unobserve(entry.target);
+              }
+            }
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }
+        );
+        els.forEach((el) => observer.observe(el));
+      });
+    </script>
   </body>
 </html>

@@ -6,12 +6,25 @@
 // to transparent at the edges instead, so it bleeds into the section's own bg-navy-900
 // rather than sitting in a boxed card.
 import { withBase } from '../../lib/site';
+
+// Named for immersion (human-requested, 2026-07-28) — CNC-01 matches the exact
+// machine name already used in UserStory.astro's "Tool-wear shift spotted on
+// CNC-01" beat, so this section's alert ties into that same story rather than
+// introducing a second, disconnected machine id. Coordinates/delays unchanged
+// from the original pin placement (read directly off cnc-factory-floor.png).
+const machines = [
+  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', alert: false },
+  { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', alert: true },
+  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', alert: false },
+  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', alert: false },
+  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', alert: false },
+];
 ---
 
 <section class="relative overflow-hidden border-t border-white/5 bg-navy-900 py-20">
   <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 md:px-8 lg:grid-cols-2">
     <!-- Copy -->
-    <div>
+    <div data-reveal>
       <h2 class="text-4xl font-bold leading-tight tracking-tight sm:text-5xl 2xl:text-6xl">
         <span class="text-offwhite">Live Factory.</span><br />
         <span class="text-teal-400">Real Predictions.</span>
@@ -24,7 +37,7 @@ import { withBase } from '../../lib/site';
     </div>
 
     <!-- CNC floor photo -->
-    <div class="relative">
+    <div class="relative" data-reveal style="transition-delay: 100ms">
       <div
         class="relative aspect-[3/2] w-full overflow-hidden"
         style="mask-image: radial-gradient(ellipse 100% 100% at center, black 15%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 100% 100% at center, black 15%, transparent 100%);"
@@ -39,28 +52,62 @@ import { withBase } from '../../lib/site';
       <!-- Sensor-light overlay: each pin sits on that machine's actual antenna/
            mount stub in the photo (coordinates read directly off
            cnc-factory-floor.png, not the old placeholder-SVG percentages).
-           4 teal = healthy; the back-center machine is red — the card below
-           sits immediately above it, close enough that proximity alone
+           4 teal = healthy; CNC-01 (back-center) is red — its callout card
+           below sits immediately above it, close enough that proximity alone
            says which machine it's about (no leader line needed: a long
            diagonal across the whole scene makes the viewer trace a line
            to find the answer, where sitting right next to it gives the
-           answer for free — Krug/Redish, human review 2026-07-28). -->
-      <span class="sensor-pin" style="left: 27.7%; top: 30.8%; animation-delay: -0.6s;" aria-hidden="true"></span>
-      <span class="sensor-pin sensor-pin--alert" style="left: 61.5%; top: 24.4%;" aria-hidden="true"></span>
-      <span class="sensor-pin" style="left: 80.1%; top: 26.9%; animation-delay: -1.7s;" aria-hidden="true"></span>
-      <span class="sensor-pin" style="left: 39.1%; top: 56.2%; animation-delay: -0.9s;" aria-hidden="true"></span>
-      <span class="sensor-pin" style="left: 67.1%; top: 56.6%; animation-delay: -2.1s;" aria-hidden="true"></span>
+           answer for free — Krug/Redish, human review 2026-07-28).
+
+           Each pin is now wrapped in a real <button> hotspot (human-requested,
+           2026-07-28): hovering/focusing a healthy machine reveals its own
+           "No drift detected" card, mirroring CNC-01's always-visible one but
+           in green — proximity again does the disambiguation, since each
+           card is anchored to its own hotspot, not a shared/roaming tooltip.
+           CNC-01 keeps its callout always visible (the section's main "aha"
+           moment shouldn't require a hover to see) but still gets the same
+           hotspot wrapper so its glow gets the same hover-pause affordance
+           as the other four. -->
+      {
+        machines.map((m) => (
+          <button
+            type="button"
+            class={`machine-hotspot ${m.alert ? 'machine-hotspot--alert' : ''}`}
+            style={`left: ${m.left}%; top: ${m.top}%;`}
+            aria-label={
+              m.alert
+                ? `${m.name}: drift detected, tool wear shift, 2.3 hours to failure`
+                : `${m.name}: no drift detected, nominal`
+            }
+          >
+            <span class={`sensor-pin ${m.alert ? 'sensor-pin--alert' : ''}`} style={`animation-delay: ${m.delay};`} aria-hidden="true" />
+            {!m.alert && (
+              <span class="machine-card machine-card--healthy">
+                <span class="machine-card-status">
+                  <span class="machine-card-dot" aria-hidden="true" />
+                  No drift detected
+                </span>
+                <span class="machine-card-title">{m.name}</span>
+                <span class="machine-card-detail">Nominal — no anomalies</span>
+              </span>
+            )}
+          </button>
+        ))
+      }
 
       <!-- Drift callout card (UI overlay, independent of the photo underneath).
            Sits directly above the alerting machine, its bottom edge almost
            touching that pin and clearly closer to it than to the left or
-           right machine — proximity alone disambiguates which one it means. -->
-      <div class="absolute left-[47%] top-[3%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
+           right machine — proximity alone disambiguates which one it means.
+           Left always-visible by default (unchanged from before) rather than
+           folded into the hover-only .machine-card treatment above, so a
+           visitor who never hovers anything still sees the section's point. -->
+      <div class="tile-hover absolute left-[47%] top-[3%] w-44 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm">
         <p class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
           <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
           Drift detected
         </p>
-        <p class="mt-1 text-sm font-semibold text-offwhite">Tool Wear Shift</p>
+        <p class="mt-1 text-sm font-semibold text-offwhite">CNC-01 · Tool Wear Shift</p>
         <p class="text-xs text-muted">2.3 hrs to failure</p>
       </div>
     </div>
@@ -68,23 +115,118 @@ import { withBase } from '../../lib/site';
 </section>
 
 <style>
-  /* Reuses global.css's pulse-pin keyframe (already stubbed in, never wired
-     up until now). Per-pin animation-delay is negative so each starts
-     mid-cycle at a different phase — five sensors pulsing in lockstep would
-     read as one fake blinking light, not five independent machines. */
+  /* Invisible ~2rem hit target centered on the pin's coordinate — the visible
+     dot is only 0.65rem, well under a real tap/click target size, so the
+     button is sized for touch/click while the dot inside stays visually
+     small. Reset to look like nothing (no button chrome) until its contents
+     are styled below. */
+  .machine-hotspot {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Reuses global.css's pulse-pin keyframe. Per-pin animation-delay is
+     negative so each starts mid-cycle at a different phase — five sensors
+     pulsing in lockstep would read as one fake blinking light, not five
+     independent machines. Positioned centered *within* the hotspot button
+     (left/top 50% + its own translate), the same technique the button uses
+     to center on its coordinate in the photo — keeps this rule reusable
+     regardless of what it's nested inside. */
   .sensor-pin {
     position: absolute;
+    left: 50%;
+    top: 50%;
     width: 0.65rem;
     height: 0.65rem;
     border-radius: 9999px;
     transform: translate(-50%, -50%);
     background-color: var(--color-teal-400);
     box-shadow: 0 0 10px 3px color-mix(in srgb, var(--color-teal-400) 70%, transparent);
-    animation: pulse-pin 2.6s ease-in-out infinite;
+    animation: pulse-pin 3.6s var(--ease-ios-in-out) infinite;
   }
   .sensor-pin--alert {
     background-color: var(--color-alert-400);
     box-shadow: 0 0 12px 4px color-mix(in srgb, var(--color-alert-400) 75%, transparent);
-    animation-duration: 1.4s;
+    animation-duration: 2.4s;
+  }
+  /* Hovering/focusing a hotspot settles its own light rather than leaving it
+     pulsing right next to the card that just appeared — a small "focused"
+     cue, and one less thing competing for attention with the card's text. */
+  .machine-hotspot:hover .sensor-pin,
+  .machine-hotspot:focus-visible .sensor-pin {
+    animation-play-state: paused;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+
+  /* Per-machine hover/focus card — same proven hover+focus popover technique
+     as InfoTip.astro's glossary popover (opacity/transform/visibility, not
+     display, so it can transition), sized and typeset to match CNC-01's
+     always-visible callout below so the two read as one design system. Not
+     gated behind (hover: hover): unlike the purely decorative .tile-hover
+     lift used elsewhere, this card *is* the requested feature, so it also
+     has to work via tap-to-focus on touch devices, not just mouse hover. */
+  .machine-card {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    z-index: 40;
+    width: 11rem;
+    transform: translate(-50%, 4px) scale(0.96);
+    transform-origin: bottom center;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-success-400) 50%, transparent);
+    background: color-mix(in srgb, var(--color-navy-950) 90%, transparent);
+    backdrop-filter: blur(4px);
+    padding: 0.75rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios),
+      visibility 0s linear var(--dur-base);
+  }
+  .machine-hotspot:hover .machine-card,
+  .machine-hotspot:focus-visible .machine-card,
+  .machine-hotspot:focus .machine-card {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0) scale(1);
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
+  }
+  .machine-card-status {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-success-400);
+  }
+  .machine-card-dot {
+    display: inline-block;
+    height: 0.375rem;
+    width: 0.375rem;
+    border-radius: 9999px;
+    background-color: var(--color-success-400);
+  }
+  .machine-card-title {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-offwhite);
+  }
+  .machine-card-detail {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--color-muted);
   }
 </style>

@@ -42,7 +42,7 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
 
 <section id="how-it-works" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
-    <div class="mx-auto max-w-2xl text-center">
+    <div class="mx-auto max-w-2xl text-center" data-reveal>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
         The AI + MLOps platform for continuous reliability
       </h2>
@@ -68,9 +68,13 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
             const isOutcome = i === steps.length;
             const gradient = isOutcome ? outcomeGradient : ringGradients[i];
             return (
-              <li class={`relative max-lg:w-[60%] max-lg:justify-self-center rounded-xl border pt-9 p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}>
+              <li
+                class={`group tile-hover relative max-lg:w-[60%] max-lg:justify-self-center rounded-xl border pt-9 p-5 ${isOutcome ? 'border-teal-400/60 bg-teal-400/[0.06]' : 'border-white/10 bg-navy-800/40'}`}
+                data-reveal
+                style={`transition-delay: ${i * 70}ms`}
+              >
                 <div
-                  class="absolute -top-7 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full p-[3px] shadow-lg shadow-black/30"
+                  class="absolute -top-7 left-1/2 h-14 w-14 -translate-x-1/2 rounded-full p-[3px] shadow-lg shadow-black/30 transition-transform duration-[var(--dur-base)] ease-[var(--ease-ios)] group-hover:scale-110"
                   style={`background: ${gradient};`}
                 >
                   <div class="flex h-full w-full items-center justify-center rounded-full bg-navy-950">

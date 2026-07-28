@@ -40,7 +40,7 @@ const { label = 'What is this?' } = Astro.props;
     color: var(--color-muted);
     cursor: help;
     opacity: 0.75;
-    transition: color 0.15s ease, opacity 0.15s ease;
+    transition: color var(--dur-fast) var(--ease-ios-in-out), opacity var(--dur-fast) var(--ease-ios-in-out);
   }
   .info-tip:hover .info-tip-btn,
   .info-tip:focus-visible .info-tip-btn {
@@ -68,13 +68,13 @@ const { label = 'What is this?' } = Astro.props;
     visibility: hidden;
     transform: translateY(2px) scale(0.97);
     transform-origin: top left;
-    transition: opacity 0.15s ease, transform 0.2s ease, visibility 0s linear 0.2s;
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s linear var(--dur-base);
   }
   .info-tip:hover .info-tip-pop,
   .info-tip:focus-within .info-tip-pop {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
-    transition: opacity 0.15s ease, transform 0.2s ease, visibility 0s;
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
   }
 </style>

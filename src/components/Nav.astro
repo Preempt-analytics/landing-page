@@ -3,9 +3,18 @@ import Logo from './Logo.astro';
 import { NAV_LINKS, withBase } from '../lib/site';
 ---
 
-<header class="sticky top-0 z-50 border-b border-white/5 bg-navy-950/80 backdrop-blur-md">
+<header
+  class="nav-header sticky top-0 z-50 border-b border-white/5 bg-navy-950/80 backdrop-blur-md"
+  data-nav
+  transition:persist
+  transition:name="site-nav"
+>
   <nav class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-3.5 md:px-8">
-    <a href={withBase('/')} class="shrink-0" aria-label="Preempt Analytics — home">
+    <a
+      href={withBase('/')}
+      class="inline-block shrink-0 transition-transform duration-[var(--dur-base)] ease-[var(--ease-ios)] hover:scale-105 active:scale-95"
+      aria-label="Preempt Analytics — home"
+    >
       <Logo />
     </a>
 
@@ -14,10 +23,7 @@ import { NAV_LINKS, withBase } from '../lib/site';
       {
         NAV_LINKS.map((link) => (
           <li>
-            <a
-              href={link.href}
-              class="text-sm font-medium text-muted transition-colors hover:text-offwhite"
-            >
+            <a href={link.href} class="nav-link text-sm font-medium text-muted hover:text-offwhite">
               {link.label}
             </a>
           </li>
@@ -29,7 +35,7 @@ import { NAV_LINKS, withBase } from '../lib/site';
     <button
       type="button"
       id="nav-toggle"
-      class="inline-flex items-center justify-center rounded-md p-2 text-muted hover:text-offwhite lg:hidden"
+      class="inline-flex items-center justify-center rounded-md p-2 text-muted transition-[color,transform] duration-[var(--dur-fast)] ease-[var(--ease-ios)] hover:text-offwhite active:scale-90 lg:hidden"
       aria-label="Toggle menu"
       aria-expanded="false"
       aria-controls="mobile-menu"
@@ -41,14 +47,14 @@ import { NAV_LINKS, withBase } from '../lib/site';
   </nav>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" class="hidden border-t border-white/5 lg:hidden">
+  <div id="mobile-menu" class="border-t border-white/5 lg:hidden">
     <ul class="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-3">
       {
         NAV_LINKS.map((link) => (
           <li>
             <a
               href={link.href}
-              class="block rounded-md px-3 py-2.5 text-sm font-medium text-muted transition-colors hover:bg-white/5 hover:text-offwhite"
+              class="block rounded-md px-3 py-2.5 text-sm font-medium text-muted transition-colors duration-[var(--dur-fast)] hover:bg-white/5 hover:text-offwhite"
               data-mobile-link
             >
               {link.label}
@@ -61,17 +67,78 @@ import { NAV_LINKS, withBase } from '../lib/site';
 </header>
 
 <script>
+  // Runs once: <header> is transition:persist-ed, so its DOM node (and every
+  // listener bound below) survives every client-side navigation rather than
+  // being torn down and rebuilt — no astro:page-load rebinding needed here,
+  // unlike the non-persisted <main> content elsewhere on the site.
   const toggle = document.getElementById('nav-toggle');
   const menu = document.getElementById('mobile-menu');
   toggle?.addEventListener('click', () => {
-    const open = menu?.classList.toggle('hidden') === false;
-    toggle.setAttribute('aria-expanded', String(open));
+    const open = menu?.classList.toggle('is-open');
+    toggle.setAttribute('aria-expanded', String(!!open));
   });
   // Close the menu after tapping a link.
   document.querySelectorAll('[data-mobile-link]').forEach((el) =>
     el.addEventListener('click', () => {
-      menu?.classList.add('hidden');
+      menu?.classList.remove('is-open');
       toggle?.setAttribute('aria-expanded', 'false');
     })
   );
+
+  // Hairline/shadow once scrolled — re-checked on every transition too, since
+  // a new page loads scrolled to the top even though this header persists.
+  const header = document.querySelector('[data-nav]');
+  const syncScrolled = () => header?.classList.toggle('nav-scrolled', window.scrollY > 8);
+  syncScrolled();
+  window.addEventListener('scroll', syncScrolled, { passive: true });
+  document.addEventListener('astro:page-load', syncScrolled);
 </script>
+
+<style>
+  .nav-header {
+    transition: box-shadow var(--dur-base) var(--ease-ios), border-color var(--dur-base) var(--ease-ios);
+  }
+  .nav-header.nav-scrolled {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  }
+
+  .nav-link {
+    position: relative;
+    transition: color var(--dur-base) var(--ease-ios-in-out);
+  }
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 1px;
+    background: var(--color-teal-400);
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform var(--dur-base) var(--ease-ios);
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+
+  /* Height/opacity reveal instead of an instant display cut. visibility (not
+     just opacity) keeps the collapsed menu's links out of the tab order —
+     same technique as InfoTip.astro's popover, applied to a bigger panel. */
+  #mobile-menu {
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: max-height var(--dur-base) var(--ease-ios), opacity var(--dur-fast) var(--ease-ios),
+      visibility 0s linear var(--dur-base);
+  }
+  #mobile-menu.is-open {
+    max-height: 28rem;
+    opacity: 1;
+    visibility: visible;
+    transition: max-height var(--dur-base) var(--ease-ios), opacity var(--dur-fast) var(--ease-ios), visibility 0s;
+  }
+</style>
