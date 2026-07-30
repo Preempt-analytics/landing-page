@@ -1,21 +1,25 @@
 ---
 // §9.7 Try It Yourself — plain-language (Krug/Redish), menu-first, teaser not a full
 // copy of the README. Links out to the repo rather than duplicating setup steps.
-// Human review (2026-07-23) added: a Docker Desktop download link + InfoTip
-// (short glossary popover), a git-free "Download ZIP" path with BeginnersTrail
-// guidance for readers who don't know what GitHub/cloning/a terminal are, and a
-// reworded "easy way" intro that no longer assumes "cloning" was already explained.
+// Human review (2026-07-23) added a Docker Desktop download link + InfoTip
+// (short glossary popover) and BeginnersTrail guidance for readers who don't
+// know what GitHub/cloning/a terminal are.
+// Human review (2026-07-28): removed the git-free "Download ZIP" path. GitHub's
+// ZIP archive has no .git folder, and docker-compose.yml bind-mounts .git into
+// the monitor container so it can push the retrain trigger — a ZIP-downloaded
+// folder silently breaks the automatic retraining demo (the container gets an
+// empty .git dir, and every push fails forever with no visible error). git
+// clone is now the one documented path, so Git joins Docker Desktop as a
+// stated prerequisite.
 import BaseLayout from '../layouts/BaseLayout.astro';
 import InfoTip from '../components/InfoTip.astro';
 import BeginnersTrail from '../components/BeginnersTrail.astro';
 import { REPO_URL, withBase } from '../lib/site';
-
-const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
 ---
 
 <BaseLayout
   title="Run it yourself — Preempt Analytics"
-  description="Run the Preempt Analytics predictive-maintenance demo on your own machine. One prerequisite (Docker Desktop), a friendly menu, and a link to the full instructions on GitHub."
+  description="Run the Preempt Analytics predictive-maintenance demo on your own machine. Two prerequisites (Docker Desktop and Git), a friendly menu, and a link to the full instructions on GitHub."
 >
   <section class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
     <a href={withBase('/')} class="text-sm text-teal-400 hover:text-teal-300">← Back to home</a>
@@ -25,77 +29,82 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
     </h1>
     <p class="mt-6 text-lg leading-relaxed text-muted">
       Everything runs inside Docker — no Python, no ML knowledge needed. Just
-      one prerequisite, then some waiting while things download.
+      two quick installs, then some waiting while things download.
     </p>
 
     <BeginnersTrail title="Never done anything like this before? Here's the whole path.">
       <p>You don't need to know how to code. The whole journey is three steps:</p>
       <p>
-        <strong>1. Install Docker Desktop</strong> (below) — one app, like installing
-        any other program.<br />
-        <strong>2. Get the code onto your computer</strong> — click a
-        "Download ZIP" button, no typing required.<br />
-        <strong>3. Open a terminal in that folder and run the menu script</strong> —
-        press <strong>6</strong> first to turn everything on, then any other
+        <strong>1. Install Docker Desktop and Git</strong> (below) — two free
+        apps, installed like any other program.<br />
+        <strong>2. Get the code onto your computer</strong> — paste one
+        command into a terminal (explained below).<br />
+        <strong>3. Run the menu script</strong> and press a number — press
+        <strong>6</strong> first to turn everything on, then any other
         number to try something.
       </p>
       <p>
-        That's the whole thing — no Docker commands to memorize, just one line
-        to launch the menu and a number to press after that.
+        That's the whole thing — no Docker commands to memorize, just a
+        couple of lines to paste and a number to press after that.
       </p>
     </BeginnersTrail>
 
-    <!-- Prerequisite -->
+    <!-- Prerequisites -->
     <div class="mt-10 rounded-xl border border-white/10 bg-navy-800/40 p-5">
-      <p class="text-sm font-semibold text-offwhite">
-        You need one thing:
-        <a
-          href="https://www.docker.com/products/docker-desktop/"
-          target="_blank"
-          rel="noopener"
-          class="text-teal-300 underline decoration-teal-400/40 underline-offset-4 hover:text-teal-200"
-        >
-          Docker Desktop
-        </a>
-        <InfoTip label="What is Docker Desktop?">
-          Docker Desktop is a free app that runs this whole project in a
-          self-contained box on your computer — you won't need to separately
-          install Python, databases, or anything else by hand.
-        </InfoTip>
-      </p>
-      <p class="mt-1 text-sm text-muted">
-        Install it and make sure it's running (the whale icon in your menu/task bar).
-        Nothing else to set up.
-      </p>
+      <p class="text-sm font-semibold text-offwhite">You need two things, both free, both one-time installs:</p>
+      <ul class="mt-3 space-y-3 text-sm text-muted">
+        <li>
+          <a
+            href="https://www.docker.com/products/docker-desktop/"
+            target="_blank"
+            rel="noopener"
+            class="text-teal-300 underline decoration-teal-400/40 underline-offset-4 hover:text-teal-200"
+          >
+            Docker Desktop
+          </a>
+          <InfoTip label="What is Docker Desktop?">
+            Docker Desktop is a free app that runs this whole project in a
+            self-contained box on your computer — you won't need to
+            separately install Python, databases, or anything else by hand.
+          </InfoTip>
+          — install it and make sure it's running (the whale icon in your
+          menu/task bar).
+        </li>
+        <li>
+          <a
+            href="https://git-scm.com/downloads"
+            target="_blank"
+            rel="noopener"
+            class="text-teal-300 underline decoration-teal-400/40 underline-offset-4 hover:text-teal-200"
+          >
+            Git
+          </a>
+          <InfoTip label="What is Git?">
+            Git is the tool that downloads ("clones") a project's full
+            history onto your computer. Macs often offer to install it
+            automatically the first time you type a git command in
+            Terminal — just follow the prompt.
+          </InfoTip>
+          — used once, to get the project folder onto your computer.
+        </li>
+      </ul>
     </div>
 
-    <!-- Get the code: git-free ZIP path first, git second -->
+    <!-- Get the code: git clone is now the one documented path (human review,
+         2026-07-28 — see the frontmatter note: a ZIP download has no .git
+         folder, which silently breaks the automatic-retraining demo). -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">Get the code onto your computer</h2>
-    <p class="mt-3 text-muted">Two ways to do this — pick whichever feels easier.</p>
-    <div class="mt-5 flex flex-wrap items-center gap-3">
-      <a
-        href={ZIP_URL}
-        target="_blank"
-        rel="noopener"
-        class="inline-flex items-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
-      >
-        Download ZIP (no git needed) ↓
-      </a>
-      <a href={REPO_URL} target="_blank" rel="noopener" class="text-sm text-teal-400 hover:text-teal-300">
-        or view the source on GitHub →
-      </a>
+    <p class="mt-3 text-muted">Open a terminal and paste this:</p>
+    <div class="mt-5 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+      <pre class="text-sm text-teal-200"><code>git clone https://github.com/Preempt-Analytics-Demo/predictive-maintenance-demo.git
+cd predictive-maintenance-demo</code></pre>
     </div>
     <p class="mt-4 text-sm text-muted">
-      Unzip it anywhere — that folder is your project folder for everything
-      below. Using git instead? The full clone command is further down this
-      page.
-    </p>
-    <p class="mt-3 text-sm text-muted">
-      <strong class="text-teal-300">One limit of the ZIP download:</strong>
-      it's fine for the smoke test (menu option 1), but the automatic
-      retraining demo (option 2) needs git's own history to push its
-      trigger — if that's the part you want to see end-to-end, use the
-      git-clone method further down this page instead.
+      That folder is your project folder for everything below. Prefer to
+      browse first?{' '}
+      <a href={REPO_URL} target="_blank" rel="noopener" class="text-teal-400 hover:text-teal-300">
+        View the source on GitHub →
+      </a>
     </p>
 
     <BeginnersTrail title="What's GitHub? What does &ldquo;cloning&rdquo; mean?">
@@ -105,14 +114,13 @@ const ZIP_URL = `${REPO_URL}/archive/refs/heads/main.zip`;
       </p>
       <p>
         <strong>Cloning</strong> just means downloading a full copy of that
-        project onto your own computer. The "Download ZIP" button above does
-        the same job without needing git installed at all.
+        project onto your own computer — the <code>git clone</code> command
+        above does exactly that.
       </p>
       <p>
         A <strong>terminal</strong> (or "command line") is a text-based way of
-        giving your computer instructions. If that sounds intimidating, you
-        don't need one — nothing on this page beyond double-clicking a file
-        requires typing a command.
+        giving your computer instructions. Paste the two lines above in, one
+        at a time, and press Enter after each.
       </p>
     </BeginnersTrail>
 
