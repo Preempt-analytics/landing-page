@@ -2,7 +2,7 @@
   "_meta": {
     "source": "live",
     "note": "Live-fetched by CI (scripts/fetch-metrics.mjs) against DagsHub's public MLflow proxy — works anonymously for this public repo; DAGSHUB_TOKEN is optional defense-in-depth, not required. Falls back to sample values only if DagsHub is unreachable or the production alias is missing.",
-    "fetched_at": "2026-07-30T09:41:41.672Z"
+    "fetched_at": "2026-07-30T11:56:29.447Z"
   },
   "binary_model": {
     "name": "predictive-maintenance-binary",
@@ -16,12 +16,12 @@
   },
   "multiclass_model": {
     "name": "predictive-maintenance-multiclass",
-    "version": "31",
-    "promoted_at": "2026-07-29T18:25:55.856Z",
+    "version": "32",
+    "promoted_at": "2026-07-30T11:29:19.322Z",
     "metrics": {
-      "recall_test": 0.6082998314173349,
-      "precision_test": 0.7322259260305533,
-      "f1_test": 0.638099226321792
+      "recall_test": 0.6754736213611208,
+      "precision_test": 0.7794303041254291,
+      "f1_test": 0.6984002967826644
     }
   }
 }
