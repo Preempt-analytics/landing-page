@@ -15,7 +15,7 @@ import maintenanceLead from '../../assets/maintenance-lead.png';
 // trigger to reflect a realistic GitHub Actions queue/startup delay.
 const beats = [
   { time: '02:16 AM', title: 'Drift Detected', body: 'Tool-wear shift spotted on CNC-01 by Evidently AI.' },
-  { time: '02:16 AM', title: 'Pipeline Triggered', body: 'The GitHub Actions pipeline kicks off automatically.' },
+  { time: '02:17 AM', title: 'Pipeline Triggered', body: 'The GitHub Actions pipeline kicks off automatically.' },
   { time: '02:28 AM', title: 'Model Retrained', body: 'A fresh model trains on the latest factory data.' },
   { time: '02:45 AM', title: 'Model Promoted', body: 'The new version beats the old one and goes live automatically.' },
   { time: '08:47 AM', title: 'System Healthy', body: 'The maintenance lead opens the dashboard. No calls. No incidents.' },
@@ -52,18 +52,26 @@ const impact = [
          so the glow orb stops lining up with its dot everywhere but the
          center. Column spacing comes from each item's own max-w-[9rem] + mx-auto
          instead. -->
-    <ol class="timeline relative mt-14 grid gap-8 lg:grid-cols-5 lg:gap-0" data-timeline>
+    <ol class="timeline relative mt-14 grid gap-10 lg:grid-cols-5 lg:gap-0" data-timeline>
       <div class="absolute left-0 right-0 top-[7px] hidden h-px bg-gradient-to-r from-transparent via-teal-400/40 to-transparent lg:block" aria-hidden="true"></div>
+      <!-- Vertical connecting line, mobile/tablet only — same fading-gradient
+           technique as the horizontal line above (via-color peak in the
+           middle, transparent at both ends), so it doesn't need to land on
+           the exact pixel of the first/last dot to read as "a line through
+           the dots" (human-requested, 2026-07-30: center the stacked
+           timeline and give it a real connecting line, not just left-aligned
+           bare dots). -->
+      <div class="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-teal-400/40 to-transparent lg:hidden" aria-hidden="true"></div>
       <span class="timeline-glow" aria-hidden="true"></span>
       {
         beats.map((b) => (
-          <li class="relative pl-6 lg:pl-0 lg:pt-6 lg:text-center">
-            <span class="absolute left-0 top-1 h-3.5 w-3.5 lg:left-1/2 lg:top-0 lg:-translate-x-1/2" aria-hidden="true">
+          <li class="relative pt-6 text-center">
+            <span class="absolute left-1/2 top-0 h-3.5 w-3.5 -translate-x-1/2" aria-hidden="true">
               <span class="timeline-dot block h-full w-full rounded-full border-2 border-teal-400 bg-navy-950"></span>
             </span>
             <p class="text-xs font-medium tracking-wide text-muted/70">{b.time}</p>
             <h3 class="mt-1 text-sm font-semibold text-teal-400">{b.title}</h3>
-            <p class="mt-1 max-w-[9rem] text-xs leading-relaxed text-muted lg:mx-auto">{b.body}</p>
+            <p class="mx-auto mt-1 max-w-[9rem] text-xs leading-relaxed text-muted">{b.body}</p>
           </li>
         ))
       }
@@ -101,8 +109,14 @@ const impact = [
 
       <!-- Illustration: anonymous maintenance lead, faceless/seen-from-behind,
            checking an abstract dashboard on a factory floor (no photo of a
-           real person — docs/IMAGE_ASSETS.md item 4). -->
-      <div class="flex flex-col overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 text-center">
+           real person — docs/IMAGE_ASSETS.md item 4). mx-auto + max-w-sm below
+           lg: this grid is single-column until lg (same breakpoint as the
+           Overnight Impact/Morning Summary cards either side of it), so
+           without a cap the square image stretched to the full row width —
+           on a tablet-width viewport (e.g. iPad portrait) that's a
+           near-viewport-height image (human-requested, 2026-07-30). At lg
+           the column itself is already narrow enough, so the cap is lifted. -->
+      <div class="mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 lg:max-w-none">
         <Image
           src={maintenanceLead}
           alt="A maintenance lead, seen from behind with no identifiable face, checking an abstract glowing dashboard on a tablet on a factory floor at night."
@@ -110,7 +124,6 @@ const impact = [
           sizes="(min-width: 1024px) 33vw, 90vw"
           class="aspect-square w-full object-cover"
         />
-        <p class="p-6 text-sm text-muted">The team rests. The pipeline doesn't.</p>
       </div>
 
       <!-- Morning Summary. CTA deliberately reads "See the dashboard" rather than the
