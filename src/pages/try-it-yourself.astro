@@ -39,7 +39,31 @@ const ciCaption = ciLive ? `live · last run ${relativeTime(lastCiRunAt())}` : '
   title="Run it yourself — Preempt Analytics"
   description="Run the Preempt Analytics predictive-maintenance demo on your own machine. Two prerequisites (Docker Desktop and Git), a friendly menu, and a link to the full instructions on GitHub."
 >
-  <section class="mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
+  <section class="relative z-0 overflow-hidden">
+    <!-- Macro-gears photo band (human-requested, 2026-07-31) — this is the site's
+         original hero image (design/visual-assets/gears.png), reused here rather
+         than discarded once the homepage hero moved to a real CNC machine shot
+         (docs/IMAGE_ASSETS.md item 1). Fixed-height band behind just the header
+         (back link, H1, intro, stat cards), not the full page — fades to solid
+         navy before the instructional content below, so the plain, scannable
+         setup steps aren't fighting a busy photo behind them. Same `relative z-0`
+         stacking-context fix as Hero.astro (see that file's comment) so the
+         negative-z layers stay contained to this section. -->
+    <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] sm:h-[480px]" aria-hidden="true">
+      <img
+        src={withBase('/images/try-it-yourself/macro-gears.png')}
+        alt=""
+        class="h-full w-full object-cover"
+      />
+      <div class="absolute inset-0 bg-navy-950/75"></div>
+      <div
+        class="absolute inset-0"
+        style="background: linear-gradient(to bottom, transparent 15%, var(--color-navy-950) 100%);"
+      >
+      </div>
+    </div>
+
+    <div class="relative mx-auto max-w-3xl px-5 py-16 md:px-8 md:py-24">
     <a href={withBase('/')} class="text-sm text-teal-400 hover:text-teal-300">← Back to home</a>
 
     <h1 class="mt-6 text-4xl font-bold tracking-tight text-offwhite sm:text-5xl">
@@ -227,6 +251,7 @@ docker compose up -d</code></pre>
       >
         Full instructions on GitHub →
       </a>
+    </div>
     </div>
   </section>
 </BaseLayout>

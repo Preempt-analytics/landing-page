@@ -15,8 +15,20 @@ target, no shared code). This round of planning covers only the **hero section**
 this doc as new mockups arrive.
 
 Design direction: a hybrid of two mockups —
-- **"Corporate"** mockup — kept for its **copy and nav framing** (trustworthy B2B SaaS tone).
-- **"Cyberpunk"** mockup — kept for its **imagery and color treatment** (macro-gears hero image, teal accent intensity, stat-tile row).
+- **"Corporate"** mockup — kept for its **copy and nav framing** (trustworthy
+  B2B SaaS tone). **Tempered 2026-07-31:** a site-wide copy pass reframed
+  language that had drifted into sounding like an operating company serving
+  real paying clients (e.g. "we watch your machines," "helps manufacturing
+  teams... so you can") into project/demo-honest phrasing (the system does
+  X, rather than we do X for you) — the trustworthy *tone* stays, the
+  implied-real-vendor *voice* doesn't. Keep this in mind before adding new
+  copy: default to describing what the system does, not what "we" do for
+  "you."
+- **"Cyberpunk"** mockup — kept for its **imagery and color treatment** (teal
+  accent intensity, stat-tile row). The mockup's own macro-gears hero image was
+  itself later swapped for a real CNC machine photo (2026-07-31,
+  `docs/IMAGE_ASSETS.md` item 1) — kept here only as the origin of the
+  color/mood direction, not a description of the current hero asset.
 
 ---
 
@@ -227,10 +239,19 @@ labelled illustrative, nothing is left to read as an unearned claim.
 - The fake customer-logo strip ("Advantage MFG," etc.) — these are invented placeholder names. Recommend **not** shipping fabricated customer names on a real public page. A truthful alternative for later: a "Built with" strip of the real stack (MLflow · DagsHub · XGBoost · Evidently AI · DVC). Not built yet — needs a decision (§6).
 - "Scroll to explore" affordance — belongs to a below-fold section not yet designed.
 
-**Hero image** — no macro-gears photo exists anywhere in the org tree yet. Ship functional today, swap the asset later with zero code changes:
-- Fixed-aspect image slot at `public/images/hero/macro-gears.jpg`; until sourced, a navy→teal CSS gradient panel with a faint gear-silhouette SVG stands in, so the build never errors on a missing asset.
-- The cyberpunk "digital particle/lens-flare" effect is a **separate CSS overlay** (radial-gradient teal glow + `mix-blend-mode: screen` + dot-grid), not baked into the photo — so the photo can be swapped later without redoing the effect.
+**Hero image — RESOLVED, now a real CNC machine photo (2026-07-31, was the
+macro-gears close-up before that; see `docs/IMAGE_ASSETS.md` item 1 for the
+full history and current prompt):**
+- Photo lives at `public/images/hero/cnc-machine.png`, `object-cover` inside
+  an `lg:aspect-video` box (near-exact match for the source's own ~16:9
+  ratio) positioned at the section's right 62%, vertically centered.
+- The cyberpunk "digital particle/lens-flare" effect is a **separate CSS overlay** (radial-gradient teal glow + `mix-blend-mode: screen` + dot-grid), not baked into the photo — so the photo can be swapped later without redoing the effect. (Proved out in practice: this is exactly what let the 2026-07-31 photo swap happen without touching the glow layers at all.)
 - Left-edge vignette (linear-gradient to navy-900) replicates both mockups' "photo dimmed into the dark background" treatment.
+- Three small icon overlays (wrench/thermometer/low-battery, `lg:`-only) mark
+  the tool-wear, heat-dissipation, and power-failure areas on the machine —
+  see `docs/IMAGE_ASSETS.md` item 1's anchor-point table for coordinates and
+  the reasoning (icons, not baked-in text, for the same reason InfoTip exists
+  elsewhere on this site).
 
 **Color tokens** (Tailwind v4, `@theme` block in `src/styles/global.css`):
 
@@ -343,7 +364,7 @@ this repo isn't a `<user>.github.io` root repo, `base: "/preempt-analytics-landi
 These need a person, not a coding agent, to resolve:
 
 1. **Logo/icon** — the triangle/A mark in both mockups is itself a placeholder. Commission/generate a real one, or ship a text-only wordmark until one exists.
-2. **Hero photo** — the macro-gears image needs sourcing (stock license) or generation. Scaffolding works without it (gradient placeholder), but the visual won't match the mockup until it's dropped in.
+2. **Hero photo — RESOLVED (2026-07-31).** A real CNC-machine photo is live (`docs/IMAGE_ASSETS.md` item 1); the macro-gears image that used to fill this slot moved to the Try It Yourself subpage instead of being discarded (item 11).
 3. **Fake customer logo strip — RESOLVED.** Omitted entirely, no replacement strip.
    The real tool stack is already covered in full by §9.6's technical architecture
    section, so a separate "Built with" strip would be redundant.
@@ -726,6 +747,12 @@ longer an open item.**
     README's own URL) — the actual destination for anyone who wants to run it.
 - Reuses `BaseLayout` + `Nav` + `Footer`, same pattern already documented for
   future pages in §2 item 5.
+- **Photo band added 2026-07-31** — the original hero macro-gears photo,
+  reused here rather than discarded once the homepage hero moved to a real
+  CNC machine (`docs/IMAGE_ASSETS.md` item 11). Fixed-height band behind just
+  the header (back link, H1, intro, stat cards), fading to solid navy before
+  the prerequisites/setup content — the instructional steps stay plain and
+  scannable, not competing with a photo behind them.
 
 ### 9.8 Footer / Project & team
 
@@ -829,7 +856,7 @@ magnitude smaller. See §12.
 - **§9.1's in-action GIF/clip** — a team-recorded screen capture of the system
   running (I can't record one). v1 ships the still + concept badge; the clip drops
   into the same slot later.
-- Hero macro-gears photo (open item since the hero session).
+- ~~Hero macro-gears photo~~ — RESOLVED 2026-07-31, see §7 item 2.
 - §9.2's factory-floor background upgrade — required, not a v2 "someday"
   (human review, 2026-07-27); generated *without* baked-in signal lights so
   the existing animated pin overlay drops on top unchanged. `docs/IMAGE_ASSETS.md` item 3.
