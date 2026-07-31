@@ -3,19 +3,28 @@ import StatCard from './StatCard.astro';
 import {
   isLive,
   failureRecallPct,
+  failurePrecisionPct,
   lastPromotedAt,
   relativeTime,
 } from '../lib/metrics';
 
 const live = isLive();
 const recall = `${failureRecallPct()}%`;
+const precision = `${failurePrecisionPct()}%`;
 const retrained = relativeTime(lastPromotedAt());
 // Honesty cue (§5): live values labelled live, illustrative copy labelled illustrative.
 const recallCaption = live ? 'live · updated hourly' : 'sample metric';
+const precisionCaption = live ? 'live · updated hourly' : 'sample metric';
 ---
 
 <div class="grid gap-4 sm:grid-cols-3">
-  <StatCard value={recall} label="Failure Recall" caption={recallCaption} captionTone={live ? 'live' : 'plain'}>
+  <StatCard
+    value={recall}
+    label="Failure Recall"
+    caption={recallCaption}
+    captionTone={live ? 'live' : 'plain'}
+    info={'"Recall" measures how many of the machine failures that actually happened were correctly flagged in advance. A higher number means fewer failures slip through unnoticed.'}
+  >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
       <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.6" />
@@ -23,13 +32,26 @@ const recallCaption = live ? 'live · updated hourly' : 'sample metric';
     </svg>
   </StatCard>
 
-  <StatCard value="2.3M" label="Sensor Readings / Day" caption="illustrative" captionTone="illustrative">
+  <StatCard
+    value={precision}
+    label="Failure Precision"
+    caption={precisionCaption}
+    captionTone={live ? 'live' : 'plain'}
+    info={'"Precision" measures how often a failure warning turns out to be a real one. A higher number means fewer false alarms — you\'re not chasing problems that were never really there.'}
+  >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M3 12h3l2-6 4 12 2-6h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
     </svg>
   </StatCard>
 
-  <StatCard value="∞" label="Retrains Automatically" caption={`Last retrained ${retrained}`} captionTone={live ? 'live' : 'plain'}>
+  <StatCard
+    value="∞"
+    label="Retrains Automatically"
+    caption={`Last retrained ${retrained}`}
+    captionTone={live ? 'live' : 'plain'}
+    info="The model isn't trained once and left alone. It automatically retrains itself as new sensor data comes in, so its predictions keep improving instead of slowly going stale."
+  >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
       <path d="M20 4v4h-4M4 20v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />

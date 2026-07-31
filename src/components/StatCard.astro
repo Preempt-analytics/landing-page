@@ -1,14 +1,18 @@
 ---
 // One hero stat tile. Styling rule (§5): all values render the same off-white;
 // teal is reserved for the icon + a 1px top-border accent — one consistent system.
+import InfoTip from './InfoTip.astro';
+
 interface Props {
   value: string;
   label: string;
   caption: string;
   /** 'live' shows a teal dot; 'illustrative' is a quiet honesty label. */
   captionTone?: 'live' | 'illustrative' | 'plain';
+  /** Optional plain-language explanation of the metric, surfaced via an InfoTip. */
+  info?: string;
 }
-const { value, label, caption, captionTone = 'plain' } = Astro.props;
+const { value, label, caption, captionTone = 'plain', info } = Astro.props;
 ---
 
 <div class="tile-hover relative rounded-xl border border-white/10 border-t-teal-400/70 bg-navy-800/40 p-5 backdrop-blur-sm">
@@ -16,13 +20,44 @@ const { value, label, caption, captionTone = 'plain' } = Astro.props;
     <slot name="icon" />
   </div>
   <div class="text-2xl font-bold text-offwhite">{value}</div>
-  <div class="mt-0.5 text-sm font-medium text-offwhite/90">{label}</div>
+  <div class="mt-0.5 flex items-center gap-1 text-sm font-medium text-offwhite/90">
+    {label}
+    {info && (
+      <InfoTip label={`What is ${label}?`} position="center">
+        {info}
+      </InfoTip>
+    )}
+  </div>
   <div class="mt-2 flex items-center gap-1.5 text-xs text-muted/70">
     {
       captionTone === 'live' && (
-        <span class="inline-block h-1.5 w-1.5 rounded-full bg-teal-400" aria-hidden="true" />
+        <span class="live-dot inline-block h-1.5 w-1.5 rounded-full bg-teal-400" aria-hidden="true" />
       )
     }
     <span>{caption}</span>
   </div>
 </div>
+
+<style>
+  /* Same fix as HowItWorks.astro's li.tile-hover:hover and MlopsSystem's
+     .mlops-node:hover: .tile-hover's hover lift (global.css) puts a
+     `transform` on this card, making it the containing block — and stacking
+     context — for its own absolutely-positioned InfoTip popover, which can
+     otherwise render under a later sibling card in the same row. Astro's
+     style scoping means that earlier fix doesn't reach this file, so it's
+     repeated here for StatCard's own .tile-hover usage. */
+  .tile-hover:hover,
+  .tile-hover:focus-within {
+    z-index: 10;
+  }
+
+  /* Apple-style "live" status pulse — slow, gentle breathing, not an urgent
+     blink. Reuses global.css's ambient-breathe keyframe (already used for
+     the hero's background glow layers) rather than pulse-pin, which bakes
+     in a translate(-50%,-50%) centering offset meant for absolutely-
+     positioned dots; this one is a plain inline dot with no such offset.
+     prefers-reduced-motion is already handled globally (global.css). */
+  .live-dot {
+    animation: ambient-breathe 2.6s var(--ease-ios-in-out) infinite;
+  }
+</style>

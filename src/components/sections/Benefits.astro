@@ -2,16 +2,25 @@
 // §9.4 Benefits — 4 tiles. The source screenshots were inconsistent (some light,
 // some dark); restyled here into one consistent dark-card/teal-icon system, the
 // same fix applied to the hero stat tiles. Maps to #solutions (part 1).
+import InfoTip from '../InfoTip.astro';
+
+// `eco` is a plain-language aside on the environmental angle of each benefit,
+// surfaced via a leaf-icon InfoTip (human-requested, 2026-07-31) — deliberately
+// qualitative ("typically", "often"), not invented numbers, matching the site's
+// existing honesty stance on illustrative content (see CLAUDE.md's Danger
+// Zones on illustrative figures).
 const benefits = [
   {
     title: 'Reduce Downtime',
     body: 'Prevent unexpected failures and unplanned stops.',
     icon: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
+    eco: "Emergency repairs are wasteful, not just costly — a failure caught too late often means an urgent replacement part rushed in on next-day freight instead of standard shipping. Preventing the failure means normal, planned shipping instead of a carbon-heavy scramble.",
   },
   {
     title: 'Extend Asset Life',
     body: 'Catch issues early and reduce wear and tear.',
     icon: 'M3 17l6-6 4 4 8-8M21 7v5M21 7h-5',
+    eco: "Every machine carries an environmental cost baked in before it's even switched on — the energy and raw materials used to build it. Keeping equipment running longer instead of replacing it early spreads that upfront footprint over more years of useful life.",
   },
   {
     title: 'Lower Maintenance Costs',
@@ -19,11 +28,13 @@ const benefits = [
     // Dollar-sign S-curve was mirror-inverted (human review, 2026-07-28) — verified
     // against a real "$" before fixing; the circle itself was already symmetric.
     icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM14.5 9.5a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1 1.6 2.5 2 2.5 1 2.5 2-1.1 2-2.5 2a2.5 2.5 0 0 1-2.5-1.5M12 6.5v11',
+    eco: "Calendar-based maintenance often replaces parts on a fixed schedule whether they need it or not — swapping out something that still has useful life left. Replacing only what's actually worn means less scrap metal, oil, and packaging.",
   },
   {
     title: 'Increase Operational Efficiency',
     body: 'More uptime. Smoother operations. Happier teams.',
     icon: 'M4 20V12M10 20V6M16 20v-9M22 20H2',
+    eco: 'A machine running with an undetected fault — vibration, misalignment, friction — typically draws more energy than one running smoothly, wasting it as heat and wear. Catching problems early keeps machines running at their efficient best, not just their functional minimum.',
   },
 ];
 ---
@@ -48,7 +59,7 @@ const benefits = [
       {
         benefits.map((b, i) => (
           <div
-            class="tile-hover flex h-full items-center gap-4 rounded-xl border border-white/10 bg-navy-800/40 p-6"
+            class="tile-hover relative flex h-full items-center gap-4 rounded-xl border border-white/10 bg-navy-800/40 p-6"
             data-reveal
             style={`transition-delay: ${i * 70}ms`}
           >
@@ -61,9 +72,37 @@ const benefits = [
               <h3 class="text-lg font-semibold text-offwhite">{b.title}</h3>
               <p class="mt-1 text-sm leading-relaxed text-muted">{b.body}</p>
             </div>
+            {/* Pinned to the card's own top-right corner (not inline after the
+                title) — an inline icon's x position would track each title's
+                length, and "Increase Operational Efficiency" is long enough
+                to have pushed a centered popover off the right edge on a
+                narrow, near-full-width mobile card. Fixed at the corner, the
+                icon's position is consistent across every card and
+                breakpoint, so a plain 'end' anchor (opens leftward, into the
+                card's own — always wide-enough — width) is safe everywhere. */}
+            <span class="absolute right-4 top-4">
+              <InfoTip icon="eco" label={`Environmental benefit of ${b.title}`} position="end">
+                {b.eco}
+              </InfoTip>
+            </span>
           </div>
         ))
       }
     </div>
   </div>
 </section>
+
+<style>
+  /* Same fix as HowItWorks.astro's li.tile-hover:hover, MlopsSystem's
+     .mlops-node:hover, and StatCard.astro's own .tile-hover:hover: the
+     shared .tile-hover lift (global.css) gives a hovered card a `transform`,
+     making it the containing block — and stacking context — for its own
+     absolutely-positioned InfoTip popover, which can otherwise render under
+     a later sibling card. Astro's style scoping means the earlier fixes
+     don't reach this file, so it's repeated here for Benefits' own
+     .tile-hover usage. */
+  .tile-hover:hover,
+  .tile-hover:focus-within {
+    z-index: 10;
+  }
+</style>

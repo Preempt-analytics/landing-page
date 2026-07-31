@@ -8,16 +8,57 @@
 // lg breakpoint where all 6 cards share one row (§12 responsive rule); stacked
 // layouts get a simple text loop-back cue instead of bent SVG geometry.
 import Button from '../Button.astro';
+import InfoTip from '../InfoTip.astro';
 import { withBase } from '../../lib/site';
 
+// Longer, plain-language explanation per card (Krug/Redish: what happens, why
+// it matters, how it connects to the rest of the loop) — surfaced via an
+// InfoTip so the cards themselves stay scannable at a glance, per the
+// existing card body copy, while a curious/non-technical reader can dig one
+// level deeper without leaving the page.
 const steps = [
-  { n: '1', title: 'Collect', body: 'Stream sensor data from your machines in real time.', icon: 'pulse' },
-  { n: '2', title: 'Predict', body: 'AI models assess failure probability continuously.', icon: 'brain' },
-  { n: '3', title: 'Detect', body: 'Anomalies and drift are caught early and automatically.', icon: 'search' },
-  { n: '4', title: 'Retrain', body: 'Models retrain on fresh data through the pipeline.', icon: 'refresh' },
-  { n: '5', title: 'Improve', body: 'Predictions get better over time — cutting downtime and cost.', icon: 'check' },
+  {
+    n: '1',
+    title: 'Collect',
+    body: 'Stream sensor data from your machines in real time.',
+    icon: 'pulse',
+    info: "Sensors on your machines send in real-time readings — temperature, vibration, pressure — every few seconds. Nothing else in this loop works without this: it's the raw material every prediction is built on. Think of it as the system's eyes and ears on the factory floor.",
+  },
+  {
+    n: '2',
+    title: 'Predict',
+    body: 'AI models assess failure probability continuously.',
+    icon: 'brain',
+    info: 'AI models look at those incoming readings and continuously estimate how likely each machine is to fail soon. Instead of waiting for a scheduled inspection, you get an early, ongoing read on machine health. This is what turns raw sensor data into a warning you can actually act on.',
+  },
+  {
+    n: '3',
+    title: 'Detect',
+    body: 'Anomalies and drift are caught early and automatically.',
+    icon: 'search',
+    info: 'The system watches for two kinds of change: early warning signs of failure, and a shift in the incoming data itself (called "drift") that could make predictions less reliable. Catching drift automatically means problems get flagged before predictions quietly get worse. This step is what keeps the whole loop trustworthy.',
+  },
+  {
+    n: '4',
+    title: 'Retrain',
+    body: 'Models retrain on fresh data through the pipeline.',
+    icon: 'refresh',
+    info: "When drift or new patterns are detected, the model is automatically retrained on the freshest data — no engineer has to notice a problem and kick it off by hand. This keeps predictions accurate as machines age or conditions change. It's what makes this a living system instead of a one-time model that slowly goes stale.",
+  },
+  {
+    n: '5',
+    title: 'Improve',
+    body: 'Predictions get better over time — cutting downtime and cost.',
+    icon: 'check',
+    info: 'With an up-to-date model back in place, predictions get sharper instead of drifting downward over time. That means fewer surprise breakdowns and less time and money spent on unnecessary maintenance. This is where the loop pays off — every trip around Collect → Predict → Detect → Retrain leaves the system a little better than before.',
+  },
 ];
-const outcome = { title: 'Business Impact', body: 'Increase uptime. Lower costs. Extend asset life.', icon: 'chart' };
+const outcome = {
+  title: 'Business Impact',
+  body: 'Increase uptime. Lower costs. Extend asset life.',
+  icon: 'chart',
+  info: 'All of the above adds up to fewer unplanned stoppages, lower maintenance costs, and equipment that lasts longer before it needs replacing. This is the reason the whole loop exists — every technical step earns its place by producing this outcome. The results then feed back into Collect, so the improvement never stops.',
+};
 
 const icons: Record<string, string> = {
   pulse: 'M3 12h3l2-6 4 12 2-6h4',
@@ -86,6 +127,12 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
 
                 <h3 class="text-center text-base font-semibold text-offwhite lg:text-left">
                   {'n' in s ? `${s.n}. ${s.title}` : s.title}
+                  <InfoTip
+                    label={`More about ${s.title}`}
+                    position={i === 0 ? 'start-lg' : isOutcome ? 'end-lg' : 'center'}
+                  >
+                    {s.info}
+                  </InfoTip>
                 </h3>
                 <p class="mt-1.5 text-center text-sm leading-relaxed text-muted lg:text-left">{s.body}</p>
                 {!isOutcome && (
@@ -267,3 +314,19 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
     </div>
   </div>
 </section>
+
+<style>
+  /* The shared .tile-hover lift (global.css) puts a `transform` on whichever
+     card is hovered, and `transform` makes an element the containing block
+     for its own absolutely-positioned descendants — including that card's
+     InfoTip popover. Without this, a hovered card's popover can render
+     UNDER a later sibling card: z-index only ranks elements within a shared
+     stacking context, and the transform just gave each card its own. Bumping
+     z-index on hover lets the open popover's whole stacking context win
+     against neighboring cards regardless of DOM order. */
+  @media (hover: hover) and (pointer: fine) {
+    li.tile-hover:hover {
+      z-index: 30;
+    }
+  }
+</style>

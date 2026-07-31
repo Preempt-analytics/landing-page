@@ -5,17 +5,41 @@
 // a one-line glossary entry, that's a guided walkthrough for bigger concepts.
 interface Props {
   label?: string;
+  // Which edge the popover opens from, so it doesn't get pushed off-screen
+  // when the button sits near the left/right edge of a row of tiles (e.g.
+  // HowItWorks' 6-card loop). 'start' (default) is the original left:0
+  // behavior; the rest are additive, existing callers are unaffected.
+  // 'start-lg'/'end-lg' anchor to that edge only from the lg breakpoint up
+  // (where HowItWorks' cards form one row and Collect/Business Impact sit at
+  // its true left/right edge) and fall back to centered below lg, where the
+  // cards stack into a single centered column instead — anchoring to an edge
+  // there pushed the popover off the opposite side of a narrow viewport,
+  // since the button is no longer at the row's actual edge.
+  position?: 'start' | 'center' | 'end' | 'start-lg' | 'end-lg';
+  // Which glyph the trigger button shows. 'info' (default) is the circled-i
+  // used for glossary/explainer tips everywhere else. 'eco' is a leaf,
+  // reserved for Benefits.astro's environmental-benefit asides — same
+  // popover behavior, just a visually distinct affordance so a reader can
+  // tell at a glance "this one's about the planet, not a definition."
+  icon?: 'info' | 'eco';
 }
-const { label = 'What is this?' } = Astro.props;
+const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.props;
 ---
 
-<span class="info-tip">
+<span class="info-tip" data-pos={position}>
   <button type="button" class="info-tip-btn" aria-label={label}>
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="9" />
-      <circle cx="12" cy="8" r="1.15" fill="currentColor" stroke="none" />
-      <path d="M12 11.5v5" />
-    </svg>
+    {icon === 'eco' ? (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M19 4C10 4 4 10 4 19c9 0 15-6 15-15z" />
+        <path d="M19 4 6 17" />
+      </svg>
+    ) : (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" />
+        <circle cx="12" cy="8" r="1.15" fill="currentColor" stroke="none" />
+        <path d="M12 11.5v5" />
+      </svg>
+    )}
   </button>
   <span class="info-tip-pop" role="tooltip"><slot /></span>
 </span>
@@ -26,6 +50,23 @@ const { label = 'What is this?' } = Astro.props;
     display: inline-flex;
     vertical-align: middle;
     margin: 0 0.15em;
+  }
+  /* Baked in here (not left to each consumer) so every usage is protected by
+     default: a later sibling in the same stacking context — a following list
+     item, card, etc. — can otherwise paint over an open popover even though
+     the popover itself has z-index:20, because that z-index is only ever
+     ranked *within* the nearest ancestor stacking context, and plenty of
+     ordinary layout (flex items, an ancestor with a settled `transform`/
+     `filter` from an entrance animation, etc.) can put the popover and its
+     "later" sibling in the same context without the popover's own z-index
+     actually winning. Bumping z-index on the trigger itself while open moves
+     the whole open .info-tip — button, popover, everything — into its own
+     higher-ranked context, which reliably wins regardless of DOM order.
+     Confirmed necessary in practice: MlopsSystem's Powered By list showed
+     exactly this — GitHub Actions' open popover rendering under DVC's row. */
+  .info-tip:hover,
+  .info-tip:focus-within {
+    z-index: 20;
   }
   .info-tip-btn {
     display: inline-flex;
@@ -52,7 +93,7 @@ const { label = 'What is this?' } = Astro.props;
     left: 0;
     top: calc(100% + 8px);
     z-index: 20;
-    width: 15rem;
+    width: 17rem;
     max-width: calc(100vw - 3rem);
     border-radius: 0.75rem;
     border: 1px solid rgba(255, 255, 255, 0.1);
@@ -76,5 +117,61 @@ const { label = 'What is this?' } = Astro.props;
     visibility: visible;
     transform: translateY(0) scale(1);
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
+  }
+
+  /* 'center'/'end' and the lg-only edge anchors below: same fade/scale as the
+     default 'start' anchor above, just anchored from a different edge so the
+     popover opens toward open space instead of off the edge of the viewport.
+     Each state pairs a matching transform function list (translateX first,
+     then translateY/scale) at rest and on hover/focus — mismatched function
+     lists between states forces the browser into matrix interpolation instead
+     of per-function, which is what produced the "diagonal drift" bug already
+     fixed once on .mlops-node (see MlopsSystem.astro's .mlops-node comment)
+     and on .sensor-pin. */
+  .info-tip[data-pos='center'] .info-tip-pop,
+  .info-tip[data-pos='start-lg'] .info-tip-pop,
+  .info-tip[data-pos='end-lg'] .info-tip-pop {
+    left: 50%;
+    transform: translateX(-50%) translateY(2px) scale(0.97);
+    transform-origin: top center;
+  }
+  .info-tip[data-pos='center']:hover .info-tip-pop,
+  .info-tip[data-pos='center']:focus-within .info-tip-pop,
+  .info-tip[data-pos='start-lg']:hover .info-tip-pop,
+  .info-tip[data-pos='start-lg']:focus-within .info-tip-pop,
+  .info-tip[data-pos='end-lg']:hover .info-tip-pop,
+  .info-tip[data-pos='end-lg']:focus-within .info-tip-pop {
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+  .info-tip[data-pos='end'] .info-tip-pop {
+    left: auto;
+    right: 0;
+    transform-origin: top right;
+  }
+
+  /* From lg up, HowItWorks' cards form one row — Collect and Business Impact
+     sit at its true left/right edge, so switch them to a plain edge anchor
+     (matching 'start'/'end' above) instead of the centered fallback used
+     below lg. */
+  @media (min-width: 1024px) {
+    .info-tip[data-pos='start-lg'] .info-tip-pop {
+      left: 0;
+      transform: translateY(2px) scale(0.97);
+      transform-origin: top left;
+    }
+    .info-tip[data-pos='start-lg']:hover .info-tip-pop,
+    .info-tip[data-pos='start-lg']:focus-within .info-tip-pop {
+      transform: translateY(0) scale(1);
+    }
+    .info-tip[data-pos='end-lg'] .info-tip-pop {
+      left: auto;
+      right: 0;
+      transform: translateY(2px) scale(0.97);
+      transform-origin: top right;
+    }
+    .info-tip[data-pos='end-lg']:hover .info-tip-pop,
+    .info-tip[data-pos='end-lg']:focus-within .info-tip-pop {
+      transform: translateY(0) scale(1);
+    }
   }
 </style>
