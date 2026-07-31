@@ -4,23 +4,64 @@
 // honest capstone-true claim strip. Circle diagram at every breakpoint (human review,
 // 2026-07-28: kept as a circle even on mobile, not swapped for a text list — the
 // diagram itself just scales down; see the responsive tile sizing below).
+import { Image } from 'astro:assets';
 import Button from '../Button.astro';
+import InfoTip from '../InfoTip.astro';
+import logo from '../../assets/logo.png';
 import { withBase } from '../../lib/site';
 
+// `info` is the deeper, Krug/Redish-plain explanation surfaced via an InfoTip
+// on hover/focus — this section is already labeled "For the technical
+// reader", so these go a level past HowItWorks' copy (naming the actual
+// tool/concept, e.g. what "drift" or an "API" is) while still defining any
+// jargon inline rather than assuming it.
 const nodes = [
-  { title: 'Sensor Data', body: 'Live/simulated readings from machines' },
-  { title: 'Prediction API', body: 'Real-time inference & failure probability' },
-  { title: 'Evidently Drift Check', body: 'Detects data & model drift' },
-  { title: 'GitHub Actions', body: 'Automated CI/CD for ML' },
-  { title: 'DVC Pipeline', body: 'Versioned data + retraining' },
-  { title: 'MLflow Registry', body: 'Compare, track & promote models' },
+  {
+    title: 'Sensor Data',
+    body: 'Live/simulated readings from machines',
+    info: "This is the same “Collect” step from How It Works, shown here as the actual system piece that receives it: an ingestion point that takes in live sensor readings (or simulated ones, for the demo) and hands them to the prediction model.",
+  },
+  {
+    title: 'Prediction API',
+    body: 'Real-time inference & failure probability',
+    info: 'A small web service with one job: take in a sensor reading and return a failure-probability score, in real time. “API” just means “a way for one piece of software to ask another for something” — here, asking for a prediction.',
+  },
+  {
+    title: 'Evidently Drift Check',
+    body: 'Detects data & model drift',
+    info: "Evidently is an open-source tool that statistically compares today's incoming sensor data against the data the model was originally trained on. If the two have drifted too far apart, that's an early sign the model needs retraining before its predictions quietly get worse.",
+  },
+  {
+    title: 'GitHub Actions',
+    body: 'Automated CI/CD for ML',
+    info: "GitHub's built-in automation runner. When drift is flagged, this is what actually kicks off the retraining job in the background — no engineer has to notice the alert and start it by hand.",
+  },
+  {
+    title: 'DVC Pipeline',
+    body: 'Versioned data + retraining',
+    info: 'DVC ("Data Version Control") works like Git, but for datasets and models instead of code. It keeps a versioned record of exactly which data produced which model, so every retraining run is traceable and repeatable.',
+  },
+  {
+    title: 'MLflow Registry',
+    body: 'Compare, track & promote models',
+    info: 'MLflow logs every training run’s results side by side, so a new model can be compared against the one currently live. Only a model that’s actually better gets "promoted" to production.',
+  },
 ];
 
-// Positions around a circle (top start, clockwise) as percentages.
+// Positions around a circle (top start, clockwise) as percentages. `anchor`
+// tells each node's InfoTip which edge to open from — derived from the
+// node's own horizontal position rather than hardcoded per index, so it
+// stays correct if the circle's node count or angles ever change: nodes on
+// the right half open leftward, the left half open rightward, top/bottom
+// stay centered — every popover opens toward the circle's open interior
+// instead of off whichever page edge that node happens to sit near.
 const R = 42;
 const placed = nodes.map((n, i) => {
   const a = (-90 + i * 60) * (Math.PI / 180);
-  return { ...n, left: 50 + R * Math.cos(a), top: 50 + R * Math.sin(a) };
+  const left = 50 + R * Math.cos(a);
+  const top = 50 + R * Math.sin(a);
+  const anchor = left > 60 ? 'end' : left < 40 ? 'start' : 'center';
+  return { ...n, left, top, anchor };
 });
 
 // Connecting arrows between consecutive nodes (missing entirely before human
@@ -33,6 +74,7 @@ const placed = nodes.map((n, i) => {
 // breakpoint (checked against the smallest tile size too).
 const ARC_R = 26;
 const ARC_TRIM_DEG = 4;
+const ARC_CHASE_DURATION = 3.6;
 const arcs = nodes.map((_, i) => {
   const a0 = (-90 + i * 60 + ARC_TRIM_DEG) * (Math.PI / 180);
   const a1 = (-90 + (i + 1) * 60 - ARC_TRIM_DEG) * (Math.PI / 180);
@@ -40,23 +82,75 @@ const arcs = nodes.map((_, i) => {
   const y0 = 50 + ARC_R * Math.sin(a0);
   const x1 = 50 + ARC_R * Math.cos(a1);
   const y1 = 50 + ARC_R * Math.sin(a1);
-  return `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${ARC_R} ${ARC_R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`;
+  // Staggered delay (negative, like the LiveFactory sensor pins) so the six
+  // arcs brighten one after another around the loop instead of in unison —
+  // reads as "data traveling the loop", not six lights blinking together.
+  const delay = -(i * (ARC_CHASE_DURATION / nodes.length));
+  return { d: `M ${x0.toFixed(2)} ${y0.toFixed(2)} A ${ARC_R} ${ARC_R} 0 0 1 ${x1.toFixed(2)} ${y1.toFixed(2)}`, delay };
 });
+
+// Full-loop path (unlike the six trimmed arcs above, this has no gaps) for the
+// traveling-light dot to glide around continuously — same center/radius as
+// the arcs, expressed as two semicircle commands since one SVG arc command
+// can't describe a full 360° circle. offset-path on an SVG child element uses
+// the SVG's own viewBox units, so this stays perfectly aligned with the arcs
+// at every breakpoint without any separate per-breakpoint pixel math.
+const LOOP_PATH = `M ${50 + ARC_R} 50 A ${ARC_R} ${ARC_R} 0 1 1 ${50 - ARC_R} 50 A ${ARC_R} ${ARC_R} 0 1 1 ${50 + ARC_R} 50`;
 
 // Name + one-line purpose per tool, matching the reference mockup
 // (design/mockups/Screenshot 2026-07-21 112150.png) — brand icons are a
 // separate, sourced-not-generated follow-up (docs/IMAGE_ASSETS.md item 6).
 const builtWith = [
-  { name: 'Python', body: 'Data processing & modeling' },
-  { name: 'Pandas', body: 'Data analysis' },
-  { name: 'Scikit-learn', body: 'ML modeling' },
-  { name: 'NumPy', body: 'Numerical computing' },
+  {
+    name: 'Python',
+    body: 'Data processing & modeling',
+    info: 'The programming language the whole system is written in — one of the most common languages for data science and machine learning.',
+  },
+  {
+    name: 'Pandas',
+    body: 'Data analysis',
+    info: 'A Python library for loading, cleaning, and reshaping tabular data — think of it as a scriptable, programmable spreadsheet.',
+  },
+  {
+    name: 'Scikit-learn',
+    body: 'ML modeling',
+    info: 'A Python library of ready-made machine learning algorithms. This is what the failure-prediction model itself is built and trained with.',
+  },
+  {
+    name: 'NumPy',
+    body: 'Numerical computing',
+    info: 'The fast, low-level number-crunching library that Pandas and Scikit-learn are both built on top of — rarely used directly, but doing most of the heavy lifting underneath.',
+  },
 ];
+// nodeIndex ties each tool back to its matching node on the circle above (an
+// index into `nodes`) so hovering either one can cross-highlight the other
+// (human-requested, 2026-07-28) — "Built with" tools (Python/Pandas/etc.)
+// don't have a matching pipeline-stage node, so only Powered By gets this.
 const poweredBy = [
-  { name: 'GitHub Actions', body: 'Automated CI/CD for ML' },
-  { name: 'DVC', body: 'Data version control' },
-  { name: 'MLflow', body: 'Experiment tracking & model registry' },
-  { name: 'Evidently AI', body: 'Data & model drift monitoring' },
+  {
+    name: 'GitHub Actions',
+    body: 'Automated CI/CD for ML',
+    info: "A free automation service built into GitHub. It's the engine that runs the retraining pipeline on a trigger or schedule — no separate server to babysit.",
+    nodeIndex: 3,
+  },
+  {
+    name: 'DVC',
+    body: 'Data version control',
+    info: 'Short for "Data Version Control" — same tool as in the diagram above. It\'s what makes "which data trained this exact model" an answerable question instead of a guess.',
+    nodeIndex: 4,
+  },
+  {
+    name: 'MLflow',
+    body: 'Experiment tracking & model registry',
+    info: 'Experiment tracking and model registry, in one tool. Every training run gets logged and compared, and whichever model is currently "promoted" is the one serving live predictions.',
+    nodeIndex: 5,
+  },
+  {
+    name: 'Evidently AI',
+    body: 'Data & model drift monitoring',
+    info: 'The open-source library that watches for drift — comparing live production data against the training data on an ongoing basis, not just once at launch.',
+    nodeIndex: 2,
+  },
 ];
 
 const claims = [
@@ -85,13 +179,23 @@ const claims = [
 
     <div class="mt-14 grid gap-8 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-center lg:gap-10 2xl:mt-16 2xl:gap-20">
       <!-- Built With -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal>
+      <div class="mlops-reveal rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal>
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60 2xl:text-sm">Built with</h3>
         <ul class="space-y-2 2xl:space-y-3">
           {builtWith.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
-              <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
-              <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+            <li class="flex items-start justify-between gap-2 rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
+              <div>
+                <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+                <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+              </div>
+              {/* Icon pinned to the row's own right edge (flex, not inline-after-name):
+                  an inline icon's x position tracked each name's length, so a name-length-
+                  dependent anchor overflowed one edge or the other depending on whether the
+                  name was short ("DVC") or long ("Scikit-learn"). Fixed at the row's right
+                  edge, the icon's position is consistent across every row and breakpoint, so
+                  a plain 'end' anchor (opens leftward, into the row's own — always
+                  wide-enough — width) is safe everywhere without per-item tuning. */}
+              <InfoTip label={`What is ${t.name}?`} position="end">{t.info}</InfoTip>
             </li>
           ))}
         </ul>
@@ -100,22 +204,44 @@ const claims = [
       <!-- Circular diagram — same layout at every breakpoint (human review, 2026-07-28:
            no separate mobile text-list fallback). The container and node tiles scale
            down together so it stays a circle even on a narrow phone. -->
-      <div data-reveal style="transition-delay: 80ms">
-        <div class="relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md 2xl:max-w-lg">
-          <!-- center mark -->
-          <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 sm:h-16 sm:w-16 md:h-20 md:w-20 2xl:h-24 2xl:w-24">
-            <svg class="h-4 w-4 sm:h-6 sm:w-6 md:h-[30px] md:w-[30px] 2xl:h-9 2xl:w-9" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-              <path d="M16 3 L29 28 L3 28 Z" stroke="var(--color-teal-400)" stroke-width="2" stroke-linejoin="round" />
-              <path d="M16 13 L23 26 L9 26 Z" fill="var(--color-teal-400)" opacity="0.9" />
-            </svg>
+      <div class="mlops-reveal" data-reveal style="animation-delay: 80ms">
+        <div class="mlops-diagram relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md 2xl:max-w-lg">
+          <!-- Center emblem (docs/IMAGE_ASSETS.md item 5): three nested rings reading
+               as an "always on" engine at the middle of the loop, not a static badge.
+               Rotation lives on an inner .mlops-ring-spin div, never on the outer
+               positioning wrapper — a wrapper already carries translate(-50%,-50%)
+               for centering, and an animated `transform` replaces rather than
+               combines with that (same gotcha as LiveFactory's sensor-pin keyframe),
+               so rotating the wrapper itself would fling the ring off-center. -->
+          <div class="absolute left-1/2 top-1/2 h-20 w-20 -translate-x-1/2 -translate-y-1/2 sm:h-28 sm:w-28 md:h-36 md:w-36 2xl:h-40 2xl:w-40">
+            <div class="mlops-ring-spin absolute inset-0 rounded-full border border-dashed border-blue-500/30"></div>
+          </div>
+          <div class="absolute left-1/2 top-1/2 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/20 sm:h-20 sm:w-20 md:h-[6.5rem] md:w-[6.5rem] 2xl:h-28 2xl:w-28"></div>
+          <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 shadow-[0_0_22px_-6px_var(--color-teal-400)] sm:h-16 sm:w-16 md:h-20 md:w-20 2xl:h-24 2xl:w-24">
+            <Image
+              src={logo}
+              width={60}
+              height={60}
+              alt=""
+              class="mlops-emblem-logo h-6 w-6 object-contain sm:h-9 sm:w-9 md:h-11 md:w-11 2xl:h-14 2xl:w-14"
+            />
           </div>
           {
             placed.map((n, i) => (
               <div
-                class="mlops-node absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5 2xl:w-36 2xl:p-3"
+                class="mlops-node absolute w-16 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5 2xl:w-36 2xl:p-3"
+                data-node={i}
                 style={`left:${n.left}%; top:${n.top}%;`}
               >
-                <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs 2xl:text-sm">{i + 1}. {n.title}</p>
+                <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs 2xl:text-sm">
+                  {i + 1}. {n.title}
+                  {/* Icon hidden below sm, matching the body line's own sm:block reveal —
+                      these tiles are already stripped to title-only on the smallest phones,
+                      so the tip joins the body copy as one more "more detail from sm up" step. */}
+                  <span class="hidden align-middle sm:inline-flex">
+                    <InfoTip label={`More about ${n.title}`} position={n.anchor}>{n.info}</InfoTip>
+                  </span>
+                </p>
                 <p class="mt-0.5 hidden text-[0.65rem] leading-tight text-muted/80 sm:block 2xl:text-xs">{n.body}</p>
               </div>
             ))
@@ -130,35 +256,71 @@ const claims = [
               </marker>
             </defs>
             {
-              arcs.map((d) => (
-                <path d={d} stroke="var(--color-teal-400)" stroke-opacity="0.85" stroke-width="0.8" marker-end="url(#mlops-arrow-head)" />
+              arcs.map((arc, i) => (
+                <path
+                  class="mlops-arc"
+                  data-arc={i}
+                  d={arc.d}
+                  stroke="var(--color-teal-400)"
+                  stroke-width="0.8"
+                  marker-end="url(#mlops-arrow-head)"
+                  style={`animation-delay: ${arc.delay}s`}
+                />
               ))
             }
+            <!-- Traveling light: a small dot gliding continuously around the full loop
+                 (human-requested, 2026-07-28) — reuses UserStory.astro's "packet of
+                 data visibly traveling" language. offset-path on an SVG child uses the
+                 SVG's own viewBox units, so it stays aligned with the arcs above at
+                 every breakpoint without separate per-breakpoint pixel math (unlike
+                 offset-path on a plain HTML element, which resolves in CSS pixels of
+                 the reference box and would drift out of sync with this responsive,
+                 percentage-based diagram). -->
+            <circle class="mlops-travel-light" r="1.3" fill="#fff" />
           </svg>
         </div>
       </div>
 
       <!-- Powered By -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal style="transition-delay: 140ms">
+      <div class="mlops-reveal rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal style="animation-delay: 140ms">
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60 2xl:text-sm">Powered by</h3>
         <ul class="space-y-2 2xl:space-y-3">
           {poweredBy.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
-              <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
-              <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+            <li
+              class="flex items-start justify-between gap-2 rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3"
+              data-powered-node={t.nodeIndex}
+            >
+              <div>
+                <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+                <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+              </div>
+              {/* Same fix as Built With: icon pinned to the row's own right edge instead
+                  of inline after the name, so its position — and therefore a safe,
+                  unconditional 'end' anchor — stays consistent regardless of name length
+                  or which column this list sits in at a given breakpoint. */}
+              <InfoTip label={`What is ${t.name}?`} position="end">{t.info}</InfoTip>
             </li>
           ))}
         </ul>
       </div>
     </div>
 
-    <!-- Honest, capstone-true claim strip -->
-    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4 2xl:mt-28 2xl:gap-6 2xl:p-8" data-reveal>
+    <!-- Honest, capstone-true claim strip. Each claim now gets a checkmark that
+         draws itself in (stroke-dasharray/dashoffset via pathLength="1", which
+         lets the draw animation be authored in simple 0..1 units regardless of
+         the path's real pixel length) shortly after the tile itself settles in
+         — a small "verified" moment (human-requested, 2026-07-28). -->
+    <div class="mlops-reveal mt-20 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:mt-24 lg:grid-cols-4 2xl:mt-28 2xl:gap-6 2xl:p-8" data-reveal>
       {
         claims.map((c) => (
-          <div class="text-center sm:text-left">
-            <p class="text-sm font-semibold text-teal-300 2xl:text-base">{c.title}</p>
-            <p class="mt-0.5 text-xs text-muted 2xl:text-sm">{c.body}</p>
+          <div class="mlops-claim flex items-start justify-center gap-2 sm:justify-start">
+            <svg class="mlops-check mt-0.5 shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M20 6 9 17l-5-5" stroke="var(--color-teal-400)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" pathLength="1" />
+            </svg>
+            <div>
+              <p class="text-sm font-semibold text-teal-300 2xl:text-base">{c.title}</p>
+              <p class="mt-0.5 text-xs text-muted 2xl:text-sm">{c.body}</p>
+            </div>
           </div>
         ))
       }
@@ -170,25 +332,324 @@ const claims = [
   </div>
 </section>
 
+<script>
+  // Bound to astro:page-load, not top-level: this section lives inside <main>,
+  // which isn't transition:persist-ed, so a fresh, unbound instance of this
+  // markup arrives on every client-side navigation to a page that renders it.
+  document.addEventListener('astro:page-load', () => {
+    // Cross-highlight: hovering a Powered By item glows its matching node on
+    // the circle, and vice versa (human-requested, 2026-07-28) — makes it
+    // explicit that the list and the diagram describe the same system rather
+    // than two unrelated pieces of copy.
+    document.querySelectorAll<HTMLElement>('[data-powered-node]').forEach((item) => {
+      const node = document.querySelector<HTMLElement>(`.mlops-node[data-node="${item.dataset.poweredNode}"]`);
+      if (!node) return;
+      const on = () => {
+        item.classList.add('is-cross-highlighted');
+        node.classList.add('is-cross-highlighted');
+      };
+      const off = () => {
+        item.classList.remove('is-cross-highlighted');
+        node.classList.remove('is-cross-highlighted');
+      };
+      item.addEventListener('mouseenter', on);
+      item.addEventListener('mouseleave', off);
+    });
+  });
+</script>
+
 <style>
   /* Bespoke hover rule, not the shared .tile-hover utility: these node tiles
-     already carry a -translate-x/y-1/2 centering transform (they're placed by
-     percentage around a circle), and .tile-hover's plain `translateY(-4px)`
-     would replace that transform outright rather than combine with it —
-     scale (a "pop", not a "lift") reads better on a radially-placed node
-     anyway, so it gets its own rule instead of forcing the shared one to fit. */
+     already carry a centering transform (they're placed by percentage around
+     a circle), and .tile-hover's plain `translateY(-4px)` would replace that
+     transform outright rather than combine with it — scale (a "pop", not a
+     "lift") reads better on a radially-placed node anyway.
+
+     The centering translate is authored HERE, not via Tailwind's
+     -translate-x/y-1/2 utilities on the element (which is how it was done
+     originally) — Tailwind composes its own transform utilities into a
+     6-function value (translate/rotate/skewX/skewY/scaleX/scaleY, with
+     identity values standing in for the ones you didn't set) via its
+     internal --tw-* custom properties, while this rule's :hover/:active
+     states set a plain 2-function `translate(...) scale(...)`. When the
+     resting and hovered transform values don't share the same function
+     list, the browser can't interpolate translate/scale independently and
+     falls back to full matrix decomposition instead — which is exactly what
+     produced the "diagonal upward zoom" (human-reported, 2026-07-28): the
+     tile visibly drifted off its centered position mid-transition instead of
+     scaling cleanly in place. Authoring the resting transform in this same
+     rule, in the same 2-function shape as :hover/:active, keeps every state
+     interpolatable function-by-function — the exact fix already applied to
+     .sensor-pin's keyframe in LiveFactory.astro and to .mlops-ring-spin's
+     wrapper above for the same underlying reason. Scale amplitude eased back
+     (1.08 → 1.05) at the same time — restrained "Apple-sophistication" pop,
+     not an emphatic one, on a tile this small. */
   .mlops-node {
+    transform: translate(-50%, -50%) scale(1);
     transition: transform var(--dur-base) var(--ease-ios), border-color var(--dur-base) var(--ease-ios),
       background-color var(--dur-base) var(--ease-ios);
   }
   @media (hover: hover) and (pointer: fine) {
     .mlops-node:hover {
-      transform: translate(-50%, -50%) scale(1.08);
+      transform: translate(-50%, -50%) scale(1.05);
       border-color: color-mix(in srgb, var(--color-teal-400) 50%, transparent);
       background-color: var(--color-navy-700);
     }
   }
   .mlops-node:active {
-    transform: translate(-50%, -50%) scale(1.03);
+    transform: translate(-50%, -50%) scale(1.02);
+  }
+  /* Same highlight, triggered from JS when the matching Powered By item is
+     hovered (see the script above) rather than from :hover on the tile
+     itself. */
+  .mlops-node.is-cross-highlighted {
+    transform: translate(-50%, -50%) scale(1.05);
+    border-color: color-mix(in srgb, var(--color-teal-400) 50%, transparent);
+    background-color: var(--color-navy-700);
+  }
+
+  /* .mlops-node carries a permanent (not just on-hover) `transform`, which
+     makes every tile the containing block — and stacking context — for its
+     own absolutely-positioned children, including its InfoTip popover.
+     Without this, an open popover can render UNDER a later sibling tile:
+     z-index only ranks elements within a shared stacking context, and the
+     transform gave each tile its own. Bumping z-index on hover/focus lets
+     the open tile's popover win against neighboring tiles regardless of DOM
+     order — same fix as HowItWorks.astro's li.tile-hover:hover. */
+  .mlops-node:hover,
+  .mlops-node:focus-within {
+    z-index: 10;
+  }
+
+  /* Outer ring of the center emblem: reuses global.css's ring-rotate keyframe
+     (defined but unused until now). Slow and continuous — an "always on" cue
+     per docs/IMAGE_ASSETS.md item 5, not a fast attention-grabbing spin. The
+     dashed border is what makes the rotation actually visible; a solid ring
+     would look identical every frame. Speeds up on hover of the whole
+     diagram (human-requested, 2026-07-28) — "the engine notices you." */
+  .mlops-ring-spin {
+    animation: ring-rotate 26s linear infinite;
+    box-shadow: 0 0 20px -4px color-mix(in srgb, var(--color-blue-500) 55%, transparent);
+  }
+  .mlops-diagram:hover .mlops-ring-spin {
+    animation-duration: 6s;
+  }
+  .mlops-emblem-logo {
+    transition: transform var(--dur-base) var(--ease-ios);
+  }
+  .mlops-diagram:hover .mlops-emblem-logo {
+    transform: scale(1.08);
+  }
+  /* Arcs "chase" around the loop — each one brightens in turn (staggered via
+     the negative animation-delay computed alongside its path in the
+     frontmatter) rather than all six pulsing in lockstep, reading as data
+     traveling the loop rather than a shared blinking light. 3.6s here must
+     match ARC_CHASE_DURATION above — one is the CSS animation length, the
+     other spaces out the six delays across it. */
+  .mlops-arc {
+    animation: mlops-arc-pulse 3.6s ease-in-out infinite;
+    transition: stroke-opacity var(--dur-base) var(--ease-ios), stroke-width var(--dur-base) var(--ease-ios);
+  }
+  @keyframes mlops-arc-pulse {
+    0%, 100% { stroke-opacity: 0.35; }
+    50% { stroke-opacity: 0.9; }
+  }
+  /* Hovering a node highlights the two arcs touching it (its outgoing and
+     incoming edge), pausing their ambient chase in favor of a steady full-
+     opacity, thicker line (human-requested, 2026-07-28) — ties the tiles and
+     arrows together as one system instead of two animations that happen to
+     share a canvas. `animation: none` (not animation-play-state: paused)
+     hands stroke-opacity back to the plain cascade so the `stroke-opacity: 1`
+     below actually applies — a *paused* animation keeps controlling that
+     property at whatever value it froze on, which a plain declaration in the
+     same rule can't override. General-sibling (~) reaches the arrows' <svg>,
+     which renders after every node tile in source order (see the comment on
+     that <svg> above); it's the only mechanism CSS alone has here, since the
+     tile-to-arc relationship is fixed and known at author time — no need for
+     the JS cross-highlight bridge this section also uses for the Powered By
+     list, where the relationship instead spans two separate DOM subtrees. */
+  .mlops-node[data-node="0"]:hover ~ svg .mlops-arc[data-arc="0"],
+  .mlops-node[data-node="0"]:hover ~ svg .mlops-arc[data-arc="5"],
+  .mlops-node[data-node="1"]:hover ~ svg .mlops-arc[data-arc="1"],
+  .mlops-node[data-node="1"]:hover ~ svg .mlops-arc[data-arc="0"],
+  .mlops-node[data-node="2"]:hover ~ svg .mlops-arc[data-arc="2"],
+  .mlops-node[data-node="2"]:hover ~ svg .mlops-arc[data-arc="1"],
+  .mlops-node[data-node="3"]:hover ~ svg .mlops-arc[data-arc="3"],
+  .mlops-node[data-node="3"]:hover ~ svg .mlops-arc[data-arc="2"],
+  .mlops-node[data-node="4"]:hover ~ svg .mlops-arc[data-arc="4"],
+  .mlops-node[data-node="4"]:hover ~ svg .mlops-arc[data-arc="3"],
+  .mlops-node[data-node="5"]:hover ~ svg .mlops-arc[data-arc="5"],
+  .mlops-node[data-node="5"]:hover ~ svg .mlops-arc[data-arc="4"] {
+    animation: none;
+    stroke-opacity: 1;
+    stroke-width: 1.6;
+  }
+
+  /* Traveling light: glides continuously around the full loop (see LOOP_PATH
+     in the frontmatter). Deliberately NOT tied to ARC_CHASE_DURATION (human-
+     reported, 2026-07-28: an earlier 3.6s lap — matching the arc-pulse chase
+     — read as "manically cycling," not sleek) — one full lap now takes 10s,
+     in the same slow, ambient register as this diagram's other passive loops
+     (.mlops-ring-spin's 26s, Hero's 11–15s glow breathing) rather than
+     competing with them for attention. offset-rotate is pinned to 0deg since
+     the dot is a circle — rotation is visually irrelevant for it, so there's
+     no reason to let it default to "auto" (which would otherwise rotate the
+     dot to match the path's tangent, pointless work for a symmetric shape). */
+  .mlops-travel-light {
+    offset-path: path("M 76 50 A 26 26 0 1 1 24 50 A 26 26 0 1 1 76 50");
+    offset-rotate: 0deg;
+    animation: mlops-travel 10s linear infinite;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.95)) drop-shadow(0 0 6px color-mix(in srgb, var(--color-teal-400) 70%, transparent));
+  }
+  @keyframes mlops-travel {
+    from { offset-distance: 0%; }
+    to { offset-distance: 100%; }
+  }
+
+  /* Bespoke reveal for this row's three panels, replacing the shared
+     [data-reveal] vertical slide-up (human-requested, 2026-07-28 — the
+     translateY reveal read as "zooming in diagonally" here, most likely
+     because it plays out while the page is still scrolling past this point,
+     and a pure vertical element-motion plus vertical page-scroll reads to
+     the eye as diagonal). Pure scale + opacity + a brief light bloom instead
+     — no translate at all, so there's no direction for it to read as
+     diagonal regardless of scroll speed. Higher specificity than the global
+     [data-reveal] rule (attribute selector + class here vs. attribute alone
+     there) so it wins without needing !important; data-reveal itself is kept
+     on the element only so BaseLayout's shared IntersectionObserver still
+     picks it up and adds .is-visible at the right time. */
+  [data-reveal].mlops-reveal {
+    transform: none;
+    transition: none;
+  }
+  [data-reveal].mlops-reveal.is-visible {
+    animation: mlops-reveal-in var(--dur-slow) var(--ease-ios) both;
+  }
+  @keyframes mlops-reveal-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.94);
+      filter: brightness(1);
+      box-shadow: 0 0 0 0 transparent;
+    }
+    55% {
+      opacity: 1;
+      filter: brightness(1.15);
+      box-shadow: 0 0 30px -6px color-mix(in srgb, var(--color-teal-400) 45%, transparent);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+      filter: brightness(1);
+      box-shadow: 0 0 0 0 transparent;
+    }
+  }
+
+  /* Item-level cascade inside Built With / Powered By: once the panel's own
+     bloom-in above has revealed the frame, its four list items then populate
+     one after another — the staggered-per-card feel Benefits/HowItWorks
+     already have, brought to this section too (human-requested, 2026-07-28).
+     Same non-diagonal scale+opacity technique, no translate component, for
+     the same reason as the panel reveal above. Delays start at 200ms (the
+     panel is already well into its own fade by then, given --dur-slow) so
+     this reads as "frame appears, then items cascade in," not two competing
+     fades at once. .mlops-claim (the claim-strip tiles below) shares the
+     same base/animation-name but its own, earlier delay schedule, since the
+     claim strip is its own [data-reveal] container with no enclosing
+     panel-level delay to wait out first. Only matches real <li>s (plus
+     .mlops-claim), so the diagram panel (no list markup) is unaffected even
+     though it shares the .mlops-reveal class. */
+  .mlops-reveal li,
+  .mlops-reveal .mlops-claim {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  [data-reveal].mlops-reveal.is-visible li,
+  [data-reveal].mlops-reveal.is-visible .mlops-claim {
+    animation: mlops-item-in var(--dur-base) var(--ease-ios) both;
+  }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(1) { animation-delay: 200ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(2) { animation-delay: 260ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(3) { animation-delay: 320ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(4) { animation-delay: 380ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(1) { animation-delay: 0ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(2) { animation-delay: 80ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(3) { animation-delay: 160ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(4) { animation-delay: 240ms; }
+  @keyframes mlops-item-in {
+    from { opacity: 0; transform: scale(0.94); }
+    to { opacity: 1; transform: none; }
+  }
+  /* li's own cross-highlight state, matching its existing hover:border-teal-400/30
+     hover:bg-navy-800/60 Tailwind utilities (which only fire on real :hover, not
+     on the JS-driven class the cross-highlight script toggles). */
+  .mlops-reveal li.is-cross-highlighted {
+    border-color: color-mix(in srgb, var(--color-teal-400) 30%, transparent);
+    background-color: color-mix(in srgb, var(--color-navy-800) 60%, transparent);
+  }
+
+  /* Each Built With / Powered By row is its own stacking context — not from
+     any deliberate transform, but because the item-cascade reveal above ends
+     its "both"-filled animation at `transform: none`, and per spec *any*
+     computed transform value that isn't literally the keyword "none" (this
+     includes the identity matrix a completed animation can leave behind, a
+     known browser quirk — confirmed here by inspection) still creates one.
+     That means a hovered row's own z-index:20 popover (bumped in
+     InfoTip.astro) only wins *inside* that row's own context — it does
+     nothing to rank the row itself above a LATER sibling row, a separate
+     context that wins purely on DOM order once neither has an explicit
+     z-index. Bumping the row's own z-index fixes that — same fix, one level
+     up, as InfoTip.astro's own hover/focus-within bump.
+
+     Plain :hover/:focus-within here, not :has(.info-tip:hover) — hovering or
+     focusing anything inside the row (the info-tip button included) already
+     satisfies :hover/:focus-within on the row itself, no child-state check
+     needed. Tried :has() first; Astro's scoped-style rewriter silently drops
+     the whole rule for it (confirmed absent from the built HTML's inline
+     <style>), so this simpler, already-proven form (same pattern as
+     li.tile-hover:hover in HowItWorks.astro and .mlops-node:hover above) is
+     both simpler and the one that actually ships.
+
+     Every row also gets an explicit resting z-index (1), not just the
+     hovered one — confirmed by direct DOM inspection that leaving the
+     resting rows at z-index:auto wasn't enough on its own: an auto-z-index
+     stacking context created purely by a transform (not by z-index) doesn't
+     reliably lose to a later explicit positive z-index sibling the way the
+     spec's painting-order steps suggest it should. Giving every row a real,
+     explicit z-index puts them all in the same unambiguous comparison
+     bucket, so the hovered row's higher value has no room to be
+     misinterpreted. */
+  .mlops-reveal li {
+    position: relative;
+    z-index: 1;
+  }
+  .mlops-reveal li:hover,
+  .mlops-reveal li:focus-within {
+    z-index: 10;
+  }
+
+  /* Claim-strip checkmarks: pathLength="1" on the <path> lets stroke-dasharray/
+     -dashoffset be authored in simple 0..1 units regardless of the path's real
+     pixel length. Starts fully undrawn; draws in shortly after its tile has
+     mostly finished its own fade (tile delay + ~300ms), so it reads as "the
+     tile appears, then gets checked off" rather than two simultaneous motions. */
+  .mlops-check path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+  }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(1) .mlops-check path {
+    animation: mlops-check-draw 0.5s var(--ease-ios) 300ms forwards;
+  }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(2) .mlops-check path {
+    animation: mlops-check-draw 0.5s var(--ease-ios) 380ms forwards;
+  }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(3) .mlops-check path {
+    animation: mlops-check-draw 0.5s var(--ease-ios) 460ms forwards;
+  }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(4) .mlops-check path {
+    animation: mlops-check-draw 0.5s var(--ease-ios) 540ms forwards;
+  }
+  @keyframes mlops-check-draw {
+    to { stroke-dashoffset: 0; }
   }
 </style>
