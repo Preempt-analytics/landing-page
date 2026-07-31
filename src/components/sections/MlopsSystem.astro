@@ -9,6 +9,31 @@ import Button from '../Button.astro';
 import InfoTip from '../InfoTip.astro';
 import logo from '../../assets/logo.png';
 import { withBase } from '../../lib/site';
+// Brand marks: gpt-image-2 sprite-sheet generation, cropped (docs/IMAGE_ASSETS.md
+// item 6). Two of the 8 failed the dark-background recognizability bar and were
+// swapped for a fallback source instead of shipped as-is: githubActions is a
+// manually-sourced asset with its black fill stripped to transparent (the
+// generated mark was near-black, invisible on navy); mlflow is Simple Icons'
+// official mark (the generated "ml" prefix was too dark to read at display size,
+// leaving only "flow" legible).
+import python from '../../assets/tools/python.png';
+import pandas from '../../assets/tools/pandas.png';
+import scikitLearn from '../../assets/tools/scikit-learn.png';
+import numpy from '../../assets/tools/numpy.png';
+import githubActions from '../../assets/tools/github-actions.png';
+import dvc from '../../assets/tools/dvc.png';
+import mlflow from '../../assets/tools/mlflow.png';
+import evidentlyAi from '../../assets/tools/evidently-ai.png';
+
+// The 8 crops have different native aspect ratios (a wide wordmark like MLflow's
+// vs. a square mark like Python's) — scale each to fit an ~32px display box
+// (2x for retina) while keeping its own proportions, rather than forcing a
+// uniform square that would squash the wide ones.
+const ICON_MAX = 64;
+function iconSize(icon: { width: number; height: number }) {
+  const scale = ICON_MAX / Math.max(icon.width, icon.height);
+  return { width: Math.round(icon.width * scale), height: Math.round(icon.height * scale) };
+}
 
 // `info` is the deeper, Krug/Redish-plain explanation surfaced via an InfoTip
 // on hover/focus — this section is already labeled "For the technical
@@ -97,59 +122,71 @@ const arcs = nodes.map((_, i) => {
 // at every breakpoint without any separate per-breakpoint pixel math.
 const LOOP_PATH = `M ${50 + ARC_R} 50 A ${ARC_R} ${ARC_R} 0 1 1 ${50 - ARC_R} 50 A ${ARC_R} ${ARC_R} 0 1 1 ${50 + ARC_R} 50`;
 
-// Name + one-line purpose per tool, matching the reference mockup
-// (design/mockups/Screenshot 2026-07-21 112150.png) — brand icons are a
-// separate, sourced-not-generated follow-up (docs/IMAGE_ASSETS.md item 6).
+// Name + one-line purpose + brand icon per tool, matching the reference mockup
+// (design/mockups/Screenshot 2026-07-21 112150.png). Icons per docs/IMAGE_ASSETS.md
+// item 6.
 const builtWith = [
   {
     name: 'Python',
     body: 'Data processing & modeling',
     info: 'The programming language the whole system is written in — one of the most common languages for data science and machine learning.',
+    icon: python,
   },
   {
     name: 'Pandas',
     body: 'Data analysis',
     info: 'A Python library for loading, cleaning, and reshaping tabular data — think of it as a scriptable, programmable spreadsheet.',
+    icon: pandas,
   },
   {
     name: 'Scikit-learn',
     body: 'ML modeling',
     info: 'A Python library of ready-made machine learning algorithms. This is what the failure-prediction model itself is built and trained with.',
+    icon: scikitLearn,
   },
   {
     name: 'NumPy',
     body: 'Numerical computing',
     info: 'The fast, low-level number-crunching library that Pandas and Scikit-learn are both built on top of — rarely used directly, but doing most of the heavy lifting underneath.',
+    icon: numpy,
   },
 ];
 // nodeIndex ties each tool back to its matching node on the circle above (an
 // index into `nodes`) so hovering either one can cross-highlight the other
 // (human-requested, 2026-07-28) — "Built with" tools (Python/Pandas/etc.)
 // don't have a matching pipeline-stage node, so only Powered By gets this.
+// Evidently AI listed first (human-requested, 2026-07-31) — otherwise same
+// order as before; nodeIndex is an explicit index into `nodes` per item, not
+// implied by array position, so reordering this list doesn't affect which
+// diagram node each row cross-highlights.
 const poweredBy = [
+  {
+    name: 'Evidently AI',
+    body: 'Data & model drift monitoring',
+    info: 'The open-source library that watches for drift — comparing live production data against the training data on an ongoing basis, not just once at launch.',
+    nodeIndex: 2,
+    icon: evidentlyAi,
+  },
   {
     name: 'GitHub Actions',
     body: 'Automated CI/CD for ML',
     info: "A free automation service built into GitHub. It's the engine that runs the retraining pipeline on a trigger or schedule — no separate server to babysit.",
     nodeIndex: 3,
+    icon: githubActions,
   },
   {
     name: 'DVC',
     body: 'Data version control',
     info: 'Short for "Data Version Control" — same tool as in the diagram above. It\'s what makes "which data trained this exact model" an answerable question instead of a guess.',
     nodeIndex: 4,
+    icon: dvc,
   },
   {
     name: 'MLflow',
     body: 'Experiment tracking & model registry',
     info: 'Experiment tracking and model registry, in one tool. Every training run gets logged and compared, and whichever model is currently "promoted" is the one serving live predictions.',
     nodeIndex: 5,
-  },
-  {
-    name: 'Evidently AI',
-    body: 'Data & model drift monitoring',
-    info: 'The open-source library that watches for drift — comparing live production data against the training data on an ongoing basis, not just once at launch.',
-    nodeIndex: 2,
+    icon: mlflow,
   },
 ];
 
@@ -184,9 +221,12 @@ const claims = [
         <ul class="space-y-2 2xl:space-y-3">
           {builtWith.map((t) => (
             <li class="flex items-start justify-between gap-2 rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
-              <div>
-                <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
-                <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+              <div class="flex items-center gap-3">
+                <Image src={t.icon} alt="" {...iconSize(t.icon)} class="h-8 w-8 shrink-0 object-contain" />
+                <div>
+                  <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+                  <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+                </div>
               </div>
               {/* Icon pinned to the row's own right edge (flex, not inline-after-name):
                   an inline icon's x position tracked each name's length, so a name-length-
@@ -290,9 +330,12 @@ const claims = [
               class="flex items-start justify-between gap-2 rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3"
               data-powered-node={t.nodeIndex}
             >
-              <div>
-                <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
-                <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+              <div class="flex items-center gap-3">
+                <Image src={t.icon} alt="" {...iconSize(t.icon)} class="h-8 w-8 shrink-0 object-contain" />
+                <div>
+                  <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+                  <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
+                </div>
               </div>
               {/* Same fix as Built With: icon pinned to the row's own right edge instead
                   of inline after the name, so its position — and therefore a safe,

@@ -43,6 +43,43 @@ entry and get a usable image in the fewest generations:
 
 ---
 
+## Sprite-sheet batch generation — conserving image-gen tokens
+
+Borrowed from game-industry practice (one sprite sheet instead of one call per
+frame): whenever an entry needs **several small, same-style icons** rather than
+one large scene, generate them **together in a single image** — laid out as an
+even grid — then crop the grid into individual files afterward. One generation
+call instead of N cuts image-gen token spend roughly N-to-1. Confirmed working
+(2026-07-31) by a teammate on other images in other projects; item 6 below is
+this project's first application of it.
+
+- **Describe the grid explicitly in the prompt**, not just the icons —
+  gpt-image-2 needs the layout stated as its own instruction, e.g. *"a 2×2 grid
+  of four icons, one per quadrant, each centered in generous even padding, with
+  a consistent empty gutter between cells and no shared background elements
+  crossing a cell boundary."* Without this, icons drift off-grid or bleed into
+  each other and the sheet can't be cleanly cropped.
+- **Pick a canvas size that divides evenly by the grid.** A 2×2 sheet at
+  1024×1024 crops into four clean 512×512 cells; a 1×4 strip at 1024×256 (if a
+  row reads better for a given set) crops into four 256×256 cells. Keep both
+  the sheet's and each resulting crop's edges multiples of 16 (per the gpt-image-2
+  constraint above).
+- **Crop after generating**, not before — any image editor's rectangular
+  crop/slice tool works; no vectorization or AI step needed for this part.
+  Discard the sheet file once the individual crops are saved (Verification
+  Artifact Hygiene doesn't apply here since the crops *are* the deliverable,
+  not a one-off check, but don't leave the uncropped sheet sitting in the repo
+  alongside them).
+- **Same House Style DNA discipline applies within one sheet** — since all four
+  icons come from one generation call, style drift *between* them is far less
+  likely than across separate calls, which is the other reason this technique
+  helps (not just token cost).
+- **Not a fit for every entry.** This only helps when an entry needs *multiple*
+  small same-style marks at once (item 6 below). A single large scene (items 1,
+  3, 4, 7) gets no benefit from a grid and should stay a single generation.
+
+---
+
 ## House Style DNA — paste into every generated-image prompt
 
 gpt-image-2 keeps a consistent look across *separate* generations best when a
@@ -62,8 +99,18 @@ style** (photoreal vs. flat-vector) stays in each prompt's own `STYLE` line,
 since the hero is a photo and the others are illustrations. If you ever change
 these two lines, change them in **every** prompt block below (they're
 duplicated on purpose, for copy-paste — that's the one drift risk to keep in
-sync). **The logo (item 2) is the deliberate exception** — a single-color
-vector mark, not a scene, so it does not carry this block.
+sync). **The logo (item 2) and the tool-brand icon sprite sheets (item 6) are
+the deliberate exceptions** — the logo is a single-color vector mark, not a
+scene, and item 6's icons must carry each tool's own authentic brand colors
+(Python's blue/yellow, GitHub's black/white, etc.), not a teal-restricted
+palette, to stay recognizable as real brand marks. The shared block's
+`EXCLUDE` line is also a hard conflict for item 6 specifically — it says *"no
+logos, no brand marks,"* the opposite of that entry's goal — so pasting it in
+verbatim would work against the prompt, not just add noise. Both item 2 and
+item 6 use a **transparent background** rather than the shared block's baked
+navy-900, since both are meant to composite cleanly onto whatever exact
+surface they're placed on (nav bar, favicon, or a tool-panel row) rather than
+carry their own background color; neither carries this block verbatim.
 
 ---
 
@@ -104,7 +151,7 @@ decided.
 | 3 | Live Factory background upgrade | Yes | Required |
 | 4 | "While the employees sleep" center illustration | **No** — done | Required |
 | 5 | MLOps rotating center emblem | **No** — CSS/SVG build | Nice-to-have |
-| 6 | Built With / Powered By tool marks | **No** — sourced from Simple Icons, not generated; descriptions already implemented | Nice-to-have (icons only) |
+| 6 | Built With / Powered By tool marks | **No** — done | Nice-to-have (icons only) |
 | 7 | OG / social-preview image | Yes, if pursued | Optional — open decision, don't generate until the reuse-vs-new-image question is settled |
 | 8 | Favicon | **No** — derive from #2 | Not a separate task |
 | 9 | Product Preview screenshot | **No** — done | Do not regenerate |
@@ -389,36 +436,152 @@ place.
 
 ## 6. Built With / Powered By — real tool logos
 
-**Status:** partially built. **Descriptions are now implemented** (2026-07-27)
-— MlopsSystem.astro renders each tool as a bold name + one-line purpose
-description (e.g. *GitHub Actions — Automated CI/CD for ML*), matching the
-reference mockup
+**Status:** DONE (2026-07-31). MlopsSystem.astro renders each tool as icon +
+bold name + one-line purpose description (e.g. *GitHub Actions — Automated
+CI/CD for ML*), matching the reference mockup
 ([design/mockups/Screenshot 2026-07-21 112150.png](../design/mockups/Screenshot%202026-07-21%20112150.png),
-same screenshot as item 5) and ARCHITECTURE §9.6. **Still missing:** the
-mockup's real, full-color brand icon next to each name — that part alone is
-what remains open below.
+same screenshot as item 5) and ARCHITECTURE §9.6. Of the 8 icons: 6 are
+gpt-image-2 sprite-sheet crops (Python, Pandas, Scikit-learn, NumPy, DVC,
+Evidently AI); 2 failed the dark-background recognizability bar below and
+were swapped for a fallback instead of shipped broken — **GitHub Actions**
+(manually-sourced asset, black fill stripped to transparent, see
+`design/visual-assets/github.png`) and **MLflow** (Simple Icons' official
+mark — the generated version's "ml" prefix was too dark to read at display
+size). Source files: `src/assets/tools/*.png`, wired via `astro:assets`.
 
 **Used in:** MlopsSystem.astro, "Built With" and "Powered By" side panels.
 
-**Note — not an image-generation task, and no image-gen tokens needed at
-all.** Like item 2, these are literal existing third-party logos — source
-real marks from a permissively-licensed icon set, don't prompt an
-image-generation tool to approximate Python's/GitHub's/etc. actual logo.
+**Approach changed 2026-07-31 (human-directed):** this entry previously said
+"no image-generation tool, no tokens needed — source from Simple Icons only."
+It now uses the [sprite-sheet batch technique](#sprite-sheet-batch-generation--conserving-image-gen-tokens)
+above as the primary path — generate each panel's 4 icons together as one 2×2
+sheet, then crop. This is a deliberate reversal of the prior reasoning below,
+not an oversight — read the trade-off before using it:
+
+> **Trade-off, stated plainly:** these are real third-party trademarks
+> (Python, GitHub, DVC, MLflow, etc.). An AI-generated icon *approximates* a
+> brand mark from training data — it is not guaranteed pixel- or
+> shape-accurate the way a sourced [Simple Icons](https://simpleicons.org/)
+> SVG is. Accept a generated result only if it reads as clearly, unambiguously
+> recognizable as that specific tool at the ~28–32px display size (Layout,
+> below) — not merely "a plausible-looking logo-shaped icon." **If any one
+> icon in a sheet doesn't clear that bar, don't regenerate the whole sheet
+> repeatedly to fix it** — pull that single icon from Simple Icons instead and
+> keep the rest of the generated set. Mixing sourced-and-generated icons
+> across the 8 is expected and fine; a strip that reads as "obviously not the
+> real GitHub mark" is not.
 
 **Spec (icons only — descriptions done, see above):**
-- 8 icons total: Python, Pandas, Scikit-learn, NumPy (Built With) · GitHub
-  Actions, DVC, MLflow, Evidently AI (Powered By).
-- **Source:** [Simple Icons](https://simpleicons.org/) (SVG, permissively
-  licensed) — already the tool ARCHITECTURE §9.6/§11 names for this — or each
-  project's own official brand SVG.
+- 8 icons total, generated as **two separate 2×2 sprite sheets** (one per
+  panel, so a mistake in one doesn't force regenerating both):
+  - **Built With sheet:** Python, Pandas, Scikit-learn, NumPy.
+  - **Powered By sheet:** GitHub Actions, DVC, MLflow, Evidently AI.
+- **Fallback source:** [Simple Icons](https://simpleicons.org/) (SVG,
+  permissively licensed) — or each project's own official brand SVG — for any
+  individual icon that fails the recognizability bar above.
 - **Color — flag before building, don't assume:** the mockup shows each logo
-  in its authentic brand colors (Python's blue/yellow, DVC's purple, etc.) on
-  a dark tile — standard practice for "built with" attribution, and Contract
-  4's palette rule governs the site's *own* design elements, not a third
-  party's trademark colors. Keep them full-color unless the human decides the
-  mix clashes too much with the page; don't silently recolor them teal.
+  in its authentic brand colors (Python's blue/yellow, DVC's purple, etc.) —
+  standard practice for "built with" attribution, and Contract 4's palette
+  rule governs the site's *own* design elements, not a third party's
+  trademark colors. Keep them full-color unless the human decides the mix
+  clashes too much with the page; don't silently recolor them teal. This is
+  why these sheets don't carry the shared House Style DNA `COLOR` line
+  verbatim (see that section's exception note) — that includes not baking in
+  its navy-900 background either: generate on a **transparent background**
+  (background note below), not a filled navy tile, so each icon composites
+  cleanly onto the exact row background it ends up next to instead of
+  carrying a fixed color that can drift out of sync with it.
 - **Layout:** icon (~28–32px) placed beside the name+description block already
   built — a small addition to the existing markup, not a redesign.
+- **Dark-background visibility (real issue hit 2026-07-31, not hypothetical):**
+  a first Powered By generation rendered GitHub's Octocat in near-black
+  outline — invisible against `navy-900` — and the "transparent" background
+  came back as a hazy dark gradient with a visible crosshair divider instead
+  of true alpha. Root cause: GitHub's mark (like several brand logos) ships
+  as **two monochrome variants** — black for light backgrounds, white for
+  dark — and "authentic brand colors" alone doesn't tell the model which one
+  to pick; left to guess, it defaulted to the light-background (black)
+  variant. **Fix, baked into the Powered By prompt below:** name the
+  dark-background/white variant explicitly per icon, forbid black/near-black
+  fills outright, and forbid background gradient/glow/haze as strongly as
+  the flat color fill. Reuse this same fix if the Built With sheet (or any
+  future sheet) ever needs regenerating, even though it didn't hit this
+  problem the first time.
+
+**Prompt — Built With sheet:**
+> SUBJECT: A 2×2 grid of four separate flat brand-style icon marks for
+> open-source data/ML tools, one per quadrant: top-left Python (the two-tone
+> intertwined-snake mark), top-right Pandas (its official panda/data mark),
+> bottom-left Scikit-learn (its blue/orange ribbon mark), bottom-right NumPy
+> (its blue grid/square "n" mark).
+> COMPOSITION: Square canvas, even 2×2 grid; each icon centered alone within
+> roughly the middle 70% of its quadrant with generous uniform padding; a
+> consistent empty gutter between all four cells; no shared background
+> element crossing a cell boundary, so the sheet crops cleanly into four
+> independent icons afterward.
+> STYLE: Clean flat vector-style brand-icon rendering; consistent icon size,
+> weight, and rendering style across all four; simple recognizable silhouette
+> per tool, matching each tool's real public mark as closely as possible.
+> LIGHT: Even, flat lighting; no dramatic shadows.
+> COLOR: plain transparent background (no filled canvas color) behind all
+> four icons; each icon in its own authentic brand colors (not teal-
+> restricted) so it stays recognizable as that tool's real mark.
+> EXCLUDE: no text or labels under the icons, no numbers, no drawn dividing
+> lines/borders between cells, no drop shadows, no 3D, no extra ornament, no
+> background color or pattern of any kind.
+
+**Prompt — Powered By sheet (revised 2026-07-31 for dark-background
+visibility — see spec note above):**
+> SUBJECT: A 2×2 grid of four separate flat brand-style icon marks for
+> MLOps tooling, one per quadrant: top-left GitHub Actions (GitHub's Octocat
+> mark, rendered in its official **white/light** dark-background variant —
+> the version GitHub itself uses on dark UIs — never the black
+> light-background variant), top-right DVC (its official mark), bottom-left
+> MLflow (its official mark, rendered in its brightest/lightest authentic
+> colorway), bottom-right Evidently AI (its official mark, rendered in its
+> brightest/most saturated authentic colorway, not a muted or dark tone).
+> COMPOSITION: Square canvas, even 2×2 grid; each icon centered alone within
+> roughly the middle 70% of its quadrant with generous uniform padding; a
+> consistent empty gutter between all four cells; no shared background
+> element, line, or divider crossing a cell boundary, so the sheet crops
+> cleanly into four independent icons afterward.
+> STYLE: Clean flat vector-style brand-icon rendering; consistent icon size,
+> weight, and rendering style across all four; simple recognizable silhouette
+> per tool, matching each tool's real public mark as closely as possible.
+> LIGHT: Even, flat lighting; no dramatic shadows.
+> COLOR: fully transparent background — zero fill, zero gradient, zero
+> ambient glow or haze anywhere outside each icon's own silhouette — behind
+> all four icons; every icon rendered light-colored and high-contrast enough
+> to read clearly against a dark navy (`#0d1b2e`) page background; for any
+> logo (like GitHub's) that officially ships as separate black and white
+> monochrome variants, use the white variant, never black or dark gray;
+> otherwise use each tool's authentic brand colors (not teal-restricted).
+> EXCLUDE: no text or labels under the icons, no numbers, no drawn dividing
+> lines, crosshairs, or borders between cells, no drop shadows, no 3D, no
+> extra ornament, no background color, gradient, glow, vignette, or haze of
+> any kind, no black or near-black icon fills or strokes that would be
+> invisible on a dark background.
+
+**Dimensions:** generate each sheet at 1024×1024 (both edges multiples of
+16), crop into four 512×512 cells, then downscale each crop to the ~28–32px
+display size. **Don't chase 4K for headroom** — 512×512 is already ~16–18×
+the target display size (more than enough margin even for retina), and
+gpt-image-2's own guidance (top of this doc) flags anything above 2560×1440
+as "experimental and more variable," so a larger canvas trades away
+reliability for resolution the icons will never use. Drops into
+`public/images/tools/` as 8 individual files (or `src/assets/tools/` if
+imported via `astro:assets`, matching item 4's and item 9's pattern) once
+cropped.
+
+**Verify transparency before treating a crop as done.** gpt-image-2 doesn't
+always deliver a clean alpha channel just because the prompt asked for one —
+some generations come back on an opaque fill despite the instruction, or the
+"transparent" area is only a checkerboard *preview* convention in the
+delivery UI, not real per-pixel alpha in the saved file. Open each cropped
+PNG and confirm it actually composites transparently (drag it over a
+non-navy background, or check the file's alpha channel) before wiring it
+into `MlopsSystem.astro` — if it isn't clean, remove the background in the
+same image-editor pass used for cropping rather than re-generating.
 
 ---
 

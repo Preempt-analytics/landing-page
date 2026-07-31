@@ -656,9 +656,14 @@ this?" One system, two zoom levels; **not two different systems.**
     control), MLflow (experiment tracking & model registry), Evidently AI (data &
     model drift monitoring).
   - **Implemented** (name + description text, `MlopsSystem.astro`). **Still
-    open:** the mockup's real per-tool brand icon next to each line — sourced,
-    not generated, from a permissively-licensed icon set (`docs/IMAGE_ASSETS.md`
-    item 6; zero image-generation tokens needed for that part).
+    open:** the mockup's real per-tool brand icon next to each line. **Approach
+    changed 2026-07-31 (human-directed):** generated via a gpt-image-2
+    sprite-sheet batch (two 2×2 sheets, one per panel, cropped into 8 icons)
+    rather than sourced outright — see `docs/IMAGE_ASSETS.md` item 6 for the
+    prompts and the trade-off (an AI-generated brand mark approximates the real
+    logo rather than reproducing it exactly). A permissively-licensed icon set
+    (e.g. Simple Icons) remains the fallback for any individual icon that
+    doesn't read as clearly recognizable.
 - **Bottom strip — honest, capstone-true claims (panel finding, actioned).** The
   mockup's `Automated / Scalable / Reliable / Secure` (with subtext like
   "Enterprise ready" and "Built for any factory") **overclaims for a bootcamp
@@ -672,9 +677,11 @@ this?" One system, two zoom levels; **not two different systems.**
   `Test it on your device →` (do-verb) button to §9.7 — the technical reader who
   scrolled this far is *exactly* the person most likely to run it, so give them
   the door here instead of making them scroll back to the hero.
-- Fully producible in SVG/CSS, including the tool brand marks via a
-  permissively-licensed icon set (e.g. Simple Icons) — standard practice for
-  "built with" attribution at this scale, not a trademark concern.
+- Fully producible in SVG/CSS, **except the 8 tool brand marks**, which are
+  raster PNGs cropped from a gpt-image-2 sprite-sheet generation (see §9.6
+  above and `docs/IMAGE_ASSETS.md` item 6) rather than SVG — a permissively-
+  licensed icon set (e.g. Simple Icons) is the fallback for any icon the
+  generation doesn't render recognizably.
 - Audience: the technical reader who scrolled this far — the "prove it" section
   for engineers/recruiters evaluating actual MLOps rigor, the deep counterpart to
   §9.3's birds-eye view of the same loop.
@@ -797,8 +804,10 @@ deliberate and labelled as such.
 - §9.3's birds-eye process loop (icons, cards, curved SVG arrows) — no tool logos.
 - §9.6's circular technical diagram — **rebuilt in SVG/CSS aligned to the site
   tokens**, using the ML repo's `Retraining Loop.png` as the *content reference*
-  (not raw-embedded — see the governing principle). Real open-source tool marks
-  via a permissively-licensed icon set (e.g. Simple Icons).
+  (not raw-embedded — see the governing principle). The 8 tool brand marks are
+  the one raster exception in this section — generated as gpt-image-2 sprite
+  sheets and cropped (`docs/IMAGE_ASSETS.md` item 6), with a permissively-
+  licensed icon set (e.g. Simple Icons) as fallback per-icon.
 - §9.5's timeline component (horizontal → vertical responsive). The center
   card's avatar is being upgraded from a pure CSS/SVG silhouette to a
   generated illustration — see the "Still needs external sourcing" list below
