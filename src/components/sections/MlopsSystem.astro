@@ -244,7 +244,7 @@ const claims = [
       <!-- Circular diagram — same layout at every breakpoint (human review, 2026-07-28:
            no separate mobile text-list fallback). The container and node tiles scale
            down together so it stays a circle even on a narrow phone. -->
-      <div class="mlops-reveal" data-reveal style="animation-delay: 80ms">
+      <div class="mlops-reveal" data-reveal style="transition-delay: 70ms">
         <div class="mlops-diagram relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md 2xl:max-w-lg">
           <!-- Center emblem (docs/IMAGE_ASSETS.md item 5): three nested rings reading
                as an "always on" engine at the middle of the loop, not a static badge.
@@ -322,7 +322,7 @@ const claims = [
       </div>
 
       <!-- Powered By -->
-      <div class="mlops-reveal rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal style="animation-delay: 140ms">
+      <div class="mlops-reveal rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal style="transition-delay: 140ms">
         <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60 2xl:text-sm">Powered by</h3>
         <ul class="space-y-2 2xl:space-y-3">
           {poweredBy.map((t) => (
@@ -549,59 +549,43 @@ const claims = [
     to { offset-distance: 100%; }
   }
 
-  /* Bespoke reveal for this row's three panels, replacing the shared
-     [data-reveal] vertical slide-up (human-requested, 2026-07-28 — the
-     translateY reveal read as "zooming in diagonally" here, most likely
-     because it plays out while the page is still scrolling past this point,
-     and a pure vertical element-motion plus vertical page-scroll reads to
-     the eye as diagonal). Pure scale + opacity + a brief light bloom instead
-     — no translate at all, so there's no direction for it to read as
-     diagonal regardless of scroll speed. Higher specificity than the global
-     [data-reveal] rule (attribute selector + class here vs. attribute alone
-     there) so it wins without needing !important; data-reveal itself is kept
-     on the element only so BaseLayout's shared IntersectionObserver still
-     picks it up and adds .is-visible at the right time. */
+  /* Reveal for this row's three panels — same [data-reveal] transition
+     mechanism the rest of the site uses (opacity + transform, eased by
+     BaseLayout's shared IntersectionObserver toggling .is-visible), with
+     `scale` standing in for the site's default `translateY`: a pure
+     vertical element-motion plus vertical page-scroll read as diagonal
+     here specifically (human-reported, 2026-07-28) — this section sits
+     deep enough that the page is often still scrolling as it comes into
+     view. Nothing else about it is bespoke anymore (human-requested,
+     2026-07-31 — an earlier version's mid-fade brightness/box-shadow
+     bloom read as an unwanted "border glow", out of step with the plain
+     fades everywhere else). Higher specificity than the base [data-reveal]
+     rule (attribute + class here vs. attribute alone there) lets this
+     override just the transform value it starts from; opacity, duration,
+     and easing are all inherited from [data-reveal] unchanged, and
+     [data-reveal].is-visible's own `transform: none` already resets this
+     on reveal without needing a redundant override here. */
   [data-reveal].mlops-reveal {
-    transform: none;
-    transition: none;
-  }
-  [data-reveal].mlops-reveal.is-visible {
-    animation: mlops-reveal-in var(--dur-slow) var(--ease-ios) both;
-  }
-  @keyframes mlops-reveal-in {
-    0% {
-      opacity: 0;
-      transform: scale(0.94);
-      filter: brightness(1);
-      box-shadow: 0 0 0 0 transparent;
-    }
-    55% {
-      opacity: 1;
-      filter: brightness(1.15);
-      box-shadow: 0 0 30px -6px color-mix(in srgb, var(--color-teal-400) 45%, transparent);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-      filter: brightness(1);
-      box-shadow: 0 0 0 0 transparent;
-    }
+    transform: scale(0.94);
   }
 
   /* Item-level cascade inside Built With / Powered By: once the panel's own
-     bloom-in above has revealed the frame, its four list items then populate
-     one after another — the staggered-per-card feel Benefits/HowItWorks
-     already have, brought to this section too (human-requested, 2026-07-28).
+     fade above has revealed the frame, its four list items then populate
+     one after another — the same staggered-per-card feel HowItWorks/
+     Benefits already have (their own cards stagger in 70ms steps via an
+     inline `transition-delay: ${i * 70}ms`), normalized here to the same
+     70ms step (human-requested, 2026-07-31 — was 60ms for list items, 80ms
+     for claims, two different steps neither matching the site's usual one).
      Same non-diagonal scale+opacity technique, no translate component, for
-     the same reason as the panel reveal above. Delays start at 200ms (the
-     panel is already well into its own fade by then, given --dur-slow) so
-     this reads as "frame appears, then items cascade in," not two competing
-     fades at once. .mlops-claim (the claim-strip tiles below) shares the
-     same base/animation-name but its own, earlier delay schedule, since the
-     claim strip is its own [data-reveal] container with no enclosing
-     panel-level delay to wait out first. Only matches real <li>s (plus
-     .mlops-claim), so the diagram panel (no list markup) is unaffected even
-     though it shares the .mlops-reveal class. */
+     the same reason as the panel reveal above. List-item delays start at
+     200ms (the panel is already well into its own fade by then, given
+     --dur-slow) so this reads as "frame appears, then items cascade in,"
+     not two competing fades at once. .mlops-claim (the claim-strip tiles
+     below) shares the same base/animation-name but its own, earlier delay
+     schedule, since the claim strip is its own [data-reveal] container
+     with no enclosing panel-level delay to wait out first. Only matches
+     real <li>s (plus .mlops-claim), so the diagram panel (no list markup)
+     is unaffected even though it shares the .mlops-reveal class. */
   .mlops-reveal li,
   .mlops-reveal .mlops-claim {
     opacity: 0;
@@ -612,13 +596,13 @@ const claims = [
     animation: mlops-item-in var(--dur-base) var(--ease-ios) both;
   }
   [data-reveal].mlops-reveal.is-visible li:nth-child(1) { animation-delay: 200ms; }
-  [data-reveal].mlops-reveal.is-visible li:nth-child(2) { animation-delay: 260ms; }
-  [data-reveal].mlops-reveal.is-visible li:nth-child(3) { animation-delay: 320ms; }
-  [data-reveal].mlops-reveal.is-visible li:nth-child(4) { animation-delay: 380ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(2) { animation-delay: 270ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(3) { animation-delay: 340ms; }
+  [data-reveal].mlops-reveal.is-visible li:nth-child(4) { animation-delay: 410ms; }
   [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(1) { animation-delay: 0ms; }
-  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(2) { animation-delay: 80ms; }
-  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(3) { animation-delay: 160ms; }
-  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(4) { animation-delay: 240ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(2) { animation-delay: 70ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(3) { animation-delay: 140ms; }
+  [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(4) { animation-delay: 210ms; }
   @keyframes mlops-item-in {
     from { opacity: 0; transform: scale(0.94); }
     to { opacity: 1; transform: none; }
@@ -684,13 +668,13 @@ const claims = [
     animation: mlops-check-draw 0.5s var(--ease-ios) 300ms forwards;
   }
   [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(2) .mlops-check path {
-    animation: mlops-check-draw 0.5s var(--ease-ios) 380ms forwards;
+    animation: mlops-check-draw 0.5s var(--ease-ios) 370ms forwards;
   }
   [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(3) .mlops-check path {
-    animation: mlops-check-draw 0.5s var(--ease-ios) 460ms forwards;
+    animation: mlops-check-draw 0.5s var(--ease-ios) 440ms forwards;
   }
   [data-reveal].mlops-reveal.is-visible .mlops-claim:nth-child(4) .mlops-check path {
-    animation: mlops-check-draw 0.5s var(--ease-ios) 540ms forwards;
+    animation: mlops-check-draw 0.5s var(--ease-ios) 510ms forwards;
   }
   @keyframes mlops-check-draw {
     to { stroke-dashoffset: 0; }
