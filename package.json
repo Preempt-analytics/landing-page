@@ -10,7 +10,8 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "fetch-metrics": "node scripts/fetch-metrics.mjs"
+    "fetch-metrics": "node scripts/fetch-metrics.mjs",
+    "fetch-ci-stats": "node scripts/fetch-ci-stats.mjs"
   },
   "dependencies": {
     "astro": "^5.6.0"

@@ -14,7 +14,25 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import InfoTip from '../components/InfoTip.astro';
 import BeginnersTrail from '../components/BeginnersTrail.astro';
+import StatCard from '../components/StatCard.astro';
 import { REPO_URL, withBase } from '../lib/site';
+import { isLive, retrainCount, relativeTime } from '../lib/metrics';
+import { isCiLive, totalCiRuns, lastCiRunAt } from '../lib/ci';
+
+// Live proof strip (human-requested, 2026-07-30): same honesty-labelled
+// StatCard system as the homepage hero, so a visitor who's already seen
+// "live · updated hourly" there recognizes this as more of the same real
+// system rather than a fresh claim. Model Retrains reuses metrics.json's
+// already-fetched binary_model.version (MLflow version numbers increment
+// with each promoted retrain); CI Pipeline Runs is a new source —
+// scripts/fetch-ci-stats.mjs reads the ML repo's public GitHub Actions API.
+const metricsLive = isLive();
+const retrains = retrainCount();
+const retrainsCaption = metricsLive ? 'live · updated hourly' : 'sample metric';
+
+const ciLive = isCiLive();
+const ciRuns = totalCiRuns();
+const ciCaption = ciLive ? `live · last run ${relativeTime(lastCiRunAt())}` : 'sample metric';
 ---
 
 <BaseLayout
@@ -31,6 +49,24 @@ import { REPO_URL, withBase } from '../lib/site';
       Everything runs inside Docker — no Python, no ML knowledge needed. Just
       two quick installs, then some waiting while things download.
     </p>
+
+    <!-- Live proof strip — see frontmatter note. -->
+    <div class="mt-8 grid gap-4 sm:grid-cols-2">
+      <StatCard value={String(retrains)} label="Model Retrains" caption={retrainsCaption} captionTone={metricsLive ? 'live' : 'plain'}>
+        <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M20 4v4h-4M4 20v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </StatCard>
+      <StatCard value={String(ciRuns)} label="CI Pipeline Runs" caption={ciCaption} captionTone={ciLive ? 'live' : 'plain'}>
+        <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6" />
+          <circle cx="12" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6" />
+          <circle cx="19" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6" />
+          <path d="M7.2 12h2.6M14.2 12h2.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </svg>
+      </StatCard>
+    </div>
 
     <BeginnersTrail title="Never done anything like this before? Here's the whole path.">
       <p>You don't need to know how to code. The whole journey is three steps:</p>

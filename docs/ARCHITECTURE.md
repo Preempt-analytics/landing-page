@@ -264,6 +264,13 @@ cross-workflow dispatch call, more moving parts than folding fetch → commit �
 build → deploy into one workflow. This also matches the mental model "every build
 bakes in the freshest data available, whatever triggered it."
 
+**Two fetch scripts, still one workflow (2026-07-30):** `fetch-ci-stats.mjs` was
+added alongside `fetch-metrics.mjs` as a second *step*, not a second workflow —
+same job, same fail-open contract, same commit step now staging both output
+files together. Adding more live data sources later should keep following this
+shape (another `fetch-*.mjs` + another step here) rather than spinning up a
+second workflow file.
+
 ```yaml
 name: Build and deploy
 
@@ -299,12 +306,16 @@ jobs:
           DAGSHUB_TOKEN: ${{ secrets.DAGSHUB_TOKEN }}
           MLFLOW_TRACKING_URI: ${{ vars.MLFLOW_TRACKING_URI }}
         run: node scripts/fetch-metrics.mjs
-      - name: Commit metrics.json if changed
+      - name: Refresh live CI stats from GitHub Actions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/fetch-ci-stats.mjs
+      - name: Commit metrics.json / ci-stats.json if changed
         run: |
           git config user.name "preempt-metrics-bot"
           git config user.email "bot@users.noreply.github.com"
-          git add src/data/metrics.json
-          git diff --cached --quiet || git commit -m "chore: refresh live model metrics"
+          git add src/data/metrics.json src/data/ci-stats.json
+          git diff --cached --quiet || git commit -m "chore: refresh live model metrics + CI stats"
           git push || echo "nothing to push"
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3

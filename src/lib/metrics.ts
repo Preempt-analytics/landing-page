@@ -14,6 +14,22 @@ export function failureRecallPct(): number {
   return Math.round((metrics.binary_model?.metrics?.recall_test ?? 0) * 100);
 }
 
+/** Precision of the current production binary model, as a rounded %. Pairs
+    with recall on the hero stat row: recall says "we catch most failures",
+    precision says "and we don't cry wolf" — same already-fetched field
+    (Contract 2), just not surfaced anywhere until now. */
+export function failurePrecisionPct(): number {
+  return Math.round((metrics.binary_model?.metrics?.precision_test ?? 0) * 100);
+}
+
+/** How many times the production binary model has been retrained & promoted.
+    MLflow version numbers increment monotonically with each registered
+    version, so the current version number doubles as a retrain count —
+    no new fetching needed, this field was already in metrics.json. */
+export function retrainCount(): number {
+  return Number(metrics.binary_model?.version ?? 0);
+}
+
 /** Most recent promotion across both models, ISO string or null. */
 export function lastPromotedAt(): string | null {
   const dates = [

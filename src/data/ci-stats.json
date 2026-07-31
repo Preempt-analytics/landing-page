@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "source": "live",
+    "note": "Live-fetched by CI (scripts/fetch-ci-stats.mjs) against GitHub's public REST API for the ML repo (Preempt-Analytics-Demo/predictive-maintenance-demo) — works anonymously for this public repo; GITHUB_TOKEN is only passed through to raise the unauthenticated rate limit, not required. Falls back to sample values only if the GitHub API is unreachable.",
+    "fetched_at": "2026-07-30T14:30:59.563Z"
+  },
+  "total_runs": 84,
+  "last_run_at": "2026-07-30T12:10:26Z",
+  "last_run_status": "success"
+}

@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "source": "sample",
+    "note": "Seed/fallback values. Never overwritten by CI. Real numbers replace these automatically — scripts/fetch-ci-stats.mjs reads GitHub's public REST API anonymously; GITHUB_TOKEN is optional (only raises the rate limit).",
+    "fetched_at": null
+  },
+  "total_runs": 50,
+  "last_run_at": "2026-07-20T02:37:00Z",
+  "last_run_status": "success"
+}

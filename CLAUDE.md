@@ -236,6 +236,7 @@ CI-overwritten)
 |---|---|---|
 | `_meta.source` (`"live"` \| `"sample"`) | Whether hero tiles show a "live" dot or a "sample metric" caption | Honesty labeling breaks — a sample number could silently read as live, or vice versa |
 | `binary_model.metrics.recall_test` | The Failure Recall stat tile's value | `metrics.ts`'s `failureRecallPct()` reads this exact path |
+| `binary_model.metrics.precision_test` | The Failure Precision stat tile's value (replaced the old illustrative "2.3M Sensor Readings/Day" tile, 2026-07-30 — same live source as recall, no reason for one real stat to sit next to a fake one) | `metrics.ts`'s `failurePrecisionPct()` reads this exact path |
 | `binary_model.promoted_at` / `multiclass_model.promoted_at` | "Last retrained" relative-time caption | `metrics.ts`'s `lastPromotedAt()` takes the max of both |
 
 `src/data/metrics.sample.json` is the never-overwritten seed/fallback — don't let
