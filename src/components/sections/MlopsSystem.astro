@@ -67,7 +67,7 @@ const claims = [
 ];
 ---
 
-<section id="tech-stack" class="scroll-mt-20 border-t border-white/5 bg-navy-900 py-20">
+<section id="tech-stack" class="scroll-mt-20 border-t border-white/5 bg-navy-900 py-20 2xl:py-24">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
       <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
@@ -76,22 +76,22 @@ const claims = [
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
         The MLOps System Behind the Predictions
       </h2>
-      <p class="mt-4 text-lg text-muted">
+      <p class="mt-4 text-lg text-muted 2xl:text-xl">
         The same loop from
         <a href="#how-it-works" class="text-teal-300 underline decoration-teal-400/40 underline-offset-4 hover:text-teal-200">How it works</a>
         — now with the tools that run it.
       </p>
     </div>
 
-    <div class="mt-14 grid gap-8 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-center">
+    <div class="mt-14 grid gap-8 lg:grid-cols-[1fr_1.4fr_1fr] lg:items-center lg:gap-10 2xl:mt-16 2xl:gap-20">
       <!-- Built With -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5" data-reveal>
-        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Built with</h3>
-        <ul class="space-y-2">
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal>
+        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60 2xl:text-sm">Built with</h3>
+        <ul class="space-y-2 2xl:space-y-3">
           {builtWith.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60">
-              <p class="text-sm font-semibold text-offwhite">{t.name}</p>
-              <p class="text-xs text-muted">{t.body}</p>
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
+              <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+              <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
             </li>
           ))}
         </ul>
@@ -101,10 +101,10 @@ const claims = [
            no separate mobile text-list fallback). The container and node tiles scale
            down together so it stays a circle even on a narrow phone. -->
       <div data-reveal style="transition-delay: 80ms">
-        <div class="relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md">
+        <div class="relative mx-auto aspect-square w-full max-w-[15.5rem] sm:max-w-xs md:max-w-md 2xl:max-w-lg">
           <!-- center mark -->
-          <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 sm:h-16 sm:w-16 md:h-20 md:w-20">
-            <svg class="h-4 w-4 sm:h-6 sm:w-6 md:h-[30px] md:w-[30px]" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <div class="absolute left-1/2 top-1/2 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-teal-400/40 bg-navy-950 sm:h-16 sm:w-16 md:h-20 md:w-20 2xl:h-24 2xl:w-24">
+            <svg class="h-4 w-4 sm:h-6 sm:w-6 md:h-[30px] md:w-[30px] 2xl:h-9 2xl:w-9" viewBox="0 0 32 32" fill="none" aria-hidden="true">
               <path d="M16 3 L29 28 L3 28 Z" stroke="var(--color-teal-400)" stroke-width="2" stroke-linejoin="round" />
               <path d="M16 13 L23 26 L9 26 Z" fill="var(--color-teal-400)" opacity="0.9" />
             </svg>
@@ -112,11 +112,11 @@ const claims = [
           {
             placed.map((n, i) => (
               <div
-                class="mlops-node absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5"
+                class="mlops-node absolute w-16 -translate-x-1/2 -translate-y-1/2 rounded-lg border border-white/10 bg-navy-800 p-1 text-center sm:w-28 sm:p-2 md:w-32 md:p-2.5 2xl:w-36 2xl:p-3"
                 style={`left:${n.left}%; top:${n.top}%;`}
               >
-                <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs">{i + 1}. {n.title}</p>
-                <p class="mt-0.5 hidden text-[0.65rem] leading-tight text-muted/80 sm:block">{n.body}</p>
+                <p class="text-[0.5rem] font-semibold leading-tight text-teal-300 sm:text-[0.65rem] md:text-xs 2xl:text-sm">{i + 1}. {n.title}</p>
+                <p class="mt-0.5 hidden text-[0.65rem] leading-tight text-muted/80 sm:block 2xl:text-xs">{n.body}</p>
               </div>
             ))
           }
@@ -139,13 +139,13 @@ const claims = [
       </div>
 
       <!-- Powered By -->
-      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5" data-reveal style="transition-delay: 140ms">
-        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">Powered by</h3>
-        <ul class="space-y-2">
+      <div class="rounded-xl border border-white/10 bg-navy-800/40 p-5 2xl:p-7" data-reveal style="transition-delay: 140ms">
+        <h3 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60 2xl:text-sm">Powered by</h3>
+        <ul class="space-y-2 2xl:space-y-3">
           {poweredBy.map((t) => (
-            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60">
-              <p class="text-sm font-semibold text-offwhite">{t.name}</p>
-              <p class="text-xs text-muted">{t.body}</p>
+            <li class="rounded-md border border-white/10 bg-navy-950/50 px-3 py-2 transition-colors duration-[var(--dur-base)] ease-[var(--ease-ios-in-out)] hover:border-teal-400/30 hover:bg-navy-800/60 2xl:px-4 2xl:py-3">
+              <p class="text-sm font-semibold text-offwhite 2xl:text-base">{t.name}</p>
+              <p class="text-xs text-muted 2xl:text-sm">{t.body}</p>
             </li>
           ))}
         </ul>
@@ -153,12 +153,12 @@ const claims = [
     </div>
 
     <!-- Honest, capstone-true claim strip -->
-    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4" data-reveal>
+    <div class="mt-14 grid gap-4 rounded-2xl border border-white/10 bg-navy-950/40 p-6 sm:grid-cols-2 lg:grid-cols-4 2xl:mt-28 2xl:gap-6 2xl:p-8" data-reveal>
       {
         claims.map((c) => (
           <div class="text-center sm:text-left">
-            <p class="text-sm font-semibold text-teal-300">{c.title}</p>
-            <p class="mt-0.5 text-xs text-muted">{c.body}</p>
+            <p class="text-sm font-semibold text-teal-300 2xl:text-base">{c.title}</p>
+            <p class="mt-0.5 text-xs text-muted 2xl:text-sm">{c.body}</p>
           </div>
         ))
       }

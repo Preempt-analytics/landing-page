@@ -80,22 +80,38 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   Wide-screen tuning (human review, 2026-07-23). Section content tops out at
-   max-w-7xl/max-w-6xl (80rem/72rem); on very wide monitors that leaves a lot of
-   unused side margin. One centralized rule widens the cap past the 2xl
-   breakpoint (1536px) — equal CSS specificity to Tailwind's own utility
-   classes, so the later source position (this file loads after
-   `@import "tailwindcss"`) wins only where the media query matches, without
-   `!important` or touching every component. Per-heading fluid type sizing
-   (2xl:text-* variants) lives on the headings themselves, next to their other
-   responsive classes, matching how every other breakpoint is already handled.
+   Wide-screen tuning (human review, 2026-07-23; widened further 2026-07-30
+   after the 90rem step still left visible dead margin on an ultra-wide
+   monitor). Section content tops out at max-w-7xl/max-w-6xl (80rem/72rem); on
+   very wide monitors that leaves a lot of unused side margin. One centralized
+   rule widens the cap in two steps — past the 2xl breakpoint (1536px), then
+   again past 1920px for true ultra-wide displays — equal CSS specificity to
+   Tailwind's own utility classes, so the later source position (this file
+   loads after `@import "tailwindcss"`) wins only where the media query
+   matches, without `!important` or touching every component. This is also
+   why a one-off `2xl:max-w-[...]` utility on a single section's own element
+   does nothing: an arbitrary-value class has the same specificity as
+   `.max-w-7xl` and Tailwind's utility layer is injected at the `@import`
+   above, i.e. earlier in source than this rule — so this rule always wins the
+   cascade regardless of what's added inline on the component. Widen here, not
+   per-component. Per-heading fluid type sizing (2xl:text-* variants) lives on
+   the headings themselves, next to their other responsive classes, matching
+   how every other breakpoint is already handled.
 --------------------------------------------------------------------------- */
 @media (min-width: 1536px) {
   .max-w-7xl {
-    max-width: 90rem; /* 1440px, up from 1280px */
+    max-width: 100rem; /* 1600px, up from 1280px */
   }
   .max-w-6xl {
-    max-width: 80rem; /* 1280px, up from 1152px */
+    max-width: 88rem; /* 1408px, up from 1152px */
+  }
+}
+@media (min-width: 1920px) {
+  .max-w-7xl {
+    max-width: 120rem; /* 1920px */
+  }
+  .max-w-6xl {
+    max-width: 104rem; /* 1664px */
   }
 }
 
