@@ -24,7 +24,7 @@ import dashboard from '../../assets/dashboard.png';
 
     <!-- Framed concept preview -->
     <figure class="relative mx-auto mt-12 max-w-5xl" data-reveal>
-      <div class="group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
+      <div class="product-mockup group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
         <!-- browser chrome -->
         <div class="flex items-center gap-2 border-b border-white/10 bg-navy-800/60 px-4 py-2.5">
           <span class="h-3 w-3 rounded-full bg-alert-400/70"></span>
@@ -54,3 +54,52 @@ import dashboard from '../../assets/dashboard.png';
     </p>
   </div>
 </section>
+
+<script>
+  // Bound to astro:page-load, not top-level: this section lives inside <main>,
+  // which isn't transition:persist-ed, so a fresh, unbound instance of this
+  // markup arrives on every client-side navigation to a page that renders it.
+  document.addEventListener('astro:page-load', () => {
+    // Toned-down cursor-parallax tilt on the framed dashboard mockup (moved
+    // here from LiveFactory.astro, human-requested, 2026-07-28 — this is a
+    // single coherent "device" shot with no competing hover interactions
+    // and no live DOM text to skew under the rotation (the screenshot is one
+    // rasterized image), so a subtle 3° perspective tilt reads as "looking
+    // at a product photo from a slight angle" rather than fighting for
+    // attention against anything else. Coexists with the image's own
+    // group-hover:scale-[1.02] above — that's the image zooming inside the
+    // frame, this is the whole frame tilting; different elements, same
+    // hover moment. Skipped entirely (not just slowed down) for touch/no-
+    // hover and for prefers-reduced-motion — continuous pointer-follow
+    // motion is exactly the kind of thing that setting exists to opt out
+    // of, not just soften.
+    const mockup = document.querySelector<HTMLElement>('.product-mockup');
+    const canTilt =
+      mockup &&
+      window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (canTilt && mockup) {
+      const MAX_TILT_DEG = 3;
+      mockup.addEventListener('mousemove', (e) => {
+        const rect = mockup.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / rect.width - 0.5;
+        const y = (e.clientY - rect.top) / rect.height - 0.5;
+        mockup.style.transform = `perspective(1000px) rotateX(${(-y * MAX_TILT_DEG * 2).toFixed(2)}deg) rotateY(${(x * MAX_TILT_DEG * 2).toFixed(2)}deg)`;
+      });
+      mockup.addEventListener('mouseleave', () => {
+        mockup.style.transform = '';
+      });
+    }
+  });
+</script>
+
+<style>
+  /* Perspective tilt target for the cursor-parallax script above. No
+     [data-reveal] collision to worry about here (unlike a couple of earlier
+     spots in this pass) — data-reveal lives on the outer <figure>, this
+     transition is on the inner .product-mockup div, a different element
+     with no competing transition of its own. */
+  .product-mockup {
+    transition: transform 300ms var(--ease-ios-in-out);
+  }
+</style>

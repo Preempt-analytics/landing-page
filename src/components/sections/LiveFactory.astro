@@ -12,16 +12,42 @@ import { withBase } from '../../lib/site';
 // CNC-01" beat, so this section's alert ties into that same story rather than
 // introducing a second, disconnected machine id. Coordinates/delays unchanged
 // from the original pin placement (read directly off cnc-factory-floor.png).
+// bootDelay staggers the one-time "power-up" flash each pin plays the first
+// time the section scrolls into view (human-requested, 2026-07-28) — a
+// separate concern from `delay`, which offsets each pin's *continuous*
+// ambient pulse so five sensors don't breathe in lockstep. Both live on the
+// same element at once (see .sensor-pin's two-animation rule in <style>).
 const machines = [
-  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', alert: false },
-  { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', alert: true },
-  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', alert: false },
-  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', alert: false },
-  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', alert: false },
+  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false },
+  { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', bootDelay: '150ms', alert: true },
+  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false },
+  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false },
+  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false },
+];
+
+// Scattered catwalk/background indicator lights (human-requested, 2026-07-28,
+// replacing an earlier roaming-spotlight version) — deliberately placed away
+// from the 5 machines above and the drift callout's own corner (roughly
+// left 40–54%, top 3–20%) so they read as background texture, not more
+// things demanding attention next to the section's actual focal points.
+// Durations are all different (and not simple multiples of each other) so
+// no two lights ever visibly fall into sync. bootDelay staggers each light's
+// one-time "power surging on" flicker the first time the section scrolls
+// into view (human-requested, 2026-07-28) — deliberately NOT the same
+// stagger schedule as the machines' own bootDelay above, so the whole
+// scene's lights don't power on in two neat, separately-timed sequences —
+// some of these flicker on before, between, and after the machine pins do,
+// reading as one uneven facility waking up rather than two clean cascades.
+const structureLights = [
+  { left: 8, top: 18, duration: 5.2, delay: 0, bootDelay: 0.05 },
+  { left: 92, top: 14, duration: 7.4, delay: 1.1, bootDelay: 0.5 },
+  { left: 14, top: 62, duration: 6.1, delay: 2.6, bootDelay: 0.25 },
+  { left: 90, top: 66, duration: 8.7, delay: 0.4, bootDelay: 0.7 },
+  { left: 50, top: 78, duration: 9.6, delay: 3.3, bootDelay: 0.4 },
 ];
 ---
 
-<section class="relative overflow-hidden border-t border-white/5 bg-navy-900 py-20">
+<section class="relative overflow-hidden border-t border-white/5 bg-navy-900 py-20" id="live-factory">
   <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 md:px-8 lg:grid-cols-2">
     <!-- Copy -->
     <div data-reveal>
@@ -37,7 +63,20 @@ const machines = [
     </div>
 
     <!-- CNC floor photo -->
-    <div class="relative" data-reveal style="transition-delay: 100ms">
+    <div class="factory-scene relative z-0" data-reveal style="transition-delay: 100ms">
+      <!-- Ambient glow behind the photo — same slow breathing treatment as
+           Hero's ambient light (global.css's ambient-breathe), so the two
+           sections read as one consistent "the scene is alive" system
+           rather than motion being a one-off on the homepage's first fold.
+           z-0 above (not just relative) so this -z-10 layer stays contained
+           behind the photo instead of escaping to paint behind unrelated
+           page content — the exact bug Hero.astro's own z-0 comment flags. -->
+      <div
+        class="hero-glow pointer-events-none absolute -inset-8 -z-10"
+        style="background: radial-gradient(50% 50% at 50% 40%, rgba(45,212,191,0.18), transparent 70%); animation-duration: 13s; filter: blur(20px);"
+        aria-hidden="true"
+      >
+      </div>
       <div
         class="relative aspect-[3/2] w-full overflow-hidden"
         style="mask-image: radial-gradient(ellipse 100% 100% at center, black 15%, transparent 100%); -webkit-mask-image: radial-gradient(ellipse 100% 100% at center, black 15%, transparent 100%);"
@@ -45,9 +84,28 @@ const machines = [
         <img
           src={withBase('/images/live-factory/cnc-factory-floor.png')}
           alt="Isometric view of a CNC milling factory floor with five machines, glowing teal sensor lights, and a catwalk structure."
-          class="h-full w-full object-cover"
+          class="factory-photo-parallax h-full w-full object-cover"
         />
       </div>
+
+      <!-- Structure lights: small, dim indicator lights scattered around the
+           catwalk/background — NOT the 5 named machines' own sensor pins
+           below, a separate, more numerous layer of tiny ambient lights that
+           blink occasionally and irregularly rather than breathing smoothly
+           (human-requested, 2026-07-28, replacing an earlier roaming-
+           spotlight version — this reads as "a real industrial facility,"
+           since real indicator/catwalk lighting flickers unevenly, not in
+           one uniform pulse). Each gets its own animation-duration/delay so
+           they blink independently, never in sync with each other. -->
+      {
+        structureLights.map((l) => (
+          <span
+            class="structure-light"
+            style={`left: ${l.left}%; top: ${l.top}%; animation-duration: ${l.duration}s, 1.3s; animation-delay: ${l.delay}s, ${l.bootDelay}s;`}
+            aria-hidden="true"
+          />
+        ))
+      }
 
       <!-- Sensor-light overlay: each pin sits on that machine's actual antenna/
            mount stub in the photo (coordinates read directly off
@@ -80,7 +138,11 @@ const machines = [
                 : `${m.name}: no drift detected, nominal`
             }
           >
-            <span class={`sensor-pin ${m.alert ? 'sensor-pin--alert' : ''}`} style={`animation-delay: ${m.delay};`} aria-hidden="true" />
+            <span
+              class={`sensor-pin ${m.alert ? 'sensor-pin--alert' : ''}`}
+              style={`animation-delay: ${m.bootDelay}, ${m.delay};`}
+              aria-hidden="true"
+            />
             {!m.alert && (
               <span class="machine-card machine-card--healthy">
                 <span class="machine-card-header">
@@ -165,6 +227,19 @@ const machines = [
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
+  /* .machine-card's z-index:40 only wins *inside* this button's own stacking
+     context — its permanent `transform` above (for centering) creates one,
+     per spec. From outside, the whole button is just one auto-z-index box,
+     so the always-visible red drift card (later in the DOM, same level)
+     paints over it regardless of the popup's z-index. Raising the button's
+     own z-index — only while its card is actually showing — is what lets
+     the popup rise above the red card where they overlap
+     (human-requested, 2026-07-28). */
+  .machine-hotspot:hover,
+  .machine-hotspot:focus-visible,
+  .machine-hotspot:focus {
+    z-index: 50;
+  }
 
   /* Reuses global.css's pulse-pin keyframe. Per-pin animation-delay is
      negative so each starts mid-cycle at a different phase — five sensors
@@ -183,7 +258,25 @@ const machines = [
     transform: translate(-50%, -50%);
     background-color: var(--color-teal-400);
     box-shadow: 0 0 10px 3px color-mix(in srgb, var(--color-teal-400) 70%, transparent);
-    animation: pulse-pin 3.6s var(--ease-ios-in-out) infinite;
+    /* Two animations, always both listed (never redeclared later) so the
+       inline animation-delay="{bootDelay}, {delay}" above always matches up
+       positionally — pulse-pin is the continuous ambient breathing (as
+       before); boot-flash is the one-time "power-up" this pin plays the
+       first time the section scrolls into view. boot-flash starts *paused*
+       — frozen on its neutral 0% frame, so it visibly does nothing — until
+       .factory-scene.is-visible below flips it to running. Without this
+       gate it would just play immediately on page load, off-screen, and be
+       long over by the time anyone actually scrolls down to see it. */
+    animation: pulse-pin 3.6s var(--ease-ios-in-out) infinite, boot-flash 0.7s var(--ease-ios) both;
+    animation-play-state: running, paused;
+  }
+  .factory-scene.is-visible .sensor-pin {
+    animation-play-state: running, running;
+  }
+  @keyframes boot-flash {
+    0% { filter: brightness(1); }
+    40% { filter: brightness(2.2); }
+    100% { filter: brightness(1); }
   }
   .sensor-pin--alert {
     background-color: var(--color-alert-400);
@@ -244,7 +337,11 @@ const machines = [
     opacity: 1;
     visibility: visible;
     transform: translate(-50%, 0) scale(1);
-    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
+    /* --ease-spring only on the way in — a slight overshoot reads as a small
+       "discovery" delight when the card appears. The hide direction (base
+       .machine-card rule above) keeps --ease-ios: overshooting on the way
+       OUT would look like a glitch, not a pop. */
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
   }
   /* Header row: status on the left (the point of the card), machine name
      small/muted in the upper-right corner — a label for context, not
@@ -284,5 +381,85 @@ const machines = [
     margin-top: 0.25rem;
     font-size: 0.75rem;
     color: var(--color-muted);
+  }
+
+  /* Structure lights (see the markup comment above): small, dim indicator
+     dots, each with its own animation-duration/delay set inline so they
+     never blink in sync. The keyframe stays dim for nearly the whole cycle
+     with one sharp spike near the end — an occasional flicker, not a smooth
+     breathing pulse (that's what the machines' own .sensor-pin already
+     does, and this needs to read as a visually distinct, lesser layer, not
+     five more sensor pins). Positioned with left/top directly (not
+     transform), same reasoning as the roaming spotlight this replaced: an
+     animated `transform` here would have to repeat this element's static
+     centering translate in every keyframe stop or lose it outright (the
+     transform-composition gotcha) — animating left/top instead sidesteps
+     that category of bug entirely rather than working around it. */
+  .structure-light {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    border-radius: 9999px;
+    transform: translate(-50%, -50%);
+    background-color: #eafffb;
+    box-shadow: 0 0 4px 1px rgba(234, 255, 251, 0.8);
+    opacity: 0.15;
+    /* structure-blink (unchanged, still the permanent occasional-flicker
+       loop) plus boot-flicker, a one-time "power surging on unevenly" burst
+       layered on top the first time the section scrolls into view — the
+       same paused/running gating technique as .sensor-pin's boot-flash
+       above. boot-flicker's own last keyframe stop matches structure-
+       blink's idle value (0.15) and it carries NO fill-mode, so the moment
+       it finishes it stops affecting opacity at all and hands control back
+       to structure-blink cleanly — a *filled* one-time animation would
+       otherwise permanently win every future frame for this property (same-
+       property animations composite "last listed wins," and a finished-
+       but-filled animation still counts as "listed" forever after). */
+    animation-name: structure-blink, structure-boot-flicker;
+    animation-timing-function: ease-out, linear;
+    animation-iteration-count: infinite, 1;
+    animation-play-state: running, paused;
+  }
+  .factory-scene.is-visible .structure-light {
+    animation-play-state: running, running;
+  }
+  @keyframes structure-blink {
+    0%, 90%, 100% { opacity: 0.15; }
+    93% { opacity: 1; }
+    96% { opacity: 0.15; }
+  }
+  @keyframes structure-boot-flicker {
+    0%   { opacity: 0.15; }
+    8%   { opacity: 1; }
+    14%  { opacity: 0.15; }
+    22%  { opacity: 1; }
+    28%  { opacity: 0.15; }
+    40%  { opacity: 0.9; }
+    46%  { opacity: 0.15; }
+    70%  { opacity: 1; }
+    100% { opacity: 0.15; }
+  }
+
+  /* Scroll-driven parallax on the photo itself: drifts slightly slower than
+     the surrounding content as the section passes through the viewport,
+     the classic "background sits further away" depth cue — chosen over
+     cursor-parallax specifically because it needs no hover and works on
+     touch (human-requested, 2026-07-28). Wrapped in @supports so browsers
+     without scroll-driven animations get the plain, unscaled, un-shifted
+     image exactly as before — not scoping this would otherwise show every
+     unsupporting browser permanently frozen at this animation's un-timed
+     *end* keyframe (translateY(2.5%)), a real regression, not a graceful
+     no-op. The 1.06 scale supplies the overscan the ±2.5% vertical drift
+     needs so the shift never uncovers empty space at the image's own edges. */
+  @supports (animation-timeline: view()) {
+    .factory-photo-parallax {
+      animation: factory-parallax linear both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+    }
+    @keyframes factory-parallax {
+      from { transform: scale(1.06) translateY(-2.5%); }
+      to { transform: scale(1.06) translateY(2.5%); }
+    }
   }
 </style>
