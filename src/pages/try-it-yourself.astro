@@ -52,13 +52,25 @@ const ciCaption = ciLive ? `live · last run ${relativeTime(lastCiRunAt())}` : '
 
     <!-- Live proof strip — see frontmatter note. -->
     <div class="mt-8 grid gap-4 sm:grid-cols-2">
-      <StatCard value={String(retrains)} label="Model Retrains" caption={retrainsCaption} captionTone={metricsLive ? 'live' : 'plain'}>
+      <StatCard
+        value={String(retrains)}
+        label="Model Retrains"
+        caption={retrainsCaption}
+        captionTone={metricsLive ? 'live' : 'plain'}
+        info="The model behind this demo doesn't stay frozen. It retrains and redeploys itself automatically as new data comes in — no one does it by hand. This number counts how many times that's happened so far."
+      >
         <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
           <path d="M20 4v4h-4M4 20v-4h4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
       </StatCard>
-      <StatCard value={String(ciRuns)} label="CI Pipeline Runs" caption={ciCaption} captionTone={ciLive ? 'live' : 'plain'}>
+      <StatCard
+        value={String(ciRuns)}
+        label="CI Pipeline Runs"
+        caption={ciCaption}
+        captionTone={ciLive ? 'live' : 'plain'}
+        info="A CI (&ldquo;continuous integration&rdquo;) pipeline automatically builds and tests the code every time it changes, catching problems before they reach you. This number is how many times that pipeline has run on this project."
+      >
         <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <circle cx="5" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6" />
           <circle cx="12" cy="12" r="2.2" stroke="currentColor" stroke-width="1.6" />
