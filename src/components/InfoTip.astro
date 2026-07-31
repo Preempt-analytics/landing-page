@@ -29,9 +29,9 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
 <span class="info-tip" data-pos={position}>
   <button type="button" class="info-tip-btn" aria-label={label}>
     {icon === 'eco' ? (
-      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="eco-leaf" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M19 4C10 4 4 10 4 19c9 0 15-6 15-15z" />
-        <path d="M19 4 6 17" />
+        <path class="eco-leaf-vein" d="M19 4 6 17" pathLength="1" />
       </svg>
     ) : (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -41,7 +41,16 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
       </svg>
     )}
   </button>
-  <span class="info-tip-pop" role="tooltip"><slot /></span>
+  <span class="info-tip-pop" role="tooltip">
+    {icon === 'eco' && (
+      <svg class="benefit-sprout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path class="sprout-stem" d="M12 21V9" pathLength="1" />
+        <path class="sprout-leaf-r" d="M12 9Q17 8 17 3Q13 4 12 9Z" pathLength="1" />
+        <path class="sprout-leaf-l" d="M12 13Q7 12 7 7Q11 8 12 13Z" pathLength="1" />
+      </svg>
+    )}
+    <slot />
+  </span>
 </span>
 
 <style>
@@ -88,6 +97,42 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     color: var(--color-teal-300);
     opacity: 1;
   }
+
+  /* 'eco' icon only: a subtle Apple-style "growing" flourish, not a static
+     glyph. The vein is undrawn at rest (a plain leaf silhouette reads fine
+     on its own, so this never looks broken/incomplete before any hover) and
+     draws in on hover/focus like a stem shooting up, paired with a gentle
+     spring-eased grow-in-size from the leaf's own stem point. pathLength="1"
+     on the vein keeps stroke-dasharray/-dashoffset in simple 0..1 units
+     regardless of the path's real length — same trick as the MLOps claim
+     strip's self-drawing checkmarks (MlopsSystem.astro). --ease-spring is
+     the same "discovery moment" easing reserved for exactly this kind of
+     accent elsewhere (see global.css's token comment). Transform-origin is
+     79% 17% — the leaf's tip/stem point (19,4) in the 24-unit viewBox,
+     expressed as a percentage of the rendered box since `transform-origin`
+     on the <svg> element itself operates in its own CSS pixel box, not the
+     viewBox's internal coordinate space.
+     Benefits.astro adds a second trigger off the *card's* own hover (not
+     just this button's) so the leaf reacts to hovering the tile at large,
+     not only the tiny icon — this rule alone only covers hovering/focusing
+     the icon directly, which still matters for keyboard/other consumers. */
+  .eco-leaf {
+    transform-origin: 79% 17%;
+    transition: transform var(--dur-base) var(--ease-spring);
+  }
+  .eco-leaf-vein {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--dur-slow) var(--ease-ios) 80ms;
+  }
+  .info-tip:hover .eco-leaf,
+  .info-tip:focus-within .eco-leaf {
+    transform: scale(1.15);
+  }
+  .info-tip:hover .eco-leaf-vein,
+  .info-tip:focus-within .eco-leaf-vein {
+    stroke-dashoffset: 0;
+  }
   .info-tip-pop {
     position: absolute;
     left: 0;
@@ -117,6 +162,41 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     visibility: visible;
     transform: translateY(0) scale(1);
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
+  }
+
+  /* The "gently growing" plant, living inside the eco popover itself (a
+     "hover card" in the UI sense — human-requested, 2026-07-31) rather than
+     as a decoration on the outer benefit tile: the stem draws first, then
+     each leaf unfurls a beat behind it, using the same pathLength="1" self-
+     drawing trick as the eco-leaf button's own vein and the MLOps claim
+     strip's checkmarks (MlopsSystem.astro). Same :hover/:focus-within
+     conditions that reveal the popover drive this too, so the plant keeps
+     growing for a few hundred ms after the popover itself has finished
+     fading/scaling in — "something's still quietly happening in here"
+     rather than everything landing in one instant. Transitions, not a one-
+     shot @keyframes animation, so closing the popover lets it recede
+     symmetrically instead of restarting from scratch next time. */
+  .benefit-sprout {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+    margin-bottom: 0.4rem;
+    color: var(--color-teal-300);
+  }
+  .benefit-sprout path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset var(--dur-slow) var(--ease-ios);
+  }
+  .benefit-sprout .sprout-leaf-r {
+    transition-delay: 150ms;
+  }
+  .benefit-sprout .sprout-leaf-l {
+    transition-delay: 300ms;
+  }
+  .info-tip:hover .benefit-sprout path,
+  .info-tip:focus-within .benefit-sprout path {
+    stroke-dashoffset: 0;
   }
 
   /* 'center'/'end' and the lg-only edge anchors below: same fade/scale as the

@@ -105,4 +105,18 @@ const benefits = [
   .tile-hover:focus-within {
     z-index: 10;
   }
+
+  /* Extends InfoTip.astro's own eco-leaf "growing" flourish (undrawn vein +
+     spring grow-in-size on the icon's own hover/focus) to the whole card:
+     hovering anywhere on the tile — not just the tiny leaf button in its
+     corner — sprouts the leaf too, so the animation reads as a property of
+     the benefit tile itself, not a fiddly detail you have to find. */
+  .tile-hover:hover :global(.eco-leaf),
+  .tile-hover:focus-within :global(.eco-leaf) {
+    transform: scale(1.15);
+  }
+  .tile-hover:hover :global(.eco-leaf-vein),
+  .tile-hover:focus-within :global(.eco-leaf-vein) {
+    stroke-dashoffset: 0;
+  }
 </style>
