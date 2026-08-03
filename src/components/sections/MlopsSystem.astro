@@ -47,27 +47,57 @@ const nodes = [
     info: "This is the same “Collect” step from How It Works, shown here as the actual system piece that receives it: an ingestion point that takes in live sensor readings (or simulated ones, for the demo) and hands them to the prediction model.",
   },
   {
-    title: 'Prediction API',
+    // Was "Prediction API" — measured (scrollWidth vs. content box, popover
+    // excluded) as one of four titles whose title + InfoTip icon didn't
+    // actually fit on one line at any breakpoint despite looking fine in a
+    // quick glance, wrapping the icon onto its own centered line below
+    // (human-reported, 2026-07-31). Shortened rather than widening every
+    // tile — the info tip and body copy both still say "API" for anyone
+    // who wants the precise term.
+    title: 'Predict API',
     body: 'Real-time inference & failure probability',
     info: 'A small web service with one job: take in a sensor reading and return a failure-probability score, in real time. “API” just means “a way for one piece of software to ask another for something” — here, asking for a prediction.',
   },
   {
-    title: 'Evidently Drift Check',
+    // Was "Evidently Drift Check" — the only 3-word title among 6 (the rest
+    // are all 2 words), long enough to wrap and drag the InfoTip icon down
+    // to its own second line (human-reported, 2026-07-31 — every other node
+    // keeps title + icon on one line). Shortened to match the 2-word
+    // pattern everywhere else; the Evidently attribution isn't lost — it's
+    // the first word of this node's own info tip below, and "Evidently AI"
+    // is listed (and cross-highlights this exact node) in Powered By.
+    title: 'Drift Check',
     body: 'Detects data & model drift',
     info: "Evidently is an open-source tool that statistically compares today's incoming sensor data against the data the model was originally trained on. If the two have drifted too far apart, that's an early sign the model needs retraining before its predictions quietly get worse.",
   },
   {
-    title: 'GitHub Actions',
+    // Was "GitHub Actions" — the one remaining title+icon combo (see the
+    // Predict API/MLflow comments above) that still didn't fit on one line
+    // even after those two fixes; a widely-recognized two-word product name
+    // isn't one to abbreviate, so this borrows "CI/CD" — the exact term the
+    // body line below already uses — instead. Full "GitHub Actions" is
+    // still right there in Powered By and in this node's own info tip.
+    title: 'CI/CD',
     body: 'Automated CI/CD for ML',
     info: "GitHub's built-in automation runner. When drift is flagged, this is what actually kicks off the retraining job in the background — no engineer has to notice the alert and start it by hand.",
   },
   {
-    title: 'DVC Pipeline',
+    // Was "DVC Pipeline" — same fix, and same reasoning as MLflow above:
+    // "DVC" alone now matches how Powered By already names this tool
+    // (`name: 'DVC'` below), rather than being more verbose than its own
+    // cross-highlighted counterpart.
+    title: 'DVC',
     body: 'Versioned data + retraining',
     info: 'DVC ("Data Version Control") works like Git, but for datasets and models instead of code. It keeps a versioned record of exactly which data produced which model, so every retraining run is traceable and repeatable.',
   },
   {
-    title: 'MLflow Registry',
+    // Was "MLflow Registry" — the widest offender in the same title+icon
+    // measurement above (see the Predict API comment). Shortened to
+    // "MLflow" alone, which also now matches how Powered By already names
+    // this same tool (`name: 'MLflow'` below) rather than being more
+    // verbose than its own cross-highlighted counterpart; "Registry" isn't
+    // lost, it's what the body line and info tip both describe.
+    title: 'MLflow',
     body: 'Compare, track & promote models',
     info: 'MLflow logs every training run’s results side by side, so a new model can be compared against the one currently live. Only a model that’s actually better gets "promoted" to production.',
   },
