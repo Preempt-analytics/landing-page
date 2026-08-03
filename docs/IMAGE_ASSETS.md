@@ -146,7 +146,7 @@ decided.
 
 | # | Asset | Needs image-gen? | Priority |
 |---|---|---|---|
-| 1 | Hero background photo | Yes | Required |
+| 1 | Hero background photo | **No** — done | Required |
 | 2 | Logo / brand mark | Yes (vector) | Required |
 | 3 | Live Factory background upgrade | Yes | Required |
 | 4 | "While the employees sleep" center illustration | **No** — done | Required |
@@ -156,6 +156,7 @@ decided.
 | 8 | Favicon | **No** — derive from #2 | Not a separate task |
 | 9 | Product Preview screenshot | **No** — done | Do not regenerate |
 | 10 | §9.1 in-action clip | **No** — screen recording | Not an image-gen task |
+| 11 | Try It Yourself banner (macro-gears reuse) | **No** — reused existing asset | Done |
 
 **Efficiency tip:** gpt-image-2 accepts an arbitrary size/ratio, so generate
 directly at each entry's stated dimensions (edges a multiple of 16, ratio
@@ -167,37 +168,101 @@ which cuts the number of regenerations more than any prompt wording does.
 
 ---
 
-## 1. Hero background photo — macro-gears
+## 1. Hero background photo — CNC machine, mid-operation
 
-**Status:** placeholder. Hero.astro currently renders a navy→teal CSS gradient
-panel with a faint gear-silhouette SVG stand-in instead of a real photo. Final
-asset drops into `public/images/hero/macro-gears.jpg` with zero code changes
-(ARCHITECTURE §5, §7 item 2).
+**Status:** DONE (2026-07-31). Replaces the original macro-gears close-up
+(`design/visual-assets/gears.png`), which read as generic "industrial" stock
+imagery — could be almost any manufacturing product — rather than this
+project's actual machine. The gears photo wasn't discarded: it moved to the
+Try It Yourself subpage instead (item 11 below). Asset:
+`design/visual-assets/hero-page-cnc.png` → `public/images/hero/cnc-machine.png`.
 
-**Used in:** [Hero.astro](../src/components/Hero.astro), visual column (right
-side on desktop).
+**Used in:** [Hero.astro](../src/components/Hero.astro), visual layer behind
+the copy (right 62% at `lg:`, full-bleed faded wash below `lg:`).
 
-The `low overall contrast` / darker-negative-space direction below is what lets
-Hero.astro's teal glow overlay and dot-grid texture sit on top without fighting
-the photo — kept as a composition instruction, not as rationale inside the
-prompt.
+**Content decision (human-directed, 2026-07-31):** an early direction explored
+an *exploded/cutaway* CNC diagram with the machine's assemblies pulled apart.
+Superseded before generation — the team found a better composition reference
+(a whole, intact machine mid-operation, sparks/chips flying) and preferred it.
+**Machine type correction applied to that reference:** the found reference
+photo was a CNC *turning* machine (lathe) — this project's dataset is a
+*milling* process (confirmed by the Product Preview dashboard's own "CNC-03"
+labeling, and already the reason `LiveFactory.astro`'s prompt insists on
+"CNC/milling equipment specifically"). The prompt below asks for a milling
+machine, not a lathe, to stay consistent with that established constraint.
+
+**Text/labels — deliberately excluded from the image, added in code instead.**
+The prompt asks for three specific surfaces to stay plain and neutral (no
+glow, no icon, no color) — these become anchor points for a small icon
+overlay added afterward in `Hero.astro`, following the same governing
+principle as item 3's Live Factory image (bare mounting point in the photo,
+animated/interactive layer added in code, never baked into the pixels).
 
 **Prompt:**
-> SUBJECT: Extreme macro close-up of interlocking industrial steel gears and
-> precision machine parts, filling the frame.
-> COMPOSITION: Portrait 4:5; shallow depth of field; keep the upper third
-> darker and emptier so headline text and a glow overlay can be layered on top.
-> STYLE: Photorealistic, high micro-detail, cinematic industrial.
+> SUBJECT: A single complete, realistic CNC vertical milling machine, shown
+> mid-operation — a moving spindle head actively cutting a metal workpiece
+> clamped to the machine's table, with fine metal chips and a faint coolant
+> mist at the cutting point suggesting real activity. Not an exploded or
+> parts-separated view — the machine is fully assembled.
+> KEY DETAIL: three distinct surfaces should stay plain, neutral, and
+> unlabeled — no glow, no color, no icon baked in — because each becomes an
+> overlay anchor point added afterward in code: (1) the spindle head /
+> cutting-tool area, (2) the drive motor housing or a heat-vent grille on the
+> machine body, (3) an electrical control cabinet or panel mounted to the
+> machine (switches/indicators present but unlit). Keep the three spatially
+> separated across the machine's body, not clustered together.
+> COMPOSITION: Landscape, wide — the full machine reads clearly at a
+> mid-distance, not a macro close-up. Keep the machine's most detailed,
+> legible silhouette within the right two-thirds and vertical-middle of the
+> frame; the final crop fades the left edge and bottom edge into solid navy
+> behind the page's headline text, so detail there doesn't need to survive.
+> STYLE: Photorealistic, cinematic industrial, matte-to-semi-gloss brushed
+> metal — avoid very glossy/wet specular highlights that read as organic
+> rather than machined.
 > LIGHT: Moody low-key industrial lighting; teal and deep-blue rim light
-> picking out the metal edges.
+> picking out the metal edges; small warm highlights only at the actual
+> cutting point (chips/coolant), not washing the rest of the machine.
 > COLOR: deep navy background (#0d1b2e / navy-900), bright teal-cyan accents
 > (#2dd4bf / teal-400) only; low overall contrast; designed to sit on a dark
 > website.
-> EXCLUDE: no text, no numbers, no logos, no brand marks, no UI panels.
+> EXCLUDE: no text, no numbers, no logos, no brand marks, no UI panels, no
+> glowing icons/indicator lights/gauges baked into the machine — those three
+> points are added afterward in code, not rendered here.
 
-**Dimensions:** 1600×2000px (`aspect-[4/5]` on desktop, square on mobile);
-both edges are multiples of 16, so gpt-image-2 renders this size directly.
-Drops into `public/images/hero/macro-gears.jpg`.
+Attached the found reference photo as an uploaded reference before pasting
+(content/composition only — its warm amber color grade is overridden by this
+prompt's own `COLOR` line, not carried over).
+
+**Dimensions delivered:** 1672×941 (~16:9). **Code-side consequence, not just
+a file swap:** the previous portrait macro-gears photo (1600×2000) suited
+`Hero.astro`'s old `inset-0`-stretched-to-full-section-height container. This
+landscape photo does not — stretching a ~16:9 image to fill a much taller
+container would `object-cover`-crop away most of its width, defeating the
+wide composition entirely. `Hero.astro`'s image wrapper was changed to
+`lg:aspect-video` (a near-exact match for 1672:941) plus vertical centering,
+decoupling the photo's shape from however tall the copy block next to it
+renders.
+
+**Code-side only — icon overlay anchor points (do NOT paste into the
+generator).** Like item 3's pin table, these are the alignment reference for
+the code side, read directly off the delivered `cnc-machine.png` (percent of
+canvas, so they hold regardless of final crop):
+
+| Anchor | Position (% of canvas) | Icon | Failure mode |
+|---|---|---|---|
+| Spindle / cutting-tool area | 60% across, 46% down | Wrench + low-level bars | TWF (tool wear) |
+| Control panel / screen | 73% across, 46% down | Low-battery gauge | PWF (power failure) |
+| Vented cabinet, far right | 93% across, 48% down | Thermometer | HDF (heat dissipation) |
+
+Restrained deliberately (human-requested, "very restrained," 2026-07-31):
+`lg:`-only (this photo is just a felt-not-seen wash below `lg:`, so a pinned
+icon would be nearly invisible there), no hover card, no LiveFactory-style
+pulse — just the same slow `ambient-breathe` glow the hero's own light layers
+already use. Only 3 of the dataset's 5 real failure classes get an icon
+(TWF/HDF/PWF); **OSF is omitted for restraint, and RNF is omitted on
+purpose** — random failure has no predictable sensor signature by definition
+in the dataset, so giving it an icon here would overclaim what the system
+actually does.
 
 ---
 
@@ -646,3 +711,23 @@ recording, not something an image-generation tool can produce** — listed
 here only so the full set of pending visual assets is in one place. Needs a
 team member to capture it; v1 ships without it (still + "Concept preview"
 badge on `/product`).
+
+---
+
+## 11. Try It Yourself banner — macro-gears reuse
+
+**Status:** DONE (2026-07-31). Not a new asset — this is the original hero
+macro-gears photo (`design/visual-assets/gears.png`, item 1's image before
+the 2026-07-31 swap to a real CNC machine), relocated rather than discarded.
+Zero image-generation tokens needed.
+
+**Used in:** [try-it-yourself.astro](../src/pages/try-it-yourself.astro),
+fixed-height photo band behind the page header (back link, H1, intro, stat
+cards) — fades to solid navy before the instructional content below, so the
+plain, scannable setup steps underneath aren't competing with a busy photo.
+Same fade/wash technique as `Hero.astro`, scoped to a fixed-height band
+instead of the full section since this page has no two-column hero layout to
+give the photo its own side.
+
+Asset: `design/visual-assets/gears.png` →
+`public/images/try-it-yourself/macro-gears.png`.

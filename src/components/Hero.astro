@@ -20,12 +20,29 @@ import { withBase } from '../lib/site';
     right 62% with the left/bottom fades below, so the photo reads clearly there,
     matching the mockup. Two gradient divs (not the photo itself) fade it into navy-950.
 
-    ASSET: prototype-1-hero-image.png (design/visual-assets/), confirmed by human
-    review 2026-07-28 as the image to use here.
+    ASSET: cnc-machine.png (design/visual-assets/hero-page-cnc.png), swapped in
+    2026-07-31 for a whole, mid-operation CNC milling machine — replaces the earlier
+    macro-gears close-up (design/visual-assets/gears.png), which moved to the
+    Try It Yourself subpage instead (see try-it-yourself.astro). Reasoning:
+    macro-gears is generic "industrial" stock imagery that could be almost any
+    manufacturing product; a real CNC mill visually grounds the actual product
+    (docs/IMAGE_ASSETS.md item 1).
+
+    Container shape, not just the source file, changed with it: the old portrait
+    macro-gears photo (1600×2000) suited `inset-0` stretched to the section's full
+    (tall) height. This new photo is landscape (1672×941, ~16:9) with intentional
+    dark negative space on the left for the headline to sit on — stretching THAT to
+    a tall container would object-cover-crop away most of its width, defeating the
+    wide composition entirely. `lg:aspect-video` (an exact match for the source's
+    own ~16:9 ratio) plus vertical centering keeps the photo's real shape intact
+    regardless of how tall the copy block next to it renders.
   -->
-  <div class="pointer-events-none absolute inset-0 -z-20 lg:left-auto lg:w-[62%]" aria-hidden="true">
+  <div
+    class="pointer-events-none absolute inset-0 -z-20 lg:inset-auto lg:right-0 lg:top-1/2 lg:w-[62%] lg:aspect-video lg:-translate-y-1/2"
+    aria-hidden="true"
+  >
     <img
-      src={withBase('/images/hero/prototype-1-hero-image.png')}
+      src={withBase('/images/hero/cnc-machine.png')}
       alt=""
       class="h-full w-full object-cover"
     />
@@ -42,6 +59,69 @@ import { withBase } from '../lib/site';
       class="absolute inset-0"
       style="background: linear-gradient(to bottom, transparent 55%, var(--color-navy-950) 100%);"
     >
+    </div>
+
+    <!-- Failure-mode hotspots (human-requested, 2026-07-31) — restrained version of
+         LiveFactory.astro's pin-overlay pattern: icons only, no text/labels baked
+         into the image or drawn here (gpt-image-2 can't render small text reliably,
+         and acronyms like "TWF" would need explaining before a first-time visitor
+         has any context — the Krug/Redish plain-language problem this site
+         otherwise solves with InfoTip). Three of the dataset's real failure
+         classes; still no hover card and still lg-only (this photo is just a
+         felt-not-seen wash below lg, so a pinned icon would be nearly invisible
+         there) — that restraint stands. RNF (random failure) has no icon on
+         purpose: it has no predictable sensor signature by definition in the
+         dataset, so implying this system flags it too would overclaim.
+         Coordinates are eyeballed off cnc-machine.png and expected to need a small
+         nudge once seen rendered — same as LiveFactory's own pin coordinates.
+
+         Visibility pass (human-requested follow-up, 2026-07-31): the first version
+         was too subtle to notice — a soft blurred wash, breathing over 10-13s, with
+         no arrival moment and nothing to distinguish it from the photo's own
+         highlights/sparks. Fixed three ways (`.hero-icon-marker` below), all still
+         non-interactive/pointer-events-none — this remains a flourish, not
+         LiveFactory's "watch it work" moment, just a more noticeable one:
+         (A) a visible ring + a tighter, brighter two-layer glow (teal core, dark
+         vignette behind it) reading as a deliberate marker against the photo's own
+         texture, and a faster 6-7s breathe instead of 10-13s; (B) a one-time
+         brightness flash timed just after the copy's own hero-fade-in sequence
+         finishes (no scroll/JS trigger needed — the hero's already in view at
+         load); (D) the dark vignette IS the local-contrast patch each glow sits
+         on, folded into the same background rather than a separate layer. -->
+    <div
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
+      style="left: 60%; top: 46%; animation-duration: 6.5s, 900ms; animation-delay: 0ms, 480ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      aria-hidden="true"
+    >
+      <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+        <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+        <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
+        <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
+      </svg>
+    </div>
+    <div
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
+      style="left: 73%; top: 46%; animation-duration: 7s, 900ms; animation-delay: -2.3s, 560ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      aria-hidden="true"
+    >
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+        <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
+        <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
+        <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
+      </svg>
+    </div>
+    <div
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
+      style="left: 93%; top: 48%; animation-duration: 6.8s, 900ms; animation-delay: -4.6s, 640ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      aria-hidden="true"
+    >
+      <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+        <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
+        <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
+      </svg>
     </div>
   </div>
 
@@ -88,8 +168,9 @@ import { withBase } from '../lib/site';
         class="hero-fade-in mt-6 max-w-xl text-lg leading-relaxed text-muted 2xl:max-w-2xl 2xl:text-xl"
         style="animation-delay: 140ms"
       >
-        Preempt Analytics helps manufacturing teams predict machine failures
-        before they happen—so you can maximize uptime and efficiency.
+        A predictive-maintenance system that catches machine failures before
+        they happen — built to show how manufacturing teams could maximize
+        uptime and efficiency.
       </p>
 
       <div class="hero-fade-in mt-8 flex flex-wrap gap-4" style="animation-delay: 220ms">
@@ -110,3 +191,30 @@ import { withBase } from '../lib/site';
     </div>
   </div>
 </section>
+
+<style>
+  /* Failure-mode icon markers (see the markup comment above for the full
+     visibility-pass rationale). Two animations per marker, same technique as
+     LiveFactory's .sensor-pin: the continuous ambient-breathe (shared
+     keyframe, global.css) plus a one-time brightness flash. Unlike
+     LiveFactory's boot-flash — gated behind an IntersectionObserver +
+     .is-visible class, since that section only enters view on scroll — this
+     needs no JS trigger at all: the hero is already in view at first paint,
+     so the flash just rides a plain positive animation-delay, timed to land
+     right after .hero-fade-in's own copy sequence (which ends at 340ms)
+     finishes, drawing the eye across to the photo once the headline/CTAs
+     have already appeared. animation-duration/-delay are set inline per
+     marker as comma-separated pairs (ambient-breathe value, then
+     hero-icon-flash value) so each marker's continuous breathe stays
+     independently offset — three markers pulsing in lockstep would read as
+     one fake blinking light — while its one-time flash still lands at its
+     own distinct moment. */
+  .hero-icon-marker {
+    animation: ambient-breathe 7s ease-in-out infinite, hero-icon-flash 900ms ease-out both;
+  }
+  @keyframes hero-icon-flash {
+    0% { filter: brightness(1); }
+    35% { filter: brightness(2.4); }
+    100% { filter: brightness(1); }
+  }
+</style>
