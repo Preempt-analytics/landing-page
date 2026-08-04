@@ -274,6 +274,35 @@ fixed).
 
 ---
 
+### Contract 5 — Dashboard Panel Registry
+
+**Owner:** `src/lib/dashboard.ts` (`DASHBOARD_PANELS`)
+**Dependents:** `ProductPreview.astro`'s sidebar + tabpanel shell (`/product`)
+
+`/product`'s dashboard is a real clickable sidebar, not a single static image.
+Each of the 9 items in `DASHBOARD_PANELS` has a `mode` — `'image'` (a labelled
+"Concept preview" screenshot), `'html'` (real markup, e.g. live metrics), or
+`'soon'` (in-development placeholder) — and that field is the **only** thing
+that decides how `ProductPreview.astro` renders that panel. This is what lets
+a panel be promoted or demoted (e.g. `'soon' → 'image'` once a concept
+screenshot is generated, or `'image' → 'html'` once real data exists) as a
+one-line registry edit plus one template branch, never a shell rewrite.
+
+**What is locked:**
+
+| Field | Controls | If changed without updating dependents |
+|---|---|---|
+| `mode` | Which branch of `ProductPreview.astro` renders that panel's content | A panel with no matching branch (or no imported asset for an `'image'` id) renders nothing/breaks the build |
+| `id` | Which asset/content block a panel maps to (`PANEL_IMAGES`, the `model-health`/`settings` branches in `ProductPreview.astro`) | Renaming an id without updating those maps orphans the panel |
+
+Adding a new `'image'`-mode panel needs both a registry entry **and** an
+entry in `ProductPreview.astro`'s `PANEL_IMAGES`/`PANEL_ALT` maps in the same
+change. Adding a new `'html'`-mode panel needs a new id-specific branch in
+the same file. See `docs/IMAGE_ASSETS.md` items 12–13 for the two existing
+generated concept screenshots (Alerts, Predictions) and their crop recipe.
+
+---
+
 ## PRE-CHANGE CHECKLIST
 
 | Change type | Check |
@@ -286,6 +315,7 @@ fixed).
 | Add or edit an npm/Node script | Works identically on Windows, Mac, and Linux? Uses `node:path`, not hardcoded `/` separators or bash-only syntax? |
 | Add/edit a section component | Matches the design spec in `ARCHITECTURE.md` §9 for that section, or is the spec being updated too? |
 | Touch `.github/workflows/deploy.yml` | Still fails open if `DAGSHUB_TOKEN` is unset? Still only one workflow (§6's "why one, not two")? |
+| Add/flip a `/product` dashboard panel | Registry entry (`dashboard.ts`) **and** a matching branch/asset in `ProductPreview.astro` updated in the same change (Contract 5)? |
 
 ---
 
@@ -318,6 +348,15 @@ and the handover docs so they don't have to be rediscovered:
   card's €24,300/etc. and the hero's `2.3M` sensor tile are narrative/marketing
   copy, not measured data — don't let a future edit drop the "Illustrative
   example" / "illustrative" captions that keep them from reading as real claims.
+  **This extends to `/product`'s `'image'`-mode dashboard panels** (Overview,
+  Alerts, Predictions — Contract 5): their generated content is explicitly
+  allowed to be conceptual/fabricated (machine names, alert counts, an
+  un-backed "time to likely failure," per human direction 2026-08-04, see
+  `docs/IMAGE_ASSETS.md` items 12–13) **only because** each carries a
+  "Concept preview" badge. The badge is load-bearing — never ship an
+  `'image'`-mode panel without it, and never put a fabricated live-looking
+  number (e.g. a notification-count badge) on the *real* sidebar nav item
+  itself, outside the labelled image.
 - **`fetch-metrics.mjs` must fail open, always.** A missing/invalid
   `DAGSHUB_TOKEN`, a DagsHub outage, or an API shape change should keep the
   last-committed `metrics.json` values and log a warning — never break the build,
@@ -352,6 +391,7 @@ and the handover docs so they don't have to be rediscovered:
 | `scripts/fetch-metrics.mjs` | CI live-metrics fetch | DagsHub MLflow REST API | `src/data/metrics.json` |
 | `src/lib/metrics.ts` | Metrics accessor | `src/data/metrics.json` | `StatRow.astro` |
 | `src/lib/site.ts` | Shared constants + `withBase()` | — | `Nav`, `Footer`, `Hero`, `MlopsSystem`, `try-it-yourself` |
+| `src/lib/dashboard.ts` | `/product` panel registry (`mode` per panel) | — | `ProductPreview.astro` |
 | `astro.config.mjs` | Site/base config | — | every internal link via `withBase()` |
 | `src/styles/global.css` | Design tokens, motion/focus rules | — | every component's Tailwind classes |
 | `src/layouts/BaseLayout.astro` | Page shell, SEO/OG meta | `site.ts` | wraps every page in `src/pages/` |

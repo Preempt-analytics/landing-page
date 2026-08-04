@@ -1,10 +1,69 @@
 ---
-// §9.1 Product Preview — the "See it in action" destination. The dashboard is a
-// finished screenshot shown inside browser chrome, framed as a Concept preview so
-// its (deliberately) dead interactivity reads as intentional. A team-recorded
-// in-action clip drops into the same frame later (open item §7).
+// §9.1 Product Preview — the "See it in action" destination. A real clickable
+// sidebar (DASHBOARD_PANELS, src/lib/dashboard.ts) switches between panels;
+// each panel is independently a labelled concept screenshot ('image'), real
+// markup ('html'), or an in-development placeholder ('soon') — decided per
+// panel, changeable later without reworking this shell. Frame stays browser-
+// chrome + "Concept preview" cue for image panels, same pattern as before.
 import { Image } from 'astro:assets';
-import dashboard from '../../assets/dashboard.png';
+import type { ImageMetadata } from 'astro';
+import dashboardOverview from '../../assets/dashboard-overview.png';
+import dashboardAlerts from '../../assets/dashboard-alerts.png';
+import dashboardPredictions from '../../assets/dashboard-predictions.png';
+import StatCard from '../StatCard.astro';
+import { DASHBOARD_PANELS } from '../../lib/dashboard';
+import { REPO_URL, TEAM, PROGRAM } from '../../lib/site';
+import {
+  isLive,
+  failureRecallPct,
+  failurePrecisionPct,
+  lastPromotedAt,
+  relativeTime,
+  retrainCount,
+} from '../../lib/metrics';
+
+const live = isLive();
+const recall = `${failureRecallPct()}%`;
+const precision = `${failurePrecisionPct()}%`;
+const retrained = relativeTime(lastPromotedAt());
+const liveTone = live ? 'live' : 'plain';
+const liveCaption = live ? 'live · updated hourly' : 'sample metric';
+
+// image-mode panels only need a lookup from id -> imported asset; 'html'/'soon'
+// panels are handled by id-specific branches below (only 2 'html' ids exist,
+// so a bespoke branch per id reads clearer than a second registry).
+const PANEL_IMAGES: Record<string, ImageMetadata> = {
+  overview: dashboardOverview,
+  alerts: dashboardAlerts,
+  predictions: dashboardPredictions,
+};
+
+const PANEL_ALT: Record<string, string> = {
+  overview:
+    'Preempt Analytics maintenance dashboard overview: an Overall Fleet Health tile at 94%, a Priority Maintenance Queue ranking machines such as Press-07 (97% failure probability, critical) and CNC-03 (89%, high), a failure-probability trend chart, and live sensor tiles for temperature, vibration, rotational speed, torque and tool wear.',
+  alerts:
+    'Concept mockup of an Alerts view: a feed of maintenance alert cards (e.g. "Drift Detected — Tool Wear Shift", "Abnormal Vibration Detected") each with a severity badge, machine ID, and timestamp, plus a summary strip of active/critical/resolved counts.',
+  predictions:
+    'Concept mockup of a Predictions view: machines ranked by failure probability with a color-coded severity bar and estimated time to likely failure, a probability-band legend, and a probability-over-time trend chart for the top-ranked machine.',
+};
+
+// One small stroke icon per sidebar item (24x24 viewBox, matches the site's
+// existing hand-drawn icon style — StatRow, HowItWorks). Static, trusted
+// markup only, so set:html here is just avoiding 9 near-duplicate <svg>
+// blocks rather than templating risk.
+const ICONS: Record<string, string> = {
+  overview: '<path d="M4 11.5 12 5l8 6.5" /><path d="M6 10v9h12v-9" />',
+  'live-machines': '<rect x="4" y="5" width="16" height="11" rx="1.5" /><path d="M9 20h6M12 16v4" />',
+  alerts: '<path d="M7 10a5 5 0 0 1 10 0v4l1.5 2.5h-13L7 14z" /><path d="M9.5 18.5a2.5 2.5 0 0 0 5 0" />',
+  predictions: '<path d="M4 16l4.5-5 4 3.5L20 7" /><path d="M15 7h5v5" />',
+  'maintenance-queue':
+    '<rect x="5" y="4" width="14" height="17" rx="1.5" /><path d="M9 3.5h6M8.5 10h7M8.5 13.5h7M8.5 17h4" />',
+  'work-orders': '<path d="M7 3.5h7l3 3v14H7z" /><path d="M14 3.5v3h3M9.5 12h5M9.5 15.5h5" />',
+  'model-health': '<path d="M3 12h3l2-6 3 11 2-8h3l2 3h3" />',
+  reports: '<path d="M5 20V10M11 20V4M17 20v-7" />',
+  settings:
+    '<path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h9M17 18h3" /><circle cx="13" cy="6" r="2" /><circle cx="7" cy="12" r="2" /><circle cx="13" cy="18" r="2" />',
+};
 ---
 
 <section id="product" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
@@ -18,11 +77,12 @@ import dashboard from '../../assets/dashboard.png';
       </h2>
       <p class="mt-4 text-lg leading-relaxed text-muted">
         A maintenance control center: fleet health, machines ranked by failure
-        probability, and live sensor readings — all in one place.
+        probability, and live sensor readings. The sidebar below is real —
+        click through the sections yourself.
       </p>
     </div>
 
-    <!-- Framed concept preview -->
+    <!-- Framed dashboard shell -->
     <figure class="relative mx-auto mt-12 max-w-5xl" data-reveal>
       <div class="product-mockup group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
         <!-- browser chrome -->
@@ -32,25 +92,247 @@ import dashboard from '../../assets/dashboard.png';
           <span class="h-3 w-3 rounded-full bg-teal-400/70"></span>
           <span class="ml-3 truncate text-xs text-muted/60">preempt-analytics · maintenance control center</span>
         </div>
-        <Image
-          src={dashboard}
-          alt="Preempt Analytics maintenance dashboard: an Overall Fleet Health tile at 94%, a Priority Maintenance Queue ranking machines such as Press-07 (97% failure probability, critical) and CNC-03 (89%, high), a failure-probability trend chart, and live sensor tiles for temperature, vibration, rotational speed, torque and tool wear."
-          widths={[640, 960, 1280]}
-          sizes="(max-width: 1024px) 100vw, 1024px"
-          class="block w-full select-none transition-transform duration-[var(--dur-slow)] ease-[var(--ease-ios)] group-hover:scale-[1.02]"
-          draggable="false"
-        />
-      </div>
 
-      <!-- Concept-preview cue: this is a picture of the app, not the live app -->
-      <figcaption class="absolute right-4 top-14 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300 backdrop-blur-sm">
-        Concept preview
-      </figcaption>
+        <div class="dashboard-shell flex flex-col md:flex-row" data-dashboard>
+          <!-- Real sidebar nav — a plain tablist, not baked into any image. -->
+          <nav
+            role="tablist"
+            aria-label="Dashboard sections"
+            class="dashboard-sidebar flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 bg-navy-950/60 p-2 md:w-52 md:flex-col md:gap-0.5 md:overflow-x-visible md:border-b-0 md:border-r md:p-3"
+          >
+            {
+              DASHBOARD_PANELS.map((panel, i) => (
+                <button
+                  type="button"
+                  role="tab"
+                  id={`tab-${panel.id}`}
+                  aria-controls={`panel-${panel.id}`}
+                  aria-selected={i === 0 ? 'true' : 'false'}
+                  data-panel-id={panel.id}
+                  class="dashboard-tab flex min-h-[44px] shrink-0 items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium text-muted transition-colors duration-[var(--dur-fast)] hover:bg-white/5 hover:text-offwhite"
+                >
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.8"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                    class="shrink-0"
+                    set:html={ICONS[panel.id]}
+                  />
+                  <span class="whitespace-nowrap">{panel.label}</span>
+                  {panel.mode === 'soon' && (
+                    <>
+                      <span
+                        class="dashboard-soon-tag ml-auto shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-muted/70"
+                        aria-hidden="true"
+                      >
+                        Soon
+                      </span>
+                      <span class="sr-only"> (in development)</span>
+                    </>
+                  )}
+                </button>
+              ))
+            }
+          </nav>
+
+          <!-- Content pane: one tabpanel per item, only the active one visible. -->
+          <div class="dashboard-content relative flex-1 bg-navy-900/40 p-4 md:min-h-[520px] md:p-6">
+            {
+              DASHBOARD_PANELS.map((panel, i) => (
+                <div
+                  role="tabpanel"
+                  id={`panel-${panel.id}`}
+                  aria-labelledby={`tab-${panel.id}`}
+                  hidden={i !== 0}
+                  data-panel={panel.id}
+                >
+                  {panel.mode === 'image' && (
+                    <div class="relative">
+                      <Image
+                        src={PANEL_IMAGES[panel.id]}
+                        alt={PANEL_ALT[panel.id]}
+                        widths={[640, 960, 1280]}
+                        sizes="(max-width: 1024px) 100vw, 900px"
+                        class={`block w-full select-none rounded-lg transition-transform duration-[var(--dur-slow)] ease-[var(--ease-ios)] ${panel.id === 'overview' ? 'group-hover:scale-[1.02]' : ''}`}
+                        draggable="false"
+                      />
+                      <span class="dashboard-badge absolute right-3 top-3 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300 backdrop-blur-sm">
+                        Concept preview
+                      </span>
+                    </div>
+                  )}
+
+                  {panel.mode === 'html' && panel.id === 'model-health' && (
+                    <div>
+                      <h3 class="text-lg font-semibold text-offwhite">Model Health</h3>
+                      <p class="mt-1 text-sm text-muted">
+                        The same production-model metrics shown on the homepage — real numbers, not a mockup.
+                      </p>
+                      <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                        <StatCard
+                          value={recall}
+                          label="Failure Recall"
+                          caption={liveCaption}
+                          captionTone={liveTone}
+                          info='"Recall" measures how many of the machine failures that actually happened were correctly flagged in advance.'
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+                            <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.6" />
+                            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+                          </svg>
+                        </StatCard>
+                        <StatCard
+                          value={precision}
+                          label="Failure Precision"
+                          caption={liveCaption}
+                          captionTone={liveTone}
+                          info='"Precision" measures how often a failure warning turns out to be a real one.'
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M9 12l2 2 4-4"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </StatCard>
+                        <StatCard
+                          value={`v${retrainCount()}`}
+                          label="Model Version"
+                          caption="binary classifier · production"
+                          captionTone="plain"
+                          info="MLflow version numbers increment with every retrain, so the current version number doubles as a retrain count."
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M4 12l8-8 8 8-8 8z"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linejoin="round"
+                            />
+                            <circle cx="12" cy="12" r="1.6" fill="currentColor" />
+                          </svg>
+                        </StatCard>
+                        <StatCard
+                          value={retrained}
+                          label="Last Retrained"
+                          caption={liveCaption}
+                          captionTone={liveTone}
+                          info="The model retrains itself automatically as new sensor data comes in — it isn't trained once and left alone."
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                            <path
+                              d="M20 4v4h-4M4 20v-4h4"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            />
+                          </svg>
+                        </StatCard>
+                      </div>
+                    </div>
+                  )}
+
+                  {panel.mode === 'html' && panel.id === 'settings' && (
+                    <div class="max-w-2xl">
+                      <h3 class="text-lg font-semibold text-offwhite">About this demo</h3>
+                      <p class="mt-2 text-sm leading-relaxed text-muted">
+                        Predictive maintenance for industrial equipment — a complete MLOps pipeline: live sensor
+                        predictions, automated drift monitoring, and self-triggering retraining.
+                      </p>
+                      <p class="mt-2 text-xs leading-relaxed text-muted/70">
+                        A capstone project showcase built on simulated CNC sensor data — not a live
+                        paying-customer deployment.
+                      </p>
+                      <dl class="mt-5 space-y-3 text-sm">
+                        <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-2.5">
+                          <dt class="text-muted/70">Team</dt>
+                          <dd class="text-right">
+                            {TEAM.map((m, idx) => (
+                              <>
+                                {idx > 0 && <span class="text-muted/50">, </span>}
+                                <a href={m.url} class="text-teal-400 hover:text-teal-300" rel="noopener">
+                                  {m.name}
+                                </a>
+                              </>
+                            ))}
+                          </dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-2.5">
+                          <dt class="text-muted/70">Program</dt>
+                          <dd class="text-right text-offwhite">{PROGRAM}</dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4 border-b border-white/5 pb-2.5">
+                          <dt class="text-muted/70">Source</dt>
+                          <dd class="text-right">
+                            <a href={REPO_URL} class="text-teal-400 hover:text-teal-300" rel="noopener">
+                              GitHub repository
+                            </a>
+                          </dd>
+                        </div>
+                        <div class="flex items-center justify-between gap-4">
+                          <dt class="text-muted/70">Privacy</dt>
+                          <dd class="text-right text-offwhite">No analytics, no tracking</dd>
+                        </div>
+                      </dl>
+                    </div>
+                  )}
+
+                  {panel.mode === 'soon' && (
+                    <div class="flex min-h-[240px] flex-col items-center justify-center rounded-lg border border-dashed border-white/10 bg-navy-950/30 p-8 text-center">
+                      <svg
+                        width="28"
+                        height="28"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        class="text-muted/50"
+                        aria-hidden="true"
+                      >
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3.5 2" />
+                      </svg>
+                      <p class="mt-3 text-sm font-medium text-offwhite">{panel.label}</p>
+                      <p class="mt-1 text-sm text-muted">This part of the dashboard is still in development.</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            }
+          </div>
+        </div>
+      </div>
     </figure>
 
     <p class="mx-auto mt-6 max-w-2xl text-center text-sm text-muted/70">
-      A static preview of the interface — an animated walkthrough of the system
-      running is on the way.
+      Model Health and Settings show real, live data from the production model. Overview, Alerts, and
+      Predictions are concept previews of how a full deployment might look.
     </p>
   </div>
 </section>
@@ -60,19 +342,24 @@ import dashboard from '../../assets/dashboard.png';
   // which isn't transition:persist-ed, so a fresh, unbound instance of this
   // markup arrives on every client-side navigation to a page that renders it.
   document.addEventListener('astro:page-load', () => {
-    // Toned-down cursor-parallax tilt on the framed dashboard mockup (moved
-    // here from LiveFactory.astro, human-requested, 2026-07-28 — this is a
-    // single coherent "device" shot with no competing hover interactions
-    // and no live DOM text to skew under the rotation (the screenshot is one
-    // rasterized image), so a subtle 3° perspective tilt reads as "looking
-    // at a product photo from a slight angle" rather than fighting for
-    // attention against anything else. Coexists with the image's own
-    // group-hover:scale-[1.02] above — that's the image zooming inside the
-    // frame, this is the whole frame tilting; different elements, same
-    // hover moment. Skipped entirely (not just slowed down) for touch/no-
-    // hover and for prefers-reduced-motion — continuous pointer-follow
-    // motion is exactly the kind of thing that setting exists to opt out
-    // of, not just soften.
+    const shell = document.querySelector<HTMLElement>('[data-dashboard]');
+    if (!shell) return;
+    const tabs = Array.from(shell.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
+    const panels = Array.from(shell.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => {
+        const id = tab.dataset.panelId;
+        tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
+        panels.forEach((panel) => {
+          panel.hidden = panel.dataset.panel !== id;
+        });
+      });
+    });
+
+    // Toned-down cursor-parallax tilt on the framed dashboard (moved here
+    // from LiveFactory.astro, human-requested, 2026-07-28). Now wraps the
+    // whole sidebar+content shell, not just one image — still skipped for
+    // touch/no-hover and prefers-reduced-motion, same as before.
     const mockup = document.querySelector<HTMLElement>('.product-mockup');
     const canTilt =
       mockup &&
@@ -94,12 +381,26 @@ import dashboard from '../../assets/dashboard.png';
 </script>
 
 <style>
-  /* Perspective tilt target for the cursor-parallax script above. No
-     [data-reveal] collision to worry about here (unlike a couple of earlier
-     spots in this pass) — data-reveal lives on the outer <figure>, this
-     transition is on the inner .product-mockup div, a different element
-     with no competing transition of its own. */
+  /* Perspective tilt target for the cursor-parallax script above. */
   .product-mockup {
     transition: transform 300ms var(--ease-ios-in-out);
+  }
+
+  /* Sidebar tabs: same focus-ring rule as everywhere else (global.css), just
+     confirming ≥44px hit targets here since these are denser than a typical
+     nav row (§12). aria-selected (not a class) drives the active look, so
+     the tab-switch script above only ever touches attributes, never classes. */
+  .dashboard-tab[aria-selected='true'] {
+    background: color-mix(in srgb, var(--color-teal-400) 12%, transparent);
+    color: var(--color-offwhite);
+  }
+  .dashboard-tab[aria-selected='true'] svg {
+    color: var(--color-teal-400);
+  }
+
+  /* Soon-tag legibility tweak only when its tab is active (teal wash behind
+     it would otherwise wash out the plain white/10 tag). */
+  .dashboard-tab[aria-selected='true'] .dashboard-soon-tag {
+    background: rgba(255, 255, 255, 0.14);
   }
 </style>

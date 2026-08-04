@@ -157,6 +157,8 @@ decided.
 | 9 | Product Preview screenshot | **No** — done | Do not regenerate |
 | 10 | §9.1 in-action clip | **No** — screen recording | Not an image-gen task |
 | 11 | Try It Yourself banner (macro-gears reuse) | **No** — reused existing asset | Done |
+| 12 | Product Preview — Alerts concept screenshot | **No** — done | Do not regenerate |
+| 13 | Product Preview — Predictions concept screenshot | **No** — done | Do not regenerate |
 
 **Efficiency tip:** gpt-image-2 accepts an arbitrary size/ratio, so generate
 directly at each entry's stated dimensions (edges a multiple of 16, ratio
@@ -700,6 +702,16 @@ Listed here only so this doc is a complete inventory, not a wishlist — this
 is a finished, high-quality image and needs no prompt, no regeneration, and
 no restyling (ARCHITECTURE §11's one deliberate "used as-is" exception).
 
+**Derivative crop (2026-08-04):** `ProductPreview.astro`'s dashboard became a
+real clickable sidebar shell (`src/lib/dashboard.ts`'s `DASHBOARD_PANELS`) —
+a genuine `<nav>` now sits where this screenshot's baked-in fake sidebar used
+to. `src/assets/dashboard-overview.png` is this same image with that column
+cropped off (left ~230px of 1536px, found by sampling pixel jumps down the
+image rather than eyeballing — the boundary is a clean, consistent edge at
+every row sampled). Not a new generation, just a crop of an already-finished
+asset; `dashboard.png` itself is untouched and still what this entry
+describes.
+
 ---
 
 ## 10. §9.1 in-action clip — out of scope for image generation
@@ -731,3 +743,115 @@ give the photo its own side.
 
 Asset: `design/visual-assets/gears.png` →
 `public/images/try-it-yourself/macro-gears.png`.
+
+---
+
+## 12. Product Preview — Alerts concept screenshot
+
+**Status:** DONE (2026-08-04). Generated from the prompt below (reference:
+`src/assets/dashboard.png`), delivered as `design/mockups/ui-Alerts.png`
+(1536×1024), then cropped to remove its own baked-in sidebar column (found at
+x=247, same pixel-sampling method as item 9's derivative crop — this
+generation's sidebar came back slightly wider than the original reference's).
+Final asset: `src/assets/dashboard-alerts.png` (1289×1024).
+
+**Content decision (human-directed, 2026-08-04):** this and item 13 exist
+because the `/product` dashboard became a real clickable sidebar
+(`src/lib/dashboard.ts`), and the human decided per-panel content doesn't
+need to be strictly grounded in real/live data — a labelled "Concept
+preview" mockup showing how a view *might* look for a real factory
+deployment is fine, same latitude the original Overview screenshot (item 9)
+already used for its own fabricated numbers.
+
+**Used in:** the `alerts` panel of
+[ProductPreview.astro](../src/components/sections/ProductPreview.astro)'s
+dashboard shell, badged "Concept preview" like every other `image`-mode
+panel.
+
+**Prompt used:**
+> SUBJECT: A predictive-maintenance dashboard UI screenshot, "Alerts" view —
+> same application chrome as the attached reference screenshot (same left
+> sidebar, same top header bar style), showing a different screen of the same
+> product: a maintenance alerts / notifications feed instead of the fleet
+> overview.
+> KEY DETAIL: main content area is a vertical list of 5–6 alert cards, each
+> with a severity badge (Critical / High / Medium / Info, in red / orange /
+> yellow / blue), a short alert title (e.g. "Drift Detected — Tool Wear
+> Shift", "Failure probability exceeded threshold"), a machine identifier, a
+> relative timestamp, and a one-line description. Include a small filter row
+> above the list (All / Critical / High / Resolved) and a summary stat strip
+> at the top (e.g. active alerts, resolved today) in the same stat-tile style
+> as the reference's top row.
+> COMPOSITION: same layout proportions as the reference — left sidebar column,
+> full-width header, content filling the remainder.
+> STYLE: same clean modern SaaS dashboard-UI rendering as the reference —
+> crisp sans-serif UI text, flat cards, subtle borders, small icons. Not
+> photoreal, not illustration.
+> LIGHT: flat, even UI lighting, no dramatic shadows.
+> COLOR: dark navy dashboard theme matching the reference's own background and
+> card surfaces; teal-cyan as the primary accent/highlight color; red / orange
+> / yellow used only for severity badges.
+> EXCLUDE: no real company names, no real people; all alert text, machine
+> names, and numbers are fictional placeholder content for a concept mockup,
+> not real data.
+
+Note (deliberate deviation from the shared House Style DNA block, same
+exception class as items 2 and 6): this prompt does **not** carry the shared
+`COLOR`/`EXCLUDE` lines — it's a UI-screenshot mockup, same category as item
+9's original Overview screenshot, not an ambient scene/illustration, so
+"no text, no numbers, no UI panels" would work directly against the goal.
+
+**Shell-side honesty note:** the mockup's own sidebar (baked into the
+generation, since it was prompted to match the reference's chrome) carried a
+"3" notification badge, and a separate generation of this same view carried a
+red "7" on its Alerts nav item — both were cropped away along with the rest
+of the fake sidebar column, and the *real* HTML sidebar in
+`ProductPreview.astro` deliberately carries no such badge on its own Alerts
+tab (a live-looking count with nothing behind it, sitting outside the
+labelled concept image, would cross back into the fabrication this project's
+other honesty rules forbid).
+
+---
+
+## 13. Product Preview — Predictions concept screenshot
+
+**Status:** DONE (2026-08-04). Generated from the prompt below (reference:
+`src/assets/dashboard.png`), delivered as `design/mockups/ui_predictions.png`
+(1536×1024), then cropped to remove its own baked-in sidebar column (found at
+x=227, matching the original reference almost exactly). Final asset:
+`src/assets/dashboard-predictions.png` (1309×1024).
+
+**Used in:** the `predictions` panel of `ProductPreview.astro`'s dashboard
+shell, badged "Concept preview".
+
+**Prompt used:**
+> SUBJECT: A predictive-maintenance dashboard UI screenshot, "Predictions"
+> view — same application chrome as the attached reference, showing a ranked
+> list of machines by predicted failure probability.
+> KEY DETAIL: main content area contains (a) a ranked list/table of 5
+> machines with a color-coded failure-probability bar (green/yellow/orange/
+> red), a status badge (Healthy/Moderate/High/Critical), and an estimated
+> time-to-likely-failure column; (b) a small horizontal legend explaining the
+> four probability bands (0–20% low, 20–50% moderate, 50–80% high, 80–100%
+> critical); (c) one small trend-line chart showing probability-over-time for
+> the top-ranked machine, in the same chart style as the reference's own
+> trend chart.
+> COMPOSITION: same layout proportions as the reference.
+> STYLE: same clean modern SaaS dashboard-UI rendering as the reference.
+> LIGHT: flat, even UI lighting.
+> COLOR: dark navy dashboard theme matching the reference; teal-cyan primary
+> accent; green/yellow/orange/red reserved for probability severity only.
+> EXCLUDE: no real company names or people; all machine names, probabilities,
+> and time figures are fictional placeholder content for a concept mockup.
+
+Same House Style DNA exception as item 12 above — a UI-screenshot mockup, not
+an ambient scene.
+
+**Honesty note:** the est.-time-to-failure column ("6.4 hrs", "2.1 days", …)
+is exactly the kind of number `ARCHITECTURE.md`/the project's handover notes
+flag as un-backable (no RUL model exists in this project). It ships anyway,
+under the same "Concept preview" badge the original Overview screenshot
+(item 9) already uses for its own un-backed "1.8 hrs until likely failure" —
+consistent with the human's explicit 2026-08-04 direction that per-panel
+content can be conceptual/illustrative as long as it's clearly labelled a
+concept, not a new deviation invented for this entry alone.

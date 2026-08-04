@@ -491,6 +491,44 @@ tool wear), a validation checklist card, and a business-impact card.
   user story's `See it in action` (§9.5, relabelled from "Open Dashboard" for the
   two-verb system). One consistent destination for "show me the product."
 
+**Revision, 2026-08-04 — the live-dashboard path above got partially taken.**
+`ProductPreview.astro` is no longer a single framed image; it's a real
+clickable sidebar (matching the mockup's 9 items: Overview, Live Machines,
+Alerts, Predictions, Maintenance Queue, Work Orders, Model Health, Reports,
+Settings) that switches between panels, each independently a labelled concept
+screenshot, real markup, or an in-development placeholder — see CLAUDE.md's
+Contract 5 and `src/lib/dashboard.ts`. The single framed screenshot described
+above is now just the `Overview` panel's content (cropped to remove its own
+baked-in fake sidebar, since a real one now sits to its left).
+
+- **Content mix, decided with the human:** `Model Health` and `Settings`
+  show genuinely real, live content — `Model Health` reuses the same
+  production-model metrics as the hero's stat row (`src/lib/metrics.ts`);
+  `Settings` is an "About this demo" card (team, repo, no-analytics line)
+  rather than fake toggles. `Overview`, `Alerts`, and `Predictions` are
+  generated concept screenshots (same "Concept preview" badge treatment as
+  the original still), explicitly allowed to be conceptual/illustrative
+  rather than data-grounded — see `docs/IMAGE_ASSETS.md` items 12–13 for the
+  Alerts/Predictions prompts and the human's 2026-08-04 direction that
+  loosened this. `Live Machines`, `Maintenance Queue`, `Work Orders`, and
+  `Reports` show a plain "still in development" placeholder — no fabricated
+  screenshot for a view that doesn't exist yet.
+- **The "Concept preview" badge is per-panel, not per-frame** — it appears on
+  every `'image'`-mode panel's own content, not once on the outer frame, so a
+  real (`'html'`-mode) panel like Model Health doesn't carry a badge that
+  would misdescribe it as a mockup.
+- **Still not full ARIA authoring** (§12 already defers this) — the sidebar
+  uses `role="tablist"/"tab"/"tabpanel"` for screen-reader semantics and
+  plain Tab-key/click activation, not full roving-tabindex arrow-key
+  navigation. Consistent with §12's existing "kept lightweight" scope call on
+  focus/hit-target rules.
+- **Per-panel switchability, not a one-time migration.** Any panel's `mode`
+  can flip later (`'soon' → 'image'` once a concept screenshot exists,
+  `'image' → 'html'` once real data exists) as a registry edit plus one
+  template branch — the "never locked in" requirement from the session that
+  chose this design (see `claude-handover/2026-08-04-*.md`) is now load-
+  bearing code, not just a stated intent.
+
 ### 9.2 Live Factory. Real Predictions.
 
 **Source:** `Screenshot 2026-07-21 112329.png`.
