@@ -2,28 +2,30 @@
 type: claude-handover
 schema: v1
 project: preempt-analytics-landing
-updated: 2026-08-06 (covers the 2026-08-05 *afternoon* session — Model Health depth + the Live Machines recorded replay)
-updated_by: Claude (Model Health / Live Machines replay / LiveFactory polish session)
-head_sha: 93df956
+updated: 2026-08-06 (covers two sessions: the 2026-08-05 *afternoon* session — Model Health depth + the Live Machines recorded replay — plus a same-day follow-up that enlarged the /product dashboard frame and added a sidebar legend)
+updated_by: Claude (Model Health / Live Machines replay / LiveFactory polish session, then a same-day dashboard-prominence + legend session)
+head_sha: a7ba5b0
 branch: main
-status: green (build passes; all session work committed and pushed — one small uncommitted tweak, see §4)
+status: green (build passes; all session work committed and pushed; working tree clean)
 ---
 
 # Claude Session Handover
 
-> **Note on dating:** this covers the session that ran *after*
-> `2026-08-05-claude-handover-doc.md` was written that morning. That doc covers
-> the shell build; this one covers everything since. Read that one first for the
-> shell's design, this one for what's on top of it.
+> **Note on dating:** this covers two sessions stacked on top of
+> `2026-08-05-claude-handover-doc.md` (written that morning, covering the shell
+> build). §§1–3 below were written by the session that added Model Health depth
+> and the Live Machines recorded replay; §2a is a same-day follow-up that
+> enlarged the dashboard frame and added the sidebar legend. Read the
+> 2026-08-05 doc first for the shell's design, this one for what's on top of it.
 
 ## 📋 Context block — paste this into the fresh session first
 
 ```
 Project: preempt-analytics-landing — public marketing site for Preempt Analytics (predictive-maintenance ML capstone)
-State: main @ 93df956, identical to origin/main, pushed. Build green (3 routes). One uncommitted change: LiveFactory.astro's per-machine `detail` captions (§4).
-Just did: (1) deepened Model Health with brier_score + overfit_delta as a Contract 2 change; (2) built the Live Machines panel — a browser replay of a REAL recorded run of the demo, new scripts/record-live-machines.py + src/data/live-machines.json + Contract 6; (3) smoothed the replay from setInterval to a requestAnimationFrame playhead; (4) moved the sidebar's discover dot next to the label; (5) fixed LiveFactory's drift-card proportions/pin-overlap on mobile and turned that card into a link into /product/#live-machines.
+State: main @ a7ba5b0, identical to origin/main, pushed. Build green (3 routes). Working tree clean.
+Just did (most recent first): (0) enlarged the /product dashboard frame ~12%, added a sidebar legend decoding live-vs-preview panels, moved+renamed the "Concept preview" badge (now "Dashboard preview") off the screenshot so it stops overlapping the image's own baked-in UI — see §2a; (1) deepened Model Health with brier_score + overfit_delta as a Contract 2 change; (2) built the Live Machines panel — a browser replay of a REAL recorded run of the demo, new scripts/record-live-machines.py + src/data/live-machines.json + Contract 6; (3) smoothed the replay from setInterval to a requestAnimationFrame playhead; (4) moved the sidebar's discover dot next to the label; (5) fixed LiveFactory's drift-card proportions/pin-overlap on mobile and turned that card into a link into /product/#live-machines.
 DO NEXT: cheapest real win is Maintenance Queue — it rides free off the recording already committed (rank the 5 machines by failure_probability at the current step, no new data). See §1.
-DON'T: don't interpolate the replay's sensor NUMBERS — they're i.i.d. samples, not a trajectory (§3). Don't hand-edit live-machines.json — re-record (Contract 6). Don't add drift/export flags to the recorder — they fire the ML repo's retrain pipeline. Don't design a "gradual climb to failure" chart — the real model doesn't do that (§3, the single most important finding here).
+DON'T: don't interpolate the replay's sensor NUMBERS — they're i.i.d. samples, not a trajectory (§3). Don't hand-edit live-machines.json — re-record (Contract 6). Don't add drift/export flags to the recorder — they fire the ML repo's retrain pipeline. Don't design a "gradual climb to failure" chart — the real model doesn't do that (§3, the single most important finding here). Don't call the image-panel badge "Concept preview" anymore — it's "Dashboard preview" now, everywhere (§2a).
 Blocked on: the 36-version chart question, asked three times and still unanswered (§4). Nothing else blocks.
 Ground truth: CLAUDE.md (now Contracts 1–6) + docs/ARCHITECTURE.md. Run §5 verify before editing. §3's data-shape finding is load-bearing — read it before designing any chart.
 ```
@@ -52,7 +54,8 @@ Other live options, in rough value order:
 
 - Everything settled in the 2026-08-04 and 2026-08-05 docs still stands: the
   hybrid shell, per-panel switchability via `mode`, concept-image latitude
-  under the "Concept preview" badge, the tablist mechanism.
+  under the badge (now named "Dashboard preview", see below), the tablist
+  mechanism.
 - **Live Machines is `'html'` mode and real.** It replays a recording, not a
   browser-side simulation and not live data. The "Recording · not live" badge
   and the provenance caption are load-bearing, not decoration.
@@ -69,6 +72,16 @@ Other live options, in rough value order:
 - **The sparkline is drift-card-only** (human review). It was briefly on all
   five cards; on the four healthy ones it was decoration on a card whose whole
   message is "nothing to see here".
+- **The image-panel badge is "Dashboard preview", not "Concept preview"**
+  (human-requested rename, §2a). It lives above the image now, not overlaid on
+  it. Every mention — component, its comments, the bottom caption, `CLAUDE.md`'s
+  two Contract 5 references — was updated in the same commit. Don't reintroduce
+  the old name or the absolute-overlay position.
+- **The sidebar has a live/preview legend now** (§2a): a teal dot on `'html'`
+  panels, a hollow square on `'image'` panels, both defined once in a small key
+  row above the frame. `'soon'` panels deliberately get neither — their own tag
+  already self-explains. Any new panel added to `DASHBOARD_PANELS` inherits the
+  right mark automatically from its `mode`; no separate registry to update.
 
 ## 2. What changed this session
 
@@ -134,6 +147,55 @@ text. `Soon` tags keep their own `ml-auto`; labels still truncate via `min-w-0`.
   a build-time sparkline of CNC-01's recorded trace, revealed on hover/focus/tap.
 - `ProductPreview.astro` gained hash deep-link support so that link lands on the
   right panel instead of Overview.
+
+## 2a. Same-day follow-up: dashboard prominence + legend (human-driven, spar-then-build)
+
+Human's ask: the `/product` dashboard read as a static screenshot rather than
+an interactive product, and the sidebar gave no hint which tabs show real
+content vs. a mockup. Before touching code, we sparred through the encoding
+options (color-only, symbol-only, both, text-pills-everywhere) and the legend's
+placement — see the two `AskUserQuestion` rounds earlier in that session's
+transcript if the reasoning behind the choice matters later.
+
+**What shipped (`ProductPreview.astro` + `CLAUDE.md`, one commit, `a7ba5b0`):**
+- Frame `max-w-5xl → max-w-6xl` (~12% wider); section's outer container
+  `max-w-6xl → max-w-7xl` so the increase isn't clamped by its own padding.
+  The centered intro paragraph keeps its own `max-w-2xl`, so it didn't widen.
+- New legend row above the frame: a teal-dot key ("Live, interactive data")
+  and a hollow-square key ("Dashboard preview"). Right-aligned on `md+`
+  (matches the frame's right edge below it, deliberately *not* stacked under
+  the centered intro text, per human direction); centered/wrapping on mobile,
+  where there's no "side" to sit in.
+- Matching marks added to the sidebar tabs themselves, driven purely by
+  `panel.mode` — a static teal dot on Model Health/Settings, the *existing*
+  pulsing teal dot kept as-is on Live Machines only (human-requested
+  2026-08-05 "discover me" cue, deliberately not erased), a hollow muted
+  square on Overview/Alerts/Predictions. `'soon'` tabs untouched.
+- The per-panel badge (`'image'` mode) renamed "Concept preview" →
+  "Dashboard preview" and moved from an absolutely-positioned overlay into its
+  own row above the `<Image>`. The human flagged via screenshot that the old
+  overlay collided with the screenshot's own baked-in top-right UI (a "Live"
+  pill, a search icon) — living in normal flow above the image means a future
+  screenshot's own content can never collide with it again, regardless of what
+  that screenshot draws in that corner.
+- `CLAUDE.md`'s two Contract 5 mentions of "Concept preview" synced to
+  "Dashboard preview" in the same commit — the badge name is called out there
+  as load-bearing, so a stale doc would mislead the next session.
+
+**Verification gotcha worth recording (cost real time this session): a plain
+headless-Chrome/Brave CLI `--window-size=390,844` screenshot does NOT reliably
+produce a true 390px-wide layout viewport** — confirmed by rendering a trivial
+isolated test page (a `width:100%` bar next to a `width:390px` bar; the two
+should match exactly and didn't, and long unbroken text failed to wrap at all).
+The resulting screenshot looked like a real mobile bug (headline text missing
+words, sidebar tabs clipped) but wasn't one — it was the tool silently
+rendering at a wider viewport than requested. **Don't trust a raw
+`chrome/brave --headless --window-size=<narrow> --screenshot` capture as
+evidence of a mobile bug without corroborating it another way first** (e.g. an
+isolated test page, or proper viewport emulation). Playwright's
+`newPage({ viewport: {...} })` did emulate the width correctly and confirmed
+the real layout has no issue. This is a tooling gotcha, not a CLAUDE.md rule —
+recorded here so the next session doesn't lose the same time to it.
 
 ## 3. Un-recoverable context
 
@@ -227,10 +289,9 @@ so it does render — but no automated end-to-end check exists.
       decide the real panel gets dressed-up names too.
 - [ ] **The Live Factory sparkline mapping** (§3) — keep real traces under
       illustrative CNC-0N names, or swap for an explicitly illustrative line?
-- [ ] **Uncommitted:** `LiveFactory.astro`'s per-machine `detail` captions
-      ("All parameters normal", "Within safe operating band", "Everything looks
-      fine here" replacing four identical "Nominal — no anomalies"). Small,
-      self-contained, cosmetic; not mine. Commit or drop it.
+- [x] ~~Uncommitted: `LiveFactory.astro`'s per-machine `detail` captions~~ —
+      resolved; landed in `93df956` ("Interactive dashboard timeline") before
+      this doc's own commit. Working tree is clean as of `a7ba5b0`.
 - [ ] Carried, unchanged: downtime-cost calculator placement (own panel vs.
       homepage section); the three illustrative savings figures
       (€28,400 / €24,300 / €32,800); `LiveFactory.astro`'s odd aria-label
@@ -243,8 +304,8 @@ so it does render — but no automated end-to-end check exists.
 
 ```bash
 git fetch origin
-git log --oneline -5      # tip = 93df956 (+ this handover commit) or later?
-git status                # expect only LiveFactory.astro modified (§4)
+git log --oneline -5      # tip = a7ba5b0 (+ this handover commit) or later?
+git status                # expect clean working tree
 npm run build             # must pass; 3 routes build
 ```
 
@@ -256,9 +317,9 @@ Re-record the Live Machines fixture (needs the ML repo as a sibling):
 python scripts/record-live-machines.py --steps 120 --machines 5
 ```
 
-- **Branch / commit:** `main` @ `93df956`, identical to `origin/main`.
+- **Branch / commit:** `main` @ `a7ba5b0`, identical to `origin/main`.
 - **Build:** passes, 3 pages.
-- **Uncommitted:** `src/components/sections/LiveFactory.astro` only (§4).
+- **Uncommitted:** nothing — working tree clean.
 - **Canonical sources:** [`CLAUDE.md`](../CLAUDE.md) (rules, now Contracts 1–6) ·
   [`docs/ARCHITECTURE.md`](../docs/ARCHITECTURE.md) (design why) ·
   [`docs/IMAGE_ASSETS.md`](../docs/IMAGE_ASSETS.md) (image assets + prompts).
