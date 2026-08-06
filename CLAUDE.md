@@ -283,7 +283,7 @@ fixed).
 
 `/product`'s dashboard is a real clickable sidebar, not a single static image.
 Each of the 9 items in `DASHBOARD_PANELS` has a `mode` — `'image'` (a labelled
-"Concept preview" screenshot), `'html'` (real markup, e.g. live metrics), or
+"Dashboard preview" screenshot), `'html'` (real markup, e.g. live metrics), or
 `'soon'` (in-development placeholder) — and that field is the **only** thing
 that decides how `ProductPreview.astro` renders that panel. This is what lets
 a panel be promoted or demoted (e.g. `'soon' → 'image'` once a concept
@@ -393,7 +393,7 @@ and the handover docs so they don't have to be rediscovered:
   allowed to be conceptual/fabricated (machine names, alert counts, an
   un-backed "time to likely failure," per human direction 2026-08-04, see
   `docs/IMAGE_ASSETS.md` items 12–13) **only because** each carries a
-  "Concept preview" badge. The badge is load-bearing — never ship an
+  "Dashboard preview" badge. The badge is load-bearing — never ship an
   `'image'`-mode panel without it, and never put a fabricated live-looking
   number (e.g. a notification-count badge) on the *real* sidebar nav item
   itself, outside the labelled image.

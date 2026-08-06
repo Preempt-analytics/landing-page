@@ -4,7 +4,7 @@
 // each panel is independently a labelled concept screenshot ('image'), real
 // markup ('html'), or an in-development placeholder ('soon') — decided per
 // panel, changeable later without reworking this shell. Frame stays browser-
-// chrome + "Concept preview" cue for image panels, same pattern as before.
+// chrome + "Dashboard preview" cue for image panels, same pattern as before.
 import { Image } from 'astro:assets';
 import type { ImageMetadata } from 'astro';
 import dashboardOverview from '../../assets/dashboard-overview.png';
@@ -99,7 +99,7 @@ const ICONS: Record<string, string> = {
 ---
 
 <section id="product" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
-  <div class="mx-auto max-w-6xl px-5 md:px-8">
+  <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
       <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
         The product
@@ -114,8 +114,28 @@ const ICONS: Record<string, string> = {
       </p>
     </div>
 
+    <!-- Legend: decodes the sidebar's two visual marks before anyone has to click
+         a tab to find out what's behind it (Live data = real/interactive content,
+         Dashboard preview = a labelled concept mockup; "Soon" panels already
+         self-explain via their own tag, so they don't need a legend entry).
+         Right-aligned to match the frame's edge below it on md+; centered and
+         wrapping on mobile, where there's no "side" to sit in. -->
+    <div
+      class="mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted/70 md:justify-end"
+      data-reveal
+    >
+      <span class="inline-flex items-center gap-1.5">
+        <span class="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" aria-hidden="true"></span>
+        Live, interactive data
+      </span>
+      <span class="inline-flex items-center gap-1.5">
+        <span class="h-2 w-2 shrink-0 rounded-[2px] border border-muted/50" aria-hidden="true"></span>
+        Dashboard preview
+      </span>
+    </div>
+
     <!-- Framed dashboard shell -->
-    <figure class="relative mx-auto mt-12 max-w-5xl" data-reveal>
+    <figure class="relative mx-auto mt-6 max-w-6xl" data-reveal>
       <div class="product-mockup group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
         <!-- browser chrome -->
         <div class="flex items-center gap-2 border-b border-white/10 bg-navy-800/60 px-4 py-2.5">
@@ -160,18 +180,30 @@ const ICONS: Record<string, string> = {
                       dot to the far edge. It still shrinks/truncates via min-w-0,
                       and the Soon tags keep their own ml-auto right-alignment. */}
                   <span class="min-w-0 truncate">{panel.label}</span>
-                  {/* Gentle "there's something here" cue, Live Machines only —
-                      the one panel that's a real, playing recording rather than
-                      a static screenshot, easy to miss among 8 other plain tabs
-                      (human-requested, 2026-08-05). Sits just after the label
-                      rather than pinned to the tab's right edge (human-requested
-                      follow-up) — ml-1 on top of the row's own gap-2.5 puts it a
-                      few spaces after the word rather than in its own column.
-                      Hidden once this tab is actually selected (CSS below) — its
-                      job is done once it's found. */}
-                  {panel.id === 'live-machines' && (
+                  {/* Type mark, matching the legend above: a teal dot for 'html'
+                      panels (real/interactive content) and a hollow square for
+                      'image' panels (a labelled concept mockup) — the same pair
+                      of glyphs the legend defines, so the sidebar itself decodes
+                      without needing a click. 'soon' panels keep only their own
+                      tag below; they already self-explain. Live Machines keeps
+                      its original pulsing, hide-on-select treatment (human-
+                      requested, 2026-08-05) since it's the one panel that's
+                      genuinely animating right now — the other two 'html' tabs
+                      get the same dot, just static and always visible, since
+                      their "interactive" status doesn't stop being true once
+                      you've clicked in. */}
+                  {panel.mode === 'html' && panel.id === 'live-machines' && (
                     <span
                       class="dashboard-discover-dot ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400"
+                      aria-hidden="true"
+                    />
+                  )}
+                  {panel.mode === 'html' && panel.id !== 'live-machines' && (
+                    <span class="ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" aria-hidden="true" />
+                  )}
+                  {panel.mode === 'image' && (
+                    <span
+                      class="ml-1 h-2 w-2 shrink-0 rounded-[2px] border border-muted/50"
                       aria-hidden="true"
                     />
                   )}
@@ -203,7 +235,18 @@ const ICONS: Record<string, string> = {
                   data-panel={panel.id}
                 >
                   {panel.mode === 'image' && (
-                    <div class="relative">
+                    <div>
+                      {/* Sits above the image, not overlaid on it — the screenshots
+                          themselves bake in their own top-right UI (a "Live" pill,
+                          a search icon), and an absolutely-positioned badge landed
+                          right on top of that (human-flagged, 2026-08-06). Living
+                          in normal flow above the image means it can never collide
+                          with whatever a future screenshot draws in that corner. */}
+                      <div class="mb-2 flex justify-end">
+                        <span class="dashboard-badge rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300">
+                          Dashboard preview
+                        </span>
+                      </div>
                       <Image
                         src={PANEL_IMAGES[panel.id]}
                         alt={PANEL_ALT[panel.id]}
@@ -212,9 +255,6 @@ const ICONS: Record<string, string> = {
                         class={`block w-full select-none rounded-lg transition-transform duration-[var(--dur-slow)] ease-[var(--ease-ios)] ${panel.id === 'overview' ? 'group-hover:scale-[1.02]' : ''}`}
                         draggable="false"
                       />
-                      <span class="dashboard-badge absolute right-3 top-3 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300 backdrop-blur-sm">
-                        Concept preview
-                      </span>
                     </div>
                   )}
 
@@ -592,7 +632,7 @@ const ICONS: Record<string, string> = {
 
     <p class="mx-auto mt-6 max-w-2xl text-center text-sm text-muted/70">
       Model Health and Settings show real, live data from the production model. Overview, Alerts, and
-      Predictions are concept previews of how a full deployment might look.
+      Predictions are dashboard previews of how a full deployment might look.
     </p>
   </div>
 </section>
