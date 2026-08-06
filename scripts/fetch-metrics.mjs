@@ -78,6 +78,12 @@ async function fetchModel(registeredName) {
       recall_test: m.recall_test,
       precision_test: m.precision_test,
       f1_test: m.f1_test,
+      // Both logged by the ML repo on every run, for both models — confirmed
+      // live before adding. brier_score scores the *probabilities* rather than
+      // the yes/no call; overfit_delta is f1_train - f1_test, the gap between
+      // data the model trained on and data it had never seen.
+      brier_score: m.brier_score,
+      overfit_delta: m.overfit_delta,
     },
   };
 }
@@ -96,7 +102,9 @@ function metricsEqual(a, b) {
     a.promoted_at === b.promoted_at &&
     a.metrics?.recall_test === b.metrics?.recall_test &&
     a.metrics?.precision_test === b.metrics?.precision_test &&
-    a.metrics?.f1_test === b.metrics?.f1_test
+    a.metrics?.f1_test === b.metrics?.f1_test &&
+    a.metrics?.brier_score === b.metrics?.brier_score &&
+    a.metrics?.overfit_delta === b.metrics?.overfit_delta
   );
 }
 

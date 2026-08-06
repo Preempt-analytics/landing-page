@@ -16,7 +16,7 @@ export interface DashboardPanel {
 
 export const DASHBOARD_PANELS: DashboardPanel[] = [
   { id: 'overview', label: 'Overview', mode: 'image' },
-  { id: 'live-machines', label: 'Live Machines', mode: 'soon' },
+  { id: 'live-machines', label: 'Live Machines', mode: 'html' },
   { id: 'alerts', label: 'Alerts', mode: 'image' },
   { id: 'predictions', label: 'Predictions', mode: 'image' },
   { id: 'maintenance-queue', label: 'Maintenance Queue', mode: 'soon' },

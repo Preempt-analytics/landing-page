@@ -125,7 +125,7 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
                   </div>
                 </div>
 
-                <h3 class="text-center text-base font-semibold text-offwhite lg:text-left">
+                <h3 class="text-center text-base font-semibold text-offwhite">
                   {'n' in s ? `${s.n}. ${s.title}` : s.title}
                   <InfoTip
                     label={`More about ${s.title}`}
@@ -134,7 +134,7 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
                     {s.info}
                   </InfoTip>
                 </h3>
-                <p class="mt-1.5 text-center text-sm leading-relaxed text-muted lg:text-left">{s.body}</p>
+                <p class="mt-1.5 text-center text-sm leading-relaxed text-muted">{s.body}</p>
                 {!isOutcome && (
                   <>
                     <!-- Horizontal connector (lg row layout): a gap-width box centered

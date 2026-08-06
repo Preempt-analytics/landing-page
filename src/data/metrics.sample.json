@@ -11,7 +11,9 @@
     "metrics": {
       "recall_test": 0.98,
       "precision_test": 0.94,
-      "f1_test": 0.96
+      "f1_test": 0.96,
+      "brier_score": 0.02,
+      "overfit_delta": 0.05
     }
   },
   "multiclass_model": {
@@ -21,7 +23,9 @@
     "metrics": {
       "recall_test": 0.91,
       "precision_test": 0.9,
-      "f1_test": 0.9
+      "f1_test": 0.9,
+      "brier_score": 0.03,
+      "overfit_delta": 0.08
     }
   }
 }

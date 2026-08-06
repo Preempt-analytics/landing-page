@@ -237,6 +237,8 @@ CI-overwritten)
 | `_meta.source` (`"live"` \| `"sample"`) | Whether hero tiles show a "live" dot or a "sample metric" caption | Honesty labeling breaks — a sample number could silently read as live, or vice versa |
 | `binary_model.metrics.recall_test` | The Failure Recall stat tile's value | `metrics.ts`'s `failureRecallPct()` reads this exact path |
 | `binary_model.metrics.precision_test` | The Failure Precision stat tile's value (replaced the old illustrative "2.3M Sensor Readings/Day" tile, 2026-07-30 — same live source as recall, no reason for one real stat to sit next to a fake one) | `metrics.ts`'s `failurePrecisionPct()` reads this exact path |
+| `binary_model.metrics.brier_score` | `/product`'s Model Health "Calibration" tile (added 2026-08-05 — scores the *probabilities*, not just the yes/no call, so it answers the one question recall and precision can't) | `metrics.ts`'s `brierScore()` reads this exact path |
+| `binary_model.metrics.overfit_delta` | `/product`'s Model Health "Train/Test Gap" tile | `metrics.ts`'s `overfitGap()` reads this exact path |
 | `binary_model.promoted_at` / `multiclass_model.promoted_at` | "Last retrained" relative-time caption | `metrics.ts`'s `lastPromotedAt()` takes the max of both |
 
 `src/data/metrics.sample.json` is the never-overwritten seed/fallback — don't let
@@ -303,6 +305,43 @@ generated concept screenshots (Alerts, Predictions) and their crop recipe.
 
 ---
 
+### Contract 6 — Recorded Run Fixture
+
+**Owner:** `scripts/record-live-machines.py` (writes), `src/data/live-machines.json`
+(committed)
+**Dependents:** `src/lib/live-machines.ts` (reads) → `ProductPreview.astro`'s
+`live-machines` panel + its replay script
+
+`/product`'s Live Machines panel replays a **recording of a real run**, not live
+data and not a simulation running in the browser. The recorder loads the actual
+`@production` models from DagsHub (anonymous read works) and drives the ML repo's
+own `generate_raw_reading()` / `engineer_features()`, so every sensor value and
+every probability in the fixture came out of the real system.
+
+**Manual, never CI.** The recorder needs the ML repo checked out as a sibling
+(`../predictive-maintenance-demo`); running it from CI would couple this repo's
+build to a second repository for no benefit. The JSON it writes is committed —
+that committed file is what the build consumes.
+
+| Field | Controls | If changed without updating dependents |
+|---|---|---|
+| `_meta.fields` | Column order within every frame. The client reads indices **from this array**, never hardcoded | Reorder it without the client re-reading it and every sensor silently displays another sensor's value |
+| `_meta.step_seconds` / `_meta.started_at` | The replay clock | Wrong simulated timestamps |
+| `_meta.binary_model_version` / `multiclass_model_version` | The "models v36 / v32" provenance line | The panel misattributes which model produced the numbers |
+| `machines[].frames[]` | One frame per timestep, arity must equal `_meta.fields.length` | A short/long frame shifts every later column |
+
+**Never fabricate frames by hand.** The whole point of this panel is that it is
+real; a hand-edited probability would be indistinguishable on screen from a
+recorded one, which is exactly the failure mode the "Recording · not live" badge
+and the provenance caption exist to prevent. Re-record instead.
+
+**Never add `--export-on-drift` (or the drift/export flags) to the recorder.**
+Those push to DagsHub and fire the ML repo's GitHub Actions retrain pipeline.
+The recorder deliberately runs no server, writes nothing to `simulation.db`, and
+triggers nothing.
+
+---
+
 ## PRE-CHANGE CHECKLIST
 
 | Change type | Check |
@@ -316,6 +355,7 @@ generated concept screenshots (Alerts, Predictions) and their crop recipe.
 | Add/edit a section component | Matches the design spec in `ARCHITECTURE.md` §9 for that section, or is the spec being updated too? |
 | Touch `.github/workflows/deploy.yml` | Still fails open if `DAGSHUB_TOKEN` is unset? Still only one workflow (§6's "why one, not two")? |
 | Add/flip a `/product` dashboard panel | Registry entry (`dashboard.ts`) **and** a matching branch/asset in `ProductPreview.astro` updated in the same change (Contract 5)? |
+| Re-record `live-machines.json` | Ran `scripts/record-live-machines.py` (never hand-edited)? Frame arity still matches `_meta.fields`? No drift/export flags used (Contract 6)? |
 
 ---
 
@@ -392,6 +432,8 @@ and the handover docs so they don't have to be rediscovered:
 | `src/lib/metrics.ts` | Metrics accessor | `src/data/metrics.json` | `StatRow.astro` |
 | `src/lib/site.ts` | Shared constants + `withBase()` | — | `Nav`, `Footer`, `Hero`, `MlopsSystem`, `try-it-yourself` |
 | `src/lib/dashboard.ts` | `/product` panel registry (`mode` per panel) | — | `ProductPreview.astro` |
+| `scripts/record-live-machines.py` | **Manual** recorder (not CI) | DagsHub `@production` models + ML repo's sensor generator | `src/data/live-machines.json` |
+| `src/lib/live-machines.ts` | Recorded-run accessor | `src/data/live-machines.json` | `ProductPreview.astro`'s Live Machines panel |
 | `astro.config.mjs` | Site/base config | — | every internal link via `withBase()` |
 | `src/styles/global.css` | Design tokens, motion/focus rules | — | every component's Tailwind classes |
 | `src/layouts/BaseLayout.astro` | Page shell, SEO/OG meta | `site.ts` | wraps every page in `src/pages/` |

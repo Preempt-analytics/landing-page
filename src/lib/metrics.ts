@@ -22,6 +22,36 @@ export function failurePrecisionPct(): number {
   return Math.round((metrics.binary_model?.metrics?.precision_test ?? 0) * 100);
 }
 
+/** Brier score of the production binary model — mean squared error of its
+    predicted probabilities, so it scores *how confident* the model was, not
+    just whether the yes/no call was right. Lower is better; 0 is perfect.
+    Returned raw (not rounded) because it lives in the third decimal place. */
+export function brierScore(): number {
+  return metrics.binary_model?.metrics?.brier_score ?? 0;
+}
+
+/** f1_train − f1_test for the production binary model: how much better it
+    scores on data it trained on than on data it has never seen. */
+export function overfitGap(): number {
+  return metrics.binary_model?.metrics?.overfit_delta ?? 0;
+}
+
+/** "Misses about 1 in N failures", derived from recall so the prose can't
+    drift away from the tile above it after a retrain. Returns null when recall
+    is a perfect 100% — not hypothetical, versions 2–4 genuinely scored 1.000,
+    and 1/0 would render "1 in Infinity". */
+export function missesOneIn(): number | null {
+  const missRate = 1 - (metrics.binary_model?.metrics?.recall_test ?? 0);
+  if (missRate <= 0) return null;
+  return Math.round(1 / missRate);
+}
+
+/** False alarms per 100 warnings, derived from precision. Same anti-drift
+    reasoning as missesOneIn(). */
+export function falseAlarmsPer100(): number {
+  return Math.round((1 - (metrics.binary_model?.metrics?.precision_test ?? 0)) * 100);
+}
+
 /** How many times the production binary model has been retrained & promoted.
     MLflow version numbers increment monotonically with each registered
     version, so the current version number doubles as a retrain count —

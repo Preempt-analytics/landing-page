@@ -13,34 +13,55 @@ import { withBase } from '../lib/site';
        2026-07-28. This was silently hiding the photo below entirely. -->
 
   <!--
-    Full-bleed hero photo, mirrors design/mockups/Screenshot 2026-07-21 112341.png:
-    a background layer behind the copy, not a boxed/bordered image. Full-width behind
-    the copy below lg — a near-opaque wash there, so the mobile view reads as faint
-    texture, not a distinct photo (human review, 2026-07-28). From lg, narrows to the
-    right 62% with the left/bottom fades below, so the photo reads clearly there,
-    matching the mockup. Two gradient divs (not the photo itself) fade it into navy-950.
+    Full-bleed hero photo, at every breakpoint, not just a right-side panel
+    (human-requested, 2026-08-05 — a boxed `lg:w-[62%]` right column read as
+    the photo being "off to the side" rather than a background for the whole
+    section). A near-opaque wash on mobile keeps that view reading as faint
+    texture, not a distinct photo (human review, 2026-07-28) — that part is
+    unchanged. From lg, the photo now spans the full section width; a wide
+    left→right gradient (not a hard box edge) keeps the headline/copy legible
+    against it while letting the machine on the right stay clearly visible.
 
-    ASSET: cnc-machine.png (design/visual-assets/hero-page-cnc.png), swapped in
-    2026-07-31 for a whole, mid-operation CNC milling machine — replaces the earlier
-    macro-gears close-up (design/visual-assets/gears.png), which moved to the
-    Try It Yourself subpage instead (see try-it-yourself.astro). Reasoning:
-    macro-gears is generic "industrial" stock imagery that could be almost any
-    manufacturing product; a real CNC mill visually grounds the actual product
-    (docs/IMAGE_ASSETS.md item 1).
+    ASSET: cnc-machine.png (design/visual-assets/hero-image-cnc-dark-realistic.png,
+    "Detroit style" regeneration swapped in 2026-08-05), a grittier, more atmospheric
+    re-shoot of the same whole, mid-operation CNC milling machine — the mockup-only
+    predecessor (design/mockups/hero-page-cnc.png, moved there 2026-08-05) had a
+    largely empty/flat-black left two-thirds; this version keeps dim factory/catwalk
+    detail across the full frame instead, which is what makes a true full-bleed
+    treatment (below) work instead of exposing a visibly empty stretch of photo.
+    Original CNC swap replaced the earlier macro-gears close-up
+    (design/visual-assets/gears.png), which moved to the Try It Yourself subpage
+    instead (see try-it-yourself.astro). Reasoning: macro-gears is generic
+    "industrial" stock imagery that could be almost any manufacturing product; a
+    real CNC mill visually grounds the actual product (docs/IMAGE_ASSETS.md item 1).
 
-    Container shape, not just the source file, changed with it: the old portrait
-    macro-gears photo (1600×2000) suited `inset-0` stretched to the section's full
-    (tall) height. This new photo is landscape (1672×941, ~16:9) with intentional
-    dark negative space on the left for the headline to sit on — stretching THAT to
-    a tall container would object-cover-crop away most of its width, defeating the
-    wide composition entirely. `lg:aspect-video` (an exact match for the source's
-    own ~16:9 ratio) plus vertical centering keeps the photo's real shape intact
-    regardless of how tall the copy block next to it renders.
+    Container is a plain `inset-0` at every breakpoint now (no more lg:w-[62%]
+    box) — `object-cover` crops the ~16:9 photo to whatever the section's actual
+    height is, same technique the mobile view already used. This means the photo
+    no longer keeps its exact native shape at lg like the old aspect-video box
+    did, but that's the deliberate trade of this change: a true full-section
+    background over a letterboxed side panel.
+
+    lg:max-h-[50vw] (human-requested follow-up, 2026-08-05): on a wide/ultra-
+    wide monitor the section's own height barely changes with viewport width
+    (it's driven by the copy block's fixed-ish content), so width:height keeps
+    climbing well past the photo's native ~1.78:1 the wider the screen gets —
+    object-cover has to crop more and more off the top/bottom to fill that,
+    reading as "zoomed in" and losing the composition entirely on very wide
+    screens. Capping height at 50vw (ratio 2:1 — looser than the photo's native
+    1.78:1, so normal/moderately-wide screens where this already looked fine
+    are untouched, since max-height only ever clamps DOWN from the uncapped
+    value, never forces growth) bounds how far that crop can go. `inset-0`
+    keeps `top:0`/`bottom:0` both set, so when the cap binds, per spec the
+    browser re-resolves by relaxing `bottom` — the image stays pinned to the
+    section's top edge and whatever's left uncovered appears at the bottom
+    instead, which is exactly where the fade-to-navy-950 gradient below already
+    lives, so the shortfall blends in rather than showing a hard seam. Verified
+    against the build's computed layout, not yet re-checked in an actual
+    ultra-wide browser window — flag it if it still looks off at your
+    resolution.
   -->
-  <div
-    class="pointer-events-none absolute inset-0 -z-20 lg:inset-auto lg:right-0 lg:top-1/2 lg:w-[62%] lg:aspect-video lg:-translate-y-1/2"
-    aria-hidden="true"
-  >
+  <div class="pointer-events-none absolute inset-0 -z-20 lg:max-h-[50vw]" aria-hidden="true">
     <img
       src={withBase('/images/hero/cnc-machine.png')}
       alt=""
@@ -48,10 +69,15 @@ import { withBase } from '../lib/site';
     />
     <!-- near-opaque wash below lg — the photo is felt, not seen, on narrow screens -->
     <div class="absolute inset-0 bg-navy-950/85 lg:hidden"></div>
-    <!-- fade into the page background on the left edge (desktop only) -->
+    <!-- Left→right fade (desktop only) across the FULL section width now, not
+         just within a right-side box — opaque enough under the headline/copy
+         (through ~30%) to stay legible, fully transparent by ~68% so the
+         machine on the right reads at full contrast. Widening/softening this
+         gradient (rather than a hard container edge) is what lets the photo
+         read as "background for the whole hero" per the human note above. -->
     <div
       class="absolute inset-0 hidden lg:block"
-      style="background: linear-gradient(to right, var(--color-navy-950) 0%, transparent 42%);"
+      style="background: linear-gradient(to right, var(--color-navy-950) 0%, var(--color-navy-950) 20%, transparent 68%);"
     >
     </div>
     <!-- fade into the page background at the bottom edge -->
@@ -75,25 +101,36 @@ import { withBase } from '../lib/site';
          Coordinates are eyeballed off cnc-machine.png and expected to need a small
          nudge once seen rendered — same as LiveFactory's own pin coordinates.
 
-         Visibility pass (human-requested follow-up, 2026-07-31): the first version
-         was too subtle to notice — a soft blurred wash, breathing over 10-13s, with
-         no arrival moment and nothing to distinguish it from the photo's own
-         highlights/sparks. Fixed three ways (`.hero-icon-marker` below), all still
-         non-interactive/pointer-events-none — this remains a flourish, not
-         LiveFactory's "watch it work" moment, just a more noticeable one:
-         (A) a visible ring + a tighter, brighter two-layer glow (teal core, dark
-         vignette behind it) reading as a deliberate marker against the photo's own
-         texture, and a faster 6-7s breathe instead of 10-13s; (B) a one-time
-         brightness flash timed just after the copy's own hero-fade-in sequence
-         finishes (no scroll/JS trigger needed — the hero's already in view at
-         load); (D) the dark vignette IS the local-contrast patch each glow sits
-         on, folded into the same background rather than a separate layer. -->
+         `left`/`top` values are the photo's own native coordinates (0-100% of
+         cnc-machine.png), same as when the old lg:w-[62%] aspect-video box
+         showed it uncropped. Briefly shifted inward for the full-bleed change
+         above under an assumption that desktop widths crop the photo
+         horizontally — reverted 2026-08-05 once an actual wide-screen
+         screenshot showed the opposite: width:height climbs past the photo's
+         native ratio as the viewport widens, so object-cover was cropping
+         top/bottom, not the sides, and getting worse the wider the screen —
+         which the lg:max-h-[50vw] cap above now bounds. With that cap in
+         place, native coordinates land close to correct again in both
+         regimes (uncapped-but-close-to-native at normal widths, capped-and-
+         top-anchored-so-near-native at wide ones) — still eyeballed, still
+         plausibly needing a small nudge after an actual visual check.
+
+         Toned down (human-requested, 2026-08-05, reversing part of the
+         2026-07-31 visibility pass above): the ring, tight glow, and one-time
+         brightness flash read as competing UI chrome — bright badges the eye
+         snags on — rather than ambient detail sitting on the photo. All three
+         are gone here (no border, no `hero-icon-flash`), the icons themselves
+         are smaller, and each marker sits ~4pp further left than the native
+         coordinates above (56/69/89 instead of 60/73/93) — close enough to
+         still read as "on the machine" at each of those same physical points,
+         but pulled back from the crop-risk right edge the coordinate note
+         already flags, and off the empty gap between the two housings. -->
     <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
-      style="left: 60%; top: 46%; animation-duration: 6.5s, 900ms; animation-delay: 0ms, 480ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
+      style="left: 56%; top: 46%; animation-duration: 9.5s; animation-delay: 0s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
       aria-hidden="true"
     >
-      <svg width="30" height="24" viewBox="0 0 30 24" fill="none">
+      <svg width="19" height="15" viewBox="0 0 30 24" fill="none">
         <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
         <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
         <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
@@ -102,22 +139,22 @@ import { withBase } from '../lib/site';
       </svg>
     </div>
     <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
-      style="left: 73%; top: 46%; animation-duration: 7s, 900ms; animation-delay: -2.3s, 560ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
+      style="left: 69%; top: 46%; animation-duration: 11s; animation-delay: -3.5s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
       aria-hidden="true"
     >
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
         <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
         <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
       </svg>
     </div>
     <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full border border-teal-400/45 p-2.5 lg:block"
-      style="left: 93%; top: 48%; animation-duration: 6.8s, 900ms; animation-delay: -4.6s, 640ms; background: radial-gradient(circle, rgba(45,212,191,0.55), transparent 55%), radial-gradient(circle, rgba(13,27,46,0.6), transparent 80%); box-shadow: 0 0 18px 5px rgba(45,212,191,0.4);"
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
+      style="left: 89%; top: 48%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
       aria-hidden="true"
     >
-      <svg width="23" height="23" viewBox="0 0 24 24" fill="none">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
         <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
         <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
         <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
@@ -193,28 +230,13 @@ import { withBase } from '../lib/site';
 </section>
 
 <style>
-  /* Failure-mode icon markers (see the markup comment above for the full
-     visibility-pass rationale). Two animations per marker, same technique as
-     LiveFactory's .sensor-pin: the continuous ambient-breathe (shared
-     keyframe, global.css) plus a one-time brightness flash. Unlike
-     LiveFactory's boot-flash — gated behind an IntersectionObserver +
-     .is-visible class, since that section only enters view on scroll — this
-     needs no JS trigger at all: the hero is already in view at first paint,
-     so the flash just rides a plain positive animation-delay, timed to land
-     right after .hero-fade-in's own copy sequence (which ends at 340ms)
-     finishes, drawing the eye across to the photo once the headline/CTAs
-     have already appeared. animation-duration/-delay are set inline per
-     marker as comma-separated pairs (ambient-breathe value, then
-     hero-icon-flash value) so each marker's continuous breathe stays
-     independently offset — three markers pulsing in lockstep would read as
-     one fake blinking light — while its one-time flash still lands at its
-     own distinct moment. */
+  /* Failure-mode icon markers (see the markup comment above — toned down
+     2026-08-05). Just the one shared ambient-breathe keyframe (global.css)
+     now, no flash. animation-duration/-delay are set inline per marker with
+     different values/negative offsets so the three breathe out of phase —
+     otherwise they'd read as one fake blinking light instead of three
+     independent markers. */
   .hero-icon-marker {
-    animation: ambient-breathe 7s ease-in-out infinite, hero-icon-flash 900ms ease-out both;
-  }
-  @keyframes hero-icon-flash {
-    0% { filter: brightness(1); }
-    35% { filter: brightness(2.4); }
-    100% { filter: brightness(1); }
+    animation: ambient-breathe 10s ease-in-out infinite;
   }
 </style>

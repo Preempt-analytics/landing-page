@@ -12,6 +12,11 @@ import dashboardAlerts from '../../assets/dashboard-alerts.png';
 import dashboardPredictions from '../../assets/dashboard-predictions.png';
 import StatCard from '../StatCard.astro';
 import { DASHBOARD_PANELS } from '../../lib/dashboard';
+import {
+  liveMachines,
+  recordedModelVersions,
+  recordedSpanMinutes,
+} from '../../lib/live-machines';
 import { REPO_URL, TEAM, PROGRAM } from '../../lib/site';
 import {
   isLive,
@@ -20,6 +25,10 @@ import {
   lastPromotedAt,
   relativeTime,
   retrainCount,
+  brierScore,
+  overfitGap,
+  missesOneIn,
+  falseAlarmsPer100,
 } from '../../lib/metrics';
 
 const live = isLive();
@@ -28,6 +37,29 @@ const precision = `${failurePrecisionPct()}%`;
 const retrained = relativeTime(lastPromotedAt());
 const liveTone = live ? 'live' : 'plain';
 const liveCaption = live ? 'live · updated hourly' : 'sample metric';
+
+// Model Health's plain-language summary is derived from the same live values as
+// the tiles above it, never hardcoded — otherwise a retrain silently turns the
+// prose into a false claim while the tiles stay correct.
+const brier = brierScore().toFixed(3);
+const gap = overfitGap().toFixed(2);
+const missOneIn = missesOneIn();
+const healthSummary =
+  missOneIn !== null
+    ? `it misses roughly 1 failure in ${missOneIn}, and about ${falseAlarmsPer100()} of every 100 warnings turn out to be false alarms`
+    : `it flagged every failure it was tested on, and about ${falseAlarmsPer100()} of every 100 warnings turn out to be false alarms`;
+
+// Live Machines replays a recorded run (scripts/record-live-machines.py). The
+// whole fixture is inlined as JSON below rather than fetched: it's ~25 KB, and
+// a fetch would need a base-path-aware URL for no benefit.
+const recording = liveMachines();
+const recordedVersions = recordedModelVersions();
+const recordedSpan = recordedSpanMinutes();
+const recordedOn = new Date(recording._meta.recorded_at).toLocaleDateString('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+});
 
 // image-mode panels only need a lookup from id -> imported asset; 'html'/'soon'
 // panels are handled by id-specific branches below (only 2 'html' ids exist,
@@ -73,12 +105,12 @@ const ICONS: Record<string, string> = {
         The product
       </p>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
-        Here's what the dashboard looks like.
+        Here's what the dashboard could look like . .
       </h2>
       <p class="mt-4 text-lg leading-relaxed text-muted">
-        A maintenance control center: fleet health, machines ranked by failure
-        probability, and live sensor readings. The sidebar below is real —
-        click through the sections yourself.
+        in a real factory setting: A maintenance control center: fleet health, machines ranked by failure
+        probability, and live sensor readings. The sidebar is <b>interactive</b>, and serve either mockups or real data—
+        click through the sections yourself to explore.
       </p>
     </div>
 
@@ -124,11 +156,29 @@ const ICONS: Record<string, string> = {
                     class="shrink-0"
                     set:html={ICONS[panel.id]}
                   />
-                  <span class="whitespace-nowrap">{panel.label}</span>
+                  {/* No flex-1: letting the label grow is what pushed the discover
+                      dot to the far edge. It still shrinks/truncates via min-w-0,
+                      and the Soon tags keep their own ml-auto right-alignment. */}
+                  <span class="min-w-0 truncate">{panel.label}</span>
+                  {/* Gentle "there's something here" cue, Live Machines only —
+                      the one panel that's a real, playing recording rather than
+                      a static screenshot, easy to miss among 8 other plain tabs
+                      (human-requested, 2026-08-05). Sits just after the label
+                      rather than pinned to the tab's right edge (human-requested
+                      follow-up) — ml-1 on top of the row's own gap-2.5 puts it a
+                      few spaces after the word rather than in its own column.
+                      Hidden once this tab is actually selected (CSS below) — its
+                      job is done once it's found. */}
+                  {panel.id === 'live-machines' && (
+                    <span
+                      class="dashboard-discover-dot ml-1 h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400"
+                      aria-hidden="true"
+                    />
+                  )}
                   {panel.mode === 'soon' && (
                     <>
                       <span
-                        class="dashboard-soon-tag ml-auto shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[0.62rem] font-semibold uppercase tracking-wide text-muted/70"
+                        class="dashboard-soon-tag ml-auto shrink-0 rounded-full bg-white/10 px-1.5 py-0.5 text-[0.62rem] font-semibold leading-none text-muted/70"
                         aria-hidden="true"
                       >
                         Soon
@@ -168,13 +218,173 @@ const ICONS: Record<string, string> = {
                     </div>
                   )}
 
+                  {panel.mode === 'html' && panel.id === 'live-machines' && (
+                    <div data-live-machines>
+                      <div class="flex flex-wrap items-start justify-between gap-3">
+                        <div>
+                          <h3 class="text-lg font-semibold text-offwhite">Live Machines</h3>
+                          <p class="mt-1 max-w-xl text-sm text-muted">
+                            A real run of the demo, recorded and played back. Every sensor reading and
+                            every probability below came out of the production models — none of it is
+                            mocked up.
+                          </p>
+                        </div>
+                        <span class="shrink-0 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300">
+                          Recording · not live
+                        </span>
+                      </div>
+
+                      {/* Transport. Starts paused under prefers-reduced-motion — see the script. */}
+                      <div class="mt-5 flex flex-wrap items-center gap-3">
+                        <button
+                          type="button"
+                          data-lm-toggle
+                          aria-label="Play recording"
+                          class="inline-flex min-h-[38px] items-center gap-2 rounded-lg border border-white/10 bg-navy-800/60 px-3.5 py-2 text-sm font-medium text-offwhite transition-colors hover:bg-white/5"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" data-lm-icon>
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                          <span data-lm-label>Play</span>
+                        </button>
+                        <input
+                          type="range"
+                          min="0"
+                          max={recording.machines[0].frames.length - 1}
+                          value="0"
+                          step="1"
+                          data-lm-scrub
+                          aria-label="Scrub through the recording"
+                          class="h-1.5 flex-1 min-w-[140px] cursor-pointer appearance-none rounded-full bg-white/10 accent-teal-400"
+                        />
+                        <span class="tabular-nums text-xs text-muted/80" data-lm-clock>—</span>
+                      </div>
+
+                      {/* Machine selector — real ids from the recording, not invented names. */}
+                      <div class="mt-4 grid gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                        {recording.machines.map((m, mi) => (
+                          <button
+                            type="button"
+                            data-lm-machine={mi}
+                            aria-pressed={mi === 0 ? 'true' : 'false'}
+                            class="lm-machine rounded-lg border border-white/10 bg-navy-800/40 px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                          >
+                            <span class="flex items-center gap-1.5">
+                              <span class="lm-dot h-2 w-2 shrink-0 rounded-full bg-teal-400" data-lm-dot />
+                              <span class="text-xs font-medium text-offwhite">
+                                {m.id.replace('machine_', 'Machine ')}
+                              </span>
+                              {/* Generic milling-machine glyph — same silhouette on every
+                                  card (the recording is all mills, just different units),
+                                  matching the sidebar tabs' hand-drawn 24x24 stroke-icon
+                                  style. Muted, not teal/alert, so it doesn't compete with
+                                  the status dot for attention. */}
+                              <svg
+                                width="14"
+                                height="14"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.8"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                aria-hidden="true"
+                                class="ml-auto shrink-0 text-muted/60"
+                              >
+                                <rect x="13.5" y="3.5" width="6" height="12" rx="1" />
+                                <path d="M13.5 7.5H8v7" />
+                                <rect x="4.5" y="17" width="15" height="2.5" rx="0.6" />
+                              </svg>
+                            </span>
+                            <span class="mt-1.5 flex items-end justify-between gap-2">
+                              <span class="tabular-nums text-lg font-bold text-offwhite" data-lm-mprob>
+                                —
+                              </span>
+                              <span class="rounded bg-white/10 px-1 text-[0.6rem] font-semibold text-muted/80">
+                                {m.type}
+                              </span>
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Detail for the selected machine */}
+                      <div class="mt-4 rounded-xl border border-white/10 bg-navy-800/30 p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                          <p class="text-sm font-semibold text-offwhite" data-lm-title>—</p>
+                          <p class="text-xs font-semibold" data-lm-status>—</p>
+                        </div>
+
+                        {/* Whole recorded trace, with a cursor at the current step. Flat with
+                            sudden spikes is what this model genuinely does — see the caption. */}
+                        <svg
+                          viewBox="0 0 300 56"
+                          preserveAspectRatio="none"
+                          class="mt-3 h-14 w-full"
+                          role="img"
+                          aria-label="Failure probability across the whole recorded run for the selected machine"
+                        >
+                          <line x1="0" y1="14" x2="300" y2="14" stroke="currentColor" stroke-width="0.5" class="text-white/10" stroke-dasharray="3 3" />
+                          <polyline
+                            data-lm-trace
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.2"
+                            class="text-teal-400"
+                            points=""
+                          />
+                          <line data-lm-cursor x1="0" y1="0" x2="0" y2="56" stroke="currentColor" stroke-width="1" class="text-offwhite/40" />
+                          {/* Playhead marker rides the drawn line — a position on the
+                              chart, not a reading, so moving it continuously between
+                              recorded points claims nothing the recording doesn't say. */}
+                          <circle data-lm-marker cx="0" cy="54" r="2.4" fill="currentColor" class="text-teal-300" />
+                        </svg>
+                        <p class="text-[0.7rem] text-muted/60">
+                          Dashed line marks the 80% alert threshold.
+                        </p>
+
+                        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                          {[
+                            ['Air temp', 'air', 'K'],
+                            ['Process temp', 'proc', 'K'],
+                            ['Rotational speed', 'rpm', 'rpm'],
+                            ['Torque', 'torque', 'Nm'],
+                            ['Tool wear', 'wear', 'min'],
+                          ].map(([label, key, unit]) => (
+                            <div class="rounded-lg border border-white/10 bg-navy-900/50 p-2.5">
+                              <p class="text-[0.68rem] uppercase tracking-wide text-muted/70">{label}</p>
+                              <p class="mt-0.5 tabular-nums text-base font-semibold text-offwhite">
+                                <span data-lm-sensor={key}>—</span>
+                                <span class="ml-0.5 text-[0.68rem] font-normal text-muted/70">{unit}</span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <p class="mt-4 text-xs leading-relaxed text-muted/70">
+                        Recorded {recordedOn} · {recordedSpan} minutes of factory time · models {recordedVersions}.
+                        Readings come from the demo's own sensor generator, sampled from the AI4I 2020
+                        dataset; the probabilities are what the production models returned for them.
+                        Machine ids are the real ones from the run.
+                      </p>
+
+                      <script
+                        type="application/json"
+                        data-lm-json
+                        set:html={JSON.stringify(recording).replace(/</g, '\\u003c')}
+                      />
+                    </div>
+                  )}
+
                   {panel.mode === 'html' && panel.id === 'model-health' && (
                     <div>
                       <h3 class="text-lg font-semibold text-offwhite">Model Health</h3>
                       <p class="mt-1 text-sm text-muted">
-                        The same production-model metrics shown on the homepage — real numbers, not a mockup.
+                        How well the model that's serving predictions right now actually performs — read
+                        from the model registry when this page was built, not typed in by hand.
                       </p>
-                      <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                      <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         <StatCard
                           value={recall}
                           label="Failure Recall"
@@ -208,6 +418,52 @@ const ICONS: Record<string, string> = {
                               stroke-width="1.6"
                               stroke-linecap="round"
                               stroke-linejoin="round"
+                            />
+                          </svg>
+                        </StatCard>
+                        <StatCard
+                          value={brier}
+                          label="Calibration"
+                          caption={liveCaption}
+                          captionTone={liveTone}
+                          info="Most scores only ask whether the yes/no call was right. This one scores the confidence behind it — how close the model's probabilities land to what actually happened. Lower is better, and 0 would be perfect."
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M4 17a8 8 0 1 1 16 0"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                            />
+                            <path
+                              d="M12 17l4-4.5"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                            />
+                            <circle cx="12" cy="17" r="1.4" fill="currentColor" />
+                          </svg>
+                        </StatCard>
+                        <StatCard
+                          value={gap}
+                          label="Train/Test Gap"
+                          caption={liveCaption}
+                          captionTone={liveTone}
+                          info="How much better the model scores on the data it learned from than on data it had never seen. A small gap means it learned the pattern rather than memorizing the answers. It's measured on every retrain, not checked once at the start."
+                        >
+                          <svg slot="icon" width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                            <path
+                              d="M6 20V8M18 20v-6"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                            />
+                            <path
+                              d="M6 8h12"
+                              stroke="currentColor"
+                              stroke-width="1.6"
+                              stroke-linecap="round"
+                              stroke-dasharray="2 2.5"
                             />
                           </svg>
                         </StatCard>
@@ -253,6 +509,10 @@ const ICONS: Record<string, string> = {
                           </svg>
                         </StatCard>
                       </div>
+                      <p class="mt-5 max-w-2xl text-sm leading-relaxed text-muted">
+                        In plain terms: {healthSummary}. Every retrain is scored the same way
+                        before it's allowed to replace the model already in production.
+                      </p>
                     </div>
                   )}
 
@@ -346,15 +606,29 @@ const ICONS: Record<string, string> = {
     if (!shell) return;
     const tabs = Array.from(shell.querySelectorAll<HTMLButtonElement>('[role="tab"]'));
     const panels = Array.from(shell.querySelectorAll<HTMLElement>('[role="tabpanel"]'));
-    tabs.forEach((tab) => {
-      tab.addEventListener('click', () => {
-        const id = tab.dataset.panelId;
-        tabs.forEach((t) => t.setAttribute('aria-selected', String(t === tab)));
-        panels.forEach((panel) => {
-          panel.hidden = panel.dataset.panel !== id;
-        });
+    function selectPanel(id: string | undefined) {
+      if (!id) return;
+      tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.panelId === id)));
+      panels.forEach((panel) => {
+        panel.hidden = panel.dataset.panel !== id;
       });
+    }
+
+    tabs.forEach((tab) => {
+      tab.addEventListener('click', () => selectPanel(tab.dataset.panelId));
     });
+
+    // Deep link: /product/#live-machines opens straight onto that panel. This
+    // is what LiveFactory's drift callout links to — the visitor sees CNC-01
+    // flagged on the factory floor, clicks it, and lands on the panel showing
+    // that kind of reading, rather than on Overview with the trail gone cold.
+    // The hash names a panel, not an element id, so nothing scrolls on its
+    // own; the shell is brought into view explicitly below.
+    const deepLinked = location.hash.slice(1);
+    if (deepLinked && tabs.some((t) => t.dataset.panelId === deepLinked)) {
+      selectPanel(deepLinked);
+      shell.scrollIntoView({ block: 'center' });
+    }
 
     // Toned-down cursor-parallax tilt on the framed dashboard (moved here
     // from LiveFactory.astro, human-requested, 2026-07-28). Now wraps the
@@ -376,6 +650,219 @@ const ICONS: Record<string, string> = {
       mockup.addEventListener('mouseleave', () => {
         mockup.style.transform = '';
       });
+    }
+
+    // ── Live Machines replay ────────────────────────────────────────────────
+    // Steps through the recording inlined by the panel above. Nothing is
+    // computed or simulated here — every number shown was produced by the real
+    // @production models at record time (scripts/record-live-machines.py).
+    const lm = document.querySelector<HTMLElement>('[data-live-machines]');
+    const lmJson = lm?.querySelector<HTMLScriptElement>('[data-lm-json]');
+    if (lm && lmJson) {
+      type Frame = (number | string | null)[];
+      const rec = JSON.parse(lmJson.textContent || '{}') as {
+        _meta: { fields: string[]; step_seconds: number; started_at: string };
+        machines: { id: string; type: string; frames: Frame[] }[];
+      };
+
+      // Column positions come from _meta.fields, never hardcoded — the recorder
+      // owns that order, so adding a field there can't silently shift meaning.
+      const F = rec._meta.fields;
+      const COL = {
+        air: F.indexOf('air_temp_k'),
+        proc: F.indexOf('process_temp_k'),
+        rpm: F.indexOf('rpm'),
+        torque: F.indexOf('torque_nm'),
+        wear: F.indexOf('tool_wear_min'),
+        prob: F.indexOf('failure_prob'),
+        pred: F.indexOf('predicted_failure'),
+        ftype: F.indexOf('failure_type'),
+      };
+
+      const steps = rec.machines[0].frames.length;
+      const startMs = new Date(rec._meta.started_at).getTime();
+      const TEAL = 'var(--color-teal-400)';
+      const ALERT = 'var(--color-alert-400)';
+      const PLAY_ICON = '<path d="M8 5v14l11-7z" />';
+      const PAUSE_ICON = '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />';
+
+      const panel = lm.closest<HTMLElement>('[role="tabpanel"]');
+      const toggle = lm.querySelector<HTMLButtonElement>('[data-lm-toggle]');
+      const icon = lm.querySelector<SVGElement>('[data-lm-icon]');
+      const label = lm.querySelector<HTMLElement>('[data-lm-label]');
+      const scrub = lm.querySelector<HTMLInputElement>('[data-lm-scrub]');
+      const clock = lm.querySelector<HTMLElement>('[data-lm-clock]');
+      const title = lm.querySelector<HTMLElement>('[data-lm-title]');
+      const status = lm.querySelector<HTMLElement>('[data-lm-status]');
+      const trace = lm.querySelector<SVGPolylineElement>('[data-lm-trace]');
+      const cursor = lm.querySelector<SVGLineElement>('[data-lm-cursor]');
+      const marker = lm.querySelector<SVGCircleElement>('[data-lm-marker]');
+      const machineBtns = Array.from(lm.querySelectorAll<HTMLButtonElement>('[data-lm-machine]'));
+      const sensorOut = (key: string) => lm.querySelector<HTMLElement>(`[data-lm-sensor="${key}"]`);
+
+      // `position` is continuous (fractional frames) so the playhead can glide;
+      // `step` is the integer frame whose *recorded* values are displayed. The
+      // two are deliberately separate: interpolating a position is presentation,
+      // interpolating a sensor reading would invent data (Contract 6).
+      let position = 0;
+      let step = 0;
+      let selected = 0;
+      let playing = false;
+      let raf: number | undefined;
+      let lastTs = 0;
+
+      const STEP_MS = 700;
+
+      // p=0 sits at y=54 and p=1 at y=4, which puts the 80% alert threshold
+      // exactly on the dashed guide line the markup draws at y=14.
+      const yFor = (p: number) => 54 - p * 50;
+      const xFor = (i: number) => Math.min(300, (i / (steps - 1)) * 300);
+      const pct = (p: number) => `${(p * 100).toFixed(1)}%`;
+
+      /** Probability at a fractional position — read straight off the straight
+          line the polyline already draws between two recorded points, so the
+          marker sits on the rendered trace rather than floating beside it. */
+      function probAt(pos: number) {
+        const a = Math.floor(pos);
+        const b = Math.min(a + 1, steps - 1);
+        const frames = rec.machines[selected].frames;
+        const pa = Number(frames[a][COL.prob]);
+        return pa + (Number(frames[b][COL.prob]) - pa) * (pos - a);
+      }
+
+      function drawPlayhead() {
+        const x = xFor(position);
+        cursor?.setAttribute('x1', x.toFixed(2));
+        cursor?.setAttribute('x2', x.toFixed(2));
+        marker?.setAttribute('cx', x.toFixed(2));
+        marker?.setAttribute('cy', yFor(probAt(position)).toFixed(2));
+      }
+
+      function drawTrace() {
+        trace?.setAttribute(
+          'points',
+          rec.machines[selected].frames
+            .map((f, i) => `${xFor(i).toFixed(1)},${yFor(Number(f[COL.prob])).toFixed(1)}`)
+            .join(' ')
+        );
+      }
+
+      function render() {
+        const machine = rec.machines[selected];
+        const cur = machine.frames[step];
+        const flagged = Number(cur[COL.pred]) === 1;
+
+        machineBtns.forEach((btn, mi) => {
+          const f = rec.machines[mi].frames[step];
+          const bad = Number(f[COL.pred]) === 1;
+          const out = btn.querySelector<HTMLElement>('[data-lm-mprob]');
+          if (out) {
+            out.textContent = pct(Number(f[COL.prob]));
+            out.style.color = bad ? ALERT : 'var(--color-offwhite)';
+          }
+          const dot = btn.querySelector<HTMLElement>('[data-lm-dot]');
+          if (dot) {
+            dot.style.background = bad ? ALERT : TEAL;
+            dot.dataset.alert = bad ? '1' : '0'; // drives the dot's CSS strobe
+          }
+          btn.dataset.alert = bad ? '1' : '0'; // drives the row's CSS strobe
+          btn.setAttribute('aria-pressed', String(mi === selected));
+          btn.style.borderColor = mi === selected ? TEAL : '';
+        });
+
+        if (title) {
+          title.textContent = `${machine.id.replace('machine_', 'Machine ')} · quality grade ${machine.type}`;
+        }
+        if (status) {
+          const ftype = cur[COL.ftype];
+          status.textContent = flagged
+            ? `Predicted failure${ftype ? ` · ${String(ftype).toUpperCase()}` : ''} · ${pct(Number(cur[COL.prob]))}`
+            : `Normal · ${pct(Number(cur[COL.prob]))}`;
+          status.style.color = flagged ? ALERT : TEAL;
+        }
+
+        const air = sensorOut('air');
+        const proc = sensorOut('proc');
+        const rpm = sensorOut('rpm');
+        const torque = sensorOut('torque');
+        const wear = sensorOut('wear');
+        if (air) air.textContent = String(cur[COL.air]);
+        if (proc) proc.textContent = String(cur[COL.proc]);
+        if (rpm) rpm.textContent = String(cur[COL.rpm]);
+        if (torque) torque.textContent = String(cur[COL.torque]);
+        if (wear) wear.textContent = String(cur[COL.wear]);
+
+        if (clock) {
+          const t = new Date(startMs + step * rec._meta.step_seconds * 1000);
+          clock.textContent = `${t.toLocaleTimeString('en-GB')} · ${step + 1}/${steps}`;
+        }
+        if (scrub) scrub.value = String(step);
+      }
+
+      // Driven by rAF rather than setInterval so the playhead advances with the
+      // display's refresh rate instead of jumping once every STEP_MS. The
+      // readouts still change only on whole-frame boundaries.
+      function loop(ts: number) {
+        if (!playing) return;
+        if (!lastTs) lastTs = ts;
+        const dt = ts - lastTs;
+        lastTs = ts;
+
+        // Don't advance while another panel is showing — returning to this tab
+        // should resume where it was, not somewhere arbitrary.
+        if (!panel?.hidden) {
+          position = (position + dt / STEP_MS) % steps;
+          const s = Math.floor(position);
+          if (s !== step) {
+            step = s;
+            render();
+          }
+          drawPlayhead();
+        }
+        raf = window.requestAnimationFrame(loop);
+      }
+
+      function setPlaying(on: boolean) {
+        playing = on;
+        if (raf) {
+          window.cancelAnimationFrame(raf);
+          raf = undefined;
+        }
+        lastTs = 0;
+        if (on) raf = window.requestAnimationFrame(loop);
+        if (icon) icon.innerHTML = on ? PAUSE_ICON : PLAY_ICON;
+        if (label) label.textContent = on ? 'Pause' : 'Play';
+        toggle?.setAttribute('aria-label', on ? 'Pause recording' : 'Play recording');
+        // Freezes the alert strobe too — a still frame with continued flashing
+        // reads as broken/distracting while someone's actually pausing to read
+        // the sensor values, not as "still live". CSS below pauses both the
+        // row glow and the dot on this attribute.
+        lm?.setAttribute('data-lm-playing', on ? '1' : '0');
+      }
+
+      toggle?.addEventListener('click', () => setPlaying(!playing));
+      scrub?.addEventListener('input', () => {
+        setPlaying(false);
+        position = Number(scrub.value);
+        step = Math.floor(position);
+        render();
+        drawPlayhead();
+      });
+      machineBtns.forEach((btn, mi) => {
+        btn.addEventListener('click', () => {
+          selected = mi;
+          drawTrace();
+          render();
+          drawPlayhead();
+        });
+      });
+
+      drawTrace();
+      render();
+      drawPlayhead();
+      // Autoplay is continuous motion — the thing prefers-reduced-motion exists
+      // to opt out of. Everything stays usable via the scrubber and Play.
+      setPlaying(!window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
   });
 </script>
@@ -402,5 +889,127 @@ const ICONS: Record<string, string> = {
      it would otherwise wash out the plain white/10 tag). */
   .dashboard-tab[aria-selected='true'] .dashboard-soon-tag {
     background: rgba(255, 255, 255, 0.14);
+  }
+
+  /* Live Machines "discover me" dot — a slow ambient breathe, not the alert
+     strobe further down (that's reserved for an actual predicted-failure
+     event; reusing it here would wrongly imply something's wrong). Scoped
+     locally rather than global.css's shared ambient-breathe keyframe since
+     that one's written for translate(-50%,-50%)-centered elements — this dot
+     is corner-positioned instead. Gone once the tab is selected: its whole
+     job is getting a first click, nothing to signal after that. */
+  @keyframes dashboard-discover-pulse {
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.45;
+      transform: scale(1.7);
+    }
+  }
+  .dashboard-discover-dot {
+    animation: dashboard-discover-pulse 2s var(--ease-ios-in-out) infinite;
+    box-shadow: 0 0 5px 1.5px color-mix(in srgb, var(--color-teal-400) 65%, transparent);
+  }
+  .dashboard-tab[aria-selected='true'] .dashboard-discover-dot {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .dashboard-discover-dot {
+      animation: none;
+    }
+  }
+
+  /* ── Live Machines replay ──────────────────────────────────────────────────
+     Smoothing here is deliberately limited to colour and the playhead. The
+     numeric readouts snap between recorded frames on purpose: sensor values in
+     the recording are independent samples, not a continuous trajectory, so
+     easing them would draw a line through readings that never happened. */
+  [data-live-machines] [data-lm-dot] {
+    transition: background-color 260ms var(--ease-ios);
+  }
+  [data-live-machines] [data-lm-mprob],
+  [data-live-machines] [data-lm-status] {
+    transition: color 260ms var(--ease-ios);
+  }
+  [data-live-machines] .lm-machine {
+    transition:
+      border-color 260ms var(--ease-ios),
+      background-color 200ms var(--ease-ios);
+  }
+  /* The marker rides the trace every frame, so it must not also tween. */
+  [data-live-machines] [data-lm-marker],
+  [data-live-machines] [data-lm-cursor] {
+    transition: none;
+  }
+
+  /* Draws the eye to the moment a machine flips to predicted-failure — the
+     one genuinely interesting event in the recording. Deliberately NOT this
+     site's usual Apple/iOS-style eased "breathing" pulse (human-requested,
+     2026-08-05: a smooth ease-in-out scale still read as calm/sleek, not
+     urgent, no matter how large). steps(1, jump-end) instead of an easing
+     curve makes every keyframe segment a hard on/off cut rather than a
+     smooth fade, and the keyframe stops are shaped into a fast double-blink
+     followed by a long rest — closer to a real hazard-light cadence than a
+     glow. box-shadow only (not a background fill) so the flash reads as a
+     glow bursting around the row rather than a wash sitting over the text —
+     box-shadow always paints outside the border box, so it can't cover the
+     row's own content and needs no z-index/stacking-context handling (the
+     exact bug class Hero.astro's own z-0 comment flags — this sidesteps it
+     entirely by construction rather than fighting it). The dot's own
+     brightness/scale snap reinforces the same beat at the point of the row
+     you'd actually be looking at. */
+  @keyframes lm-alert-strobe {
+    0%,
+    8%,
+    18%,
+    100% {
+      box-shadow: 0 0 0 0 transparent;
+    }
+    3%,
+    13% {
+      box-shadow: 0 0 26px 8px color-mix(in srgb, var(--color-alert-400) 78%, transparent);
+    }
+  }
+  [data-live-machines] .lm-machine[data-alert='1'] {
+    animation: lm-alert-strobe 2.4s steps(1, jump-end) infinite;
+  }
+  @keyframes lm-alert-dot-strobe {
+    0%,
+    8%,
+    18%,
+    100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    3%,
+    13% {
+      transform: scale(1.7);
+      filter: brightness(2.6);
+    }
+  }
+  [data-live-machines] [data-lm-dot][data-alert='1'] {
+    animation: lm-alert-dot-strobe 2.4s steps(1, jump-end) infinite;
+  }
+
+  /* Freeze the strobe while the recording itself is paused (data-lm-playing,
+     set by setPlaying() above) — a still frame that keeps flashing reads as
+     broken, and is genuinely distracting the moment someone pauses
+     specifically to read the sensor values (human-requested, 2026-08-05).
+     animation-play-state, not removing the animation, so it resumes exactly
+     mid-cycle on Play rather than restarting — same technique LiveFactory
+     uses to gate its own pins on scroll-into-view. */
+  [data-live-machines][data-lm-playing='0'] .lm-machine[data-alert='1'],
+  [data-live-machines][data-lm-playing='0'] [data-lm-dot][data-alert='1'] {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-live-machines] .lm-machine[data-alert='1'],
+    [data-live-machines] [data-lm-dot][data-alert='1'] {
+      animation: none;
+    }
   }
 </style>

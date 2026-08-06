@@ -172,12 +172,24 @@ which cuts the number of regenerations more than any prompt wording does.
 
 ## 1. Hero background photo — CNC machine, mid-operation
 
-**Status:** DONE (2026-07-31). Replaces the original macro-gears close-up
-(`design/visual-assets/gears.png`), which read as generic "industrial" stock
-imagery — could be almost any manufacturing product — rather than this
-project's actual machine. The gears photo wasn't discarded: it moved to the
-Try It Yourself subpage instead (item 11 below). Asset:
-`design/visual-assets/hero-page-cnc.png` → `public/images/hero/cnc-machine.png`.
+**Status:** DONE (2026-07-31, regenerated 2026-08-05). Replaces the original
+macro-gears close-up (`design/visual-assets/gears.png`), which read as generic
+"industrial" stock imagery — could be almost any manufacturing product —
+rather than this project's actual machine. The gears photo wasn't discarded:
+it moved to the Try It Yourself subpage instead (item 11 below). Asset:
+`design/visual-assets/hero-image-cnc-dark-realistic.png` →
+`public/images/hero/cnc-machine.png`.
+
+**2026-08-05 regeneration ("Detroit style"):** the original render
+(`design/mockups/hero-page-cnc.png`, moved out of `visual-assets/` since it's
+no longer the live asset) left roughly its left two-thirds nearly flat black —
+correct per its own prompt below, but it visually read as if the photo itself
+had been narrowed to only the section's right side, not just faded there by
+CSS. The replacement keeps dim, low-contrast factory/catwalk detail across the
+full frame (same 1672×941, ~16:9 dimensions, so no code-side layout change was
+needed) so the photo fills the existing right-62% box edge-to-edge instead of
+leaving a visibly empty strip inside it, while staying dark enough for the
+headline to still read clearly over it.
 
 **Used in:** [Hero.astro](../src/components/Hero.astro), visual layer behind
 the copy (right 62% at `lg:`, full-bleed faded wash below `lg:`).

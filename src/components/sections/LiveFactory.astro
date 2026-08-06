@@ -6,6 +6,33 @@
 // to transparent at the edges instead, so it bleeds into the section's own bg-navy-900
 // rather than sitting in a boxed card.
 import { withBase } from '../../lib/site';
+import { liveMachines } from '../../lib/live-machines';
+
+// Mini sparkline for each machine's hover card — the same recorded run
+// /product's Live Machines panel replays (src/data/live-machines.json), drawn
+// at BUILD time as a plain <svg polyline>, so this costs zero client JS and no
+// extra payload beyond the points string itself.
+//
+// NOTE ON NAMING: the CNC-0N names in this section are illustrative (see the
+// `machines` comment below); the traces are real. CNC-0N maps to the recording's
+// machine_0N, and the card labels the line as a recorded run rather than as
+// live telemetry from the illustrated machine.
+const recording = liveMachines();
+const PROB = recording._meta.fields.indexOf('failure_prob');
+
+function sparkPoints(name: string): string {
+  const idx = Number(name.split('-')[1]) - 1;
+  const frames = recording.machines[idx]?.frames ?? [];
+  if (frames.length < 2) return '';
+  // ~40 points is plenty at this size and keeps each points string short.
+  const stride = Math.max(1, Math.round(frames.length / 40));
+  const pts: string[] = [];
+  for (let i = 0; i < frames.length; i += stride) {
+    const p = Number(frames[i][PROB]);
+    pts.push(`${((i / (frames.length - 1)) * 100).toFixed(1)},${(18 - p * 16).toFixed(1)}`);
+  }
+  return pts.join(' ');
+}
 
 // Named for immersion (human-requested, 2026-07-28) — CNC-01 matches the exact
 // machine name already used in UserStory.astro's "Tool-wear shift spotted on
@@ -56,8 +83,8 @@ const structureLights = [
         <span class="text-teal-400">Real Predictions.</span>
       </h2>
       <p class="mt-6 max-w-lg text-lg leading-relaxed text-muted 2xl:max-w-xl 2xl:text-xl">
-        The system watches CNC milling machines around the clock. The moment
-        tool wear or vibration starts to shift, it catches the change — often
+        The system can watch CNC milling machines around the clock. The moment
+        tool wear, or process temperature starts to shift, it catches the change — often
         hours before that could cause a failure.
       </p>
     </div>
@@ -166,17 +193,23 @@ const structureLights = [
            Left always-visible by default (unchanged from before) rather than
            folded into the hover-only .machine-card treatment above, so a
            visitor who never hovers anything still sees the section's point. -->
-      <div class="tile-hover absolute left-[47%] top-[3%] z-10 w-36 rounded-lg border border-alert-400/50 bg-navy-950/90 p-3 backdrop-blur-sm sm:w-44">
-        <p class="flex items-center justify-between gap-1.5">
-          <span class="flex items-center gap-1.5 text-[0.65rem] font-bold uppercase tracking-wider text-alert-400">
-            <span class="inline-block h-1.5 w-1.5 rounded-full bg-alert-400"></span>
+      <a href={withBase('/product/#live-machines')} class="drift-card tile-hover">
+        <span class="machine-card-header">
+          <span class="machine-card-status">
+            <span class="machine-card-dot" aria-hidden="true"></span>
             Drift detected
           </span>
-          <span class="text-[0.6rem] font-medium text-muted/60">CNC-01</span>
-        </p>
-        <p class="mt-1 text-sm font-semibold text-offwhite">Tool Wear Shift</p>
-        <p class="text-xs text-muted">2.3 hrs to failure</p>
-      </div>
+          <span class="machine-card-name">CNC-01</span>
+        </span>
+        <span class="machine-card-title">Tool Wear Shift</span>
+        <span class="machine-card-detail">2.3 hrs to failure</span>
+        <span class="machine-spark machine-spark--reveal">
+          <svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+            <polyline points={sparkPoints('CNC-01')} />
+          </svg>
+          <span class="machine-spark-cta">See it in action →</span>
+        </span>
+      </a>
     </div>
   </div>
 </section>
@@ -300,30 +333,91 @@ const structureLights = [
      gated behind (hover: hover): unlike the purely decorative .tile-hover
      lift used elsewhere, this card *is* the requested feature, so it also
      has to work via tap-to-focus on touch devices, not just mouse hover. */
+  /* Shared type/padding scale for BOTH card kinds, so the always-visible red
+     drift card and the hover-only green cards read as one system rather than
+     two lookalikes that drift apart. Compact below sm — at phone widths the
+     old fixed widths were too narrow for the header to fit on one line, which
+     is what made "NO DRIFT / DETECTED" and "CNC-\n01" wrap into the squashed
+     proportions this replaces. */
+  .machine-card,
+  .drift-card {
+    --fc-pad: 0.55rem;
+    --fc-label: 0.55rem;
+    --fc-name: 0.5rem;
+    --fc-detail: 0.65rem;
+    --fc-title: 0.78rem;
+  }
+  @media (min-width: 640px) {
+    .machine-card,
+    .drift-card {
+      --fc-pad: 0.75rem;
+      --fc-label: 0.65rem;
+      --fc-name: 0.6rem;
+      --fc-detail: 0.75rem;
+      --fc-title: 0.875rem;
+    }
+  }
+
+  /* Always-visible drift callout. Below sm it moves to the top-left corner:
+     at phone widths the photo is short, so a card anchored above CNC-01 (at
+     61.5%/24.4%) inevitably collided with that machine's own pin. Top-left
+     keeps it horizontally clear of the pin instead of stacked on top of it. */
+  .drift-card {
+    position: absolute;
+    display: block;
+    text-decoration: none;
+    left: 1%;
+    top: 2%;
+    z-index: 10;
+    width: max-content;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-alert-400) 50%, transparent);
+    background: color-mix(in srgb, var(--color-navy-950) 90%, transparent);
+    backdrop-filter: blur(4px);
+    padding: var(--fc-pad);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  }
+  @media (min-width: 640px) {
+    .drift-card {
+      left: 47%;
+      top: 3%;
+    }
+  }
+  .drift-card .machine-card-status,
+  .drift-card .machine-card-dot {
+    color: var(--color-alert-400);
+    background-color: transparent;
+  }
+  .drift-card .machine-card-dot {
+    background-color: var(--color-alert-400);
+  }
+  .machine-card-title {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: var(--fc-title);
+    font-weight: 600;
+    color: var(--color-offwhite);
+  }
+
   .machine-card {
     position: absolute;
     bottom: calc(100% + 10px);
     left: 50%;
     z-index: 40;
-    width: 9.5rem;
+    width: max-content;
     transform: translate(-50%, 4px) scale(0.96);
     transform-origin: bottom center;
     border-radius: 0.5rem;
     border: 1px solid color-mix(in srgb, var(--color-success-400) 50%, transparent);
     background: color-mix(in srgb, var(--color-navy-950) 90%, transparent);
     backdrop-filter: blur(4px);
-    padding: 0.75rem;
+    padding: var(--fc-pad);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios),
       visibility 0s linear var(--dur-base);
-  }
-  @media (min-width: 640px) {
-    .machine-card {
-      width: 11rem;
-    }
   }
   /* .is-tapped: touch equivalent of :hover/:focus-visible, toggled by the script
      below. iOS Safari doesn't move real DOM focus to a tapped <button> (a
@@ -346,17 +440,21 @@ const structureLights = [
   /* Header row: status on the left (the point of the card), machine name
      small/muted in the upper-right corner — a label for context, not
      competing with the status for attention (human-requested, 2026-07-28). */
+  /* nowrap on both halves + width:max-content on the cards is what keeps the
+     status label and the machine name on a single line at every width. */
   .machine-card-header {
     display: flex;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.6rem;
   }
   .machine-card-status {
     display: flex;
     align-items: center;
     gap: 0.35rem;
-    font-size: 0.65rem;
+    white-space: nowrap;
+    font-size: var(--fc-label);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -371,7 +469,8 @@ const structureLights = [
   }
   .machine-card-name {
     flex-shrink: 0;
-    font-size: 0.6rem;
+    white-space: nowrap;
+    font-size: var(--fc-name);
     font-weight: 500;
     color: var(--color-muted);
     opacity: 0.7;
@@ -379,8 +478,68 @@ const structureLights = [
   .machine-card-detail {
     display: block;
     margin-top: 0.25rem;
-    font-size: 0.75rem;
+    font-size: var(--fc-detail);
     color: var(--color-muted);
+  }
+
+  /* Mini version of /product's Live Machines trace — the same recorded run,
+     drawn at build time (see sparkPoints() in the frontmatter). Purely an
+     <svg polyline>, so it costs no client JS and nothing is computed live.
+     Drift card only (human review, 2026-08-05): on the four healthy cards it
+     was decoration on a card whose whole message is "nothing to see here". */
+  .machine-spark {
+    display: block;
+    margin-top: 0.4rem;
+    color: var(--color-alert-400);
+  }
+  .machine-spark svg {
+    display: block;
+    width: 100%;
+    height: 1.3rem;
+  }
+  .machine-spark polyline {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.2;
+    /* preserveAspectRatio="none" stretches the viewBox non-uniformly, which
+       would smear the stroke thickness with it without this. */
+    vector-effect: non-scaling-stroke;
+  }
+  /* "See it in action" is the site's settled look-verb CTA for /product
+     (ARCHITECTURE.md §5) — reused verbatim rather than inventing a card-sized
+     synonym, since the two-verb system is explicitly a Danger Zone. */
+  .machine-spark-cta {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.55rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--color-teal-300);
+  }
+
+  /* The drift card is always visible, so its sparkline stays collapsed until
+     CNC-01 is hovered/focused/tapped — otherwise the extra height would push
+     the card back down onto that machine's own pin, the overlap this pass
+     just fixed. :has() lets the sibling hotspot drive it with no extra JS;
+     browsers without :has() simply never expand it, which is a clean no-op. */
+  .machine-spark--reveal {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition:
+      max-height var(--dur-base) var(--ease-ios),
+      margin-top var(--dur-base) var(--ease-ios),
+      opacity var(--dur-fast) var(--ease-ios);
+  }
+  .drift-card:hover .machine-spark--reveal,
+  .drift-card:focus-visible .machine-spark--reveal,
+  .factory-scene:has(.machine-hotspot--alert:hover) .machine-spark--reveal,
+  .factory-scene:has(.machine-hotspot--alert:focus-visible) .machine-spark--reveal,
+  .factory-scene:has(.machine-hotspot--alert.is-tapped) .machine-spark--reveal {
+    max-height: 3.5rem;
+    margin-top: 0.4rem;
+    opacity: 1;
   }
 
   /* Structure lights (see the markup comment above): small, dim indicator
