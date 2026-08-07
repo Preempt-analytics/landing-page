@@ -18,24 +18,32 @@ import { withBase } from '../lib/site';
     the photo being "off to the side" rather than a background for the whole
     section). A near-opaque wash on mobile keeps that view reading as faint
     texture, not a distinct photo (human review, 2026-07-28) — that part is
-    unchanged. From lg, the photo now spans the full section width; a wide
-    left→right gradient (not a hard box edge) keeps the headline/copy legible
-    against it while letting the machine on the right stay clearly visible.
+    unchanged. From lg, the photo now spans the full section width; a soft
+    blur/bokeh transition (not a hard box edge, and — as of 2026-08-07 — not a
+    flat color fade either, see below) keeps the headline/copy legible against
+    it while letting the machine on the right stay clearly visible.
 
-    ASSET: cnc-machine.png (design/visual-assets/Milling_fleet_dark_background.png,
-    swapped in 2026-08-07), a receding row of CNC mills down a factory aisle —
-    replaces the single-machine "Detroit style" photo (hero-image-cnc-dark-
-    realistic.png, still on disk, unused). That photo's own left two-thirds was
-    still a fairly empty/dim void once cropped in practice, which is exactly the
+    ASSET: cnc-machine-hyperrealistic.png (design/visual-assets/
+    Milling_fleet_dark_background_hyperrealistic.png, swapped in from the
+    non-hyperrealistic Milling_fleet variant 2026-08-07), a receding row of CNC
+    mills down a factory aisle — replaces the single-machine "Detroit style"
+    photo (hero-image-cnc-dark-realistic.png, still staged at cnc-machine-
+    single-detroit.png for comparison, unused live). All three candidates now
+    live at stable public/images/hero/cnc-machine*.png paths specifically so
+    swapping which one's live is a one-line `src` edit, not a file copy — see
+    docs/IMAGE_ASSETS.md item 1. Reasoning for the milling-fleet family over
+    the single-machine photo: that photo's own left two-thirds was still a
+    fairly empty/dim void once cropped in practice, which is exactly the
     "confined to the right side" complaint this full-bleed treatment exists to
-    fix; this one has real, if dim, content (receding machines, floor, ceiling
-    lights) across the ENTIRE frame, so there's no void left to expose no matter
-    how the crop lands. "Fleet" framing also fits the product better than a
-    single machine: the whole pitch is fleet-wide failure prediction, not one
-    mill. Before that: the single-machine CNC photo replaced the earlier macro-
-    gears close-up (design/visual-assets/gears.png), which moved to the Try It
-    Yourself subpage instead (see try-it-yourself.astro) — generic "industrial"
-    stock imagery vs. an actual CNC mill (docs/IMAGE_ASSETS.md item 1).
+    fix; the milling-fleet photos have real, if dim, content (receding
+    machines, floor, ceiling lights) across the ENTIRE frame, so there's no
+    void left to expose no matter how the crop lands. "Fleet" framing also fits
+    the product better than a single machine: the whole pitch is fleet-wide
+    failure prediction, not one mill. Before that: the single-machine CNC photo
+    replaced the earlier macro-gears close-up (design/visual-assets/gears.png),
+    which moved to the Try It Yourself subpage instead (see try-it-
+    yourself.astro) — generic "industrial" stock imagery vs. an actual CNC mill
+    (docs/IMAGE_ASSETS.md item 1).
 
     Container is a plain `inset-0` at every breakpoint now (no more lg:w-[62%]
     box) — `object-cover` crops the ~16:9 photo to whatever the section's actual
@@ -71,21 +79,45 @@ import { withBase } from '../lib/site';
     />
     <!-- near-opaque wash below lg — the photo is felt, not seen, on narrow screens -->
     <div class="absolute inset-0 bg-navy-950/85 lg:hidden"></div>
-    <!-- Left→right fade (desktop only) across the FULL section width now, not
-         just within a right-side box — opaque enough under the headline/copy
-         (through ~30%) to stay legible, fully transparent by ~68% so the
-         machine on the right reads at full contrast. Widening/softening this
-         gradient (rather than a hard container edge) is what lets the photo
-         read as "background for the whole hero" per the human note above. -->
+    <!-- Soft blur/bokeh, not a flat color fade (desktop only) — human-requested,
+         2026-08-07: "surface a bit more of the factory continuing in the
+         background," less fadeout, more blur. backdrop-filter blurs the photo
+         itself (same technique this codebase already uses for card chrome —
+         StatCard/InfoTip/LiveFactory's machine-card), so the factory stays
+         visibly *there*, just soft, instead of getting erased under solid
+         navy. mask-image feathers the blur's own strength from full at the
+         text edge to none by 58%, rather than a hard blurred/sharp boundary.
+         The photo's own scattered lights (ceiling lamps, machine status
+         screens) bloom into soft glowing blobs under the blur — genuine
+         bokeh from the real photo, not a simulated effect drawn on top. -->
     <div
       class="absolute inset-0 hidden lg:block"
-      style="background: linear-gradient(to right, var(--color-navy-950) 0%, var(--color-navy-950) 20%, transparent 68%);"
+      style="backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); mask-image: linear-gradient(to right, black 0%, black 30%, transparent 58%); -webkit-mask-image: linear-gradient(to right, black 0%, black 30%, transparent 58%);"
+    >
+    </div>
+    <!-- Thin residual color wash on top of the blur — blur alone can't
+         guarantee headline contrast over a bright blurred highlight, so a
+         much lighter version of the old solid fade still sits under the
+         text, fading out faster (55% vs the old 68%) since the blur layer
+         above now shares the obscuring work instead of doing all of it. -->
+    <div
+      class="absolute inset-0 hidden lg:block"
+      style="background: linear-gradient(to right, color-mix(in srgb, var(--color-navy-950) 80%, transparent) 0%, transparent 55%);"
+    >
+    </div>
+    <!-- Same soft-blur treatment on the bottom edge (desktop only) — the
+         plain fade-to-navy below still owns the final, hard seam into
+         LiveFactory.astro's section; this just softens the approach to it
+         instead of a flat color ramp doing all the work. -->
+    <div
+      class="absolute inset-0 hidden lg:block"
+      style="backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px); mask-image: linear-gradient(to bottom, transparent 42%, black 72%); -webkit-mask-image: linear-gradient(to bottom, transparent 42%, black 72%);"
     >
     </div>
     <!-- fade into the page background at the bottom edge -->
     <div
       class="absolute inset-0"
-      style="background: linear-gradient(to bottom, transparent 55%, var(--color-navy-950) 100%);"
+      style="background: linear-gradient(to bottom, transparent 60%, var(--color-navy-950) 100%);"
     >
     </div>
   </div>

@@ -172,13 +172,25 @@ which cuts the number of regenerations more than any prompt wording does.
 
 ## 1. Hero background photo — CNC machine, mid-operation
 
-**Status:** DONE (2026-07-31, regenerated 2026-08-05, swapped again 2026-08-07).
-Replaces the original macro-gears close-up (`design/visual-assets/gears.png`),
-which read as generic "industrial" stock imagery — could be almost any
-manufacturing product — rather than this project's actual machine. The gears
-photo wasn't discarded: it moved to the Try It Yourself subpage instead (item
-11 below). Current asset: `design/visual-assets/Milling_fleet_dark_background.png`
-→ `public/images/hero/cnc-machine.png`.
+**Status:** DONE (2026-07-31, regenerated 2026-08-05, swapped again 2026-08-07,
+swapped to the hyperrealistic variant same day). Replaces the original
+macro-gears close-up (`design/visual-assets/gears.png`), which read as generic
+"industrial" stock imagery — could be almost any manufacturing product —
+rather than this project's actual machine. The gears photo wasn't discarded:
+it moved to the Try It Yourself subpage instead (item 11 below). Current
+asset: `design/visual-assets/Milling_fleet_dark_background_hyperrealistic.png`
+→ `public/images/hero/cnc-machine-hyperrealistic.png`.
+
+**Three candidates staged for comparison, one `src` edit swaps between them**
+(human-requested, 2026-08-07 — trying multiple photos kept meaning a file
+copy each time): `public/images/hero/cnc-machine.png` (Milling_fleet_dark_
+background.png, the non-hyperrealistic milling-fleet version),
+`cnc-machine-hyperrealistic.png` (its hyperrealistic sibling, **currently
+live**), and `cnc-machine-single-detroit.png` (the earlier single-machine
+"Detroit style" photo, item history below). Change which one's live by
+editing the one `src={withBase('/images/hero/cnc-machine*.png')}` line in
+[Hero.astro](../src/components/Hero.astro) — no file copying needed unless a
+genuinely new fourth candidate shows up.
 
 **2026-08-05 regeneration ("Detroit style"):** the original render
 (`design/mockups/hero-page-cnc.png`, moved out of `visual-assets/` since it's
@@ -205,7 +217,10 @@ them) now sits in a different part of the frame.
 
 **Used in:** [Hero.astro](../src/components/Hero.astro), full-bleed visual
 layer behind the copy at every breakpoint (near-opaque wash below `lg:`,
-full-bleed with a left→right legibility fade from `lg:` up).
+full-bleed from `lg:` up with a soft blur/bokeh legibility transition —
+`backdrop-filter: blur()` + a mask-image gradient, not a flat color fade;
+see that file's own comments — swapped in 2026-08-07 so the factory stays
+visibly present behind the copy instead of fading to solid navy).
 
 **Content decision (human-directed, 2026-07-31):** an early direction explored
 an *exploded/cutaway* CNC diagram with the machine's assemblies pulled apart.
