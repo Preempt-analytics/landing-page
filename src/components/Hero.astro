@@ -238,48 +238,31 @@ import { withBase } from '../lib/site';
        into `pointer-events-auto` individually so it stays clickable/
        hoverable despite the wrapper.
 
-       Coordinates recomputed 2026-08-07 for Milling_fleet_dark_background.png
-       (a receding row of machines, not one machine filling the frame) and
-       depth-staggered per human direction the same day: the closest machine's
-       two markers are largest and sit highest (smallest `top`); the second
-       machine's single marker, further back in the row, is smallest and sits
-       lowest — using the photo's own receding perspective as the ordering cue
-       rather than fighting it. Still eyeballed off a static preview, not a
-       rendered browser — expect a small nudge once actually seen. -->
+       Coordinates first computed 2026-08-07 for Milling_fleet_dark_background.png
+       (a receding row of machines, not one machine filling the frame), then
+       RE-computed the same day (human review, screenshot-marked-up) onto a
+       diagonal that tracks specific real features of the foreground machine
+       instead of an abstract depth-ordering: the battery icon (Power Failure)
+       sits at that machine's own control-panel display, the wrench (Tool Wear
+       Failure) at the lower-left corner of its glass window, and the
+       thermometer (Heat Dissipation Failure) stays close to its original spot,
+       lower and further back — then nudged up 6pp across all three (same
+       delta on every `top`, a rigid translation, so the diagonal's shape is
+       unchanged) after a second human pass. The three read top-to-bottom as
+       Power → Tool Wear → Heat Dissipation, and size now actually steps down
+       that same direction too (battery largest, wrench second, thermometer
+       smallest — corrected 2026-08-07 after a human review caught the wrench
+       rendering larger than the battery despite sitting lower). Still
+       eyeballed off the human's marked-up screenshot, not pixel-measured
+       against the source photo — expect a small nudge once actually seen. -->
   <div class="pointer-events-none absolute inset-0 z-10 lg:max-h-[50vw]">
     <button
       type="button"
-      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2 pointer-events-auto lg:block"
-      style="left: 74%; top: 38%; animation-duration: 9.5s; animation-delay: 0s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 10px 3px rgba(45,212,191,0.2);"
-      aria-label="Tool Wear Failure: watches wear-time climb and catches it before the tool fails outright."
-    >
-      <svg width="22" height="17.5" viewBox="0 0 30 24" fill="none" aria-hidden="true">
-        <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
-        <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
-        <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
-      </svg>
-      <span class="hero-marker-card" role="tooltip">
-        <span class="hero-marker-card-status">
-          <span class="hero-marker-card-spinner" aria-hidden="true">
-            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-          </span>
-          Checking for…
-        </span>
-        <span class="hero-marker-card-title">Tool Wear Failure</span>
-        <span class="hero-marker-card-detail">
-          Watches wear-time climb and catches it before the tool fails outright.
-        </span>
-      </span>
-    </button>
-    <button
-      type="button"
-      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 pointer-events-auto lg:block"
-      style="left: 85%; top: 44%; animation-duration: 11s; animation-delay: -3.5s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 9px 2.5px rgba(45,212,191,0.19);"
+      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2.5 pointer-events-auto lg:block"
+      style="left: 90%; top: 36%; animation-duration: 9.5s; animation-delay: 0s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 14px 4px rgba(45,212,191,0.2);"
       aria-label="Power Failure: tracks torque and speed together, since it's the combination that signals trouble."
     >
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
         <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
         <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
@@ -299,11 +282,37 @@ import { withBase } from '../lib/site';
     </button>
     <button
       type="button"
+      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2 pointer-events-auto lg:block"
+      style="left: 75%; top: 49%; animation-duration: 11s; animation-delay: -3.5s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 12px 3.5px rgba(45,212,191,0.19);"
+      aria-label="Tool Wear Failure: watches wear-time climb toward its replacement window, before a worn tool is left to fail at random."
+    >
+      <svg width="26" height="21" viewBox="0 0 30 24" fill="none" aria-hidden="true">
+        <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+        <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
+        <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
+      </svg>
+      <span class="hero-marker-card" role="tooltip">
+        <span class="hero-marker-card-status">
+          <span class="hero-marker-card-spinner" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          Checking for…
+        </span>
+        <span class="hero-marker-card-title">Tool Wear Failure</span>
+        <span class="hero-marker-card-detail">
+          Watches tool wear climb toward its replacement window — catching it before a worn tool is left to fail at random.
+        </span>
+      </span>
+    </button>
+    <button
+      type="button"
       class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1 pointer-events-auto lg:block"
-      style="left: 58%; top: 50%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 6px 1.5px rgba(45,212,191,0.16);"
+      style="left: 57%; top: 57%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 7px 1.8px rgba(45,212,191,0.16);"
       aria-label="Heat Dissipation Failure: watches the temperature gap and speed together, before heat has nowhere to go."
     >
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
         <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
         <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
@@ -351,27 +360,51 @@ import { withBase } from '../lib/site';
 
 <style>
   /* Failure-mode icon markers (see the markup comment above — toned down
-     2026-08-05). Just the one shared ambient-breathe keyframe (global.css)
-     now, no flash. animation-duration/-delay are set inline per marker with
-     different values/negative offsets so the three breathe out of phase —
-     otherwise they'd read as one fake blinking light instead of three
-     independent markers. Reset to look like nothing (no button chrome) until
-     its own background/box-shadow (inline) and the card below are styled. */
+     2026-08-05, sized up + switched to pulse-pin 2026-08-07, amplitude
+     bumped to its own local keyframe later the same day). Started as a
+     direct reuse of global.css's shared pulse-pin keyframe — same "this is a
+     live, clickable hotspot" cue LiveFactory's own sensor-pin uses, which
+     these markers are explicitly modeled on (see the markup comment above),
+     and the same translate-preserving structure that avoids the centering
+     bug documented on pulse-pin itself (a keyframe that only sets `scale(...)`
+     silently drops the `-translate-x/y-1/2` offset for as long as it
+     animates — what ambient-breathe was doing here before). Forked into
+     `hero-marker-pulse` (below), a near-identical LOCAL copy, on human
+     feedback that the pulse should read as "slightly more noticeable" while
+     staying "calm, Apple-like" — bumping pulse-pin's own amplitude would
+     have changed LiveFactory's sensor-pin too, which wasn't asked for and
+     has its own separate tuning history. Same easing/duration family (still
+     `var(--ease-ios-in-out)`, still a slow multi-second breathe, not a fast
+     blink), just a bit more scale/opacity travel. animation-duration/-delay
+     are set inline per marker with different values/negative offsets so the
+     three pulse out of phase — otherwise they'd read as one fake blinking
+     light instead of three independent markers. Reset to look like nothing
+     (no button chrome) until its own background/box-shadow (inline) and the
+     card below are styled. */
   .hero-icon-marker {
-    animation: ambient-breathe 10s ease-in-out infinite;
+    animation: hero-marker-pulse 10s var(--ease-ios-in-out) infinite;
     border: none;
     background: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  /* Hovering/focusing settles the marker's own breathe rather than leaving it
+  /* Local fork of global.css's pulse-pin — see the comment above for why a
+     fork instead of raising the shared keyframe's own amplitude. Opacity dips
+     a bit further (0.75 → 0.65) and scale reaches a bit higher (1.12 → 1.18);
+     still symmetric in/out on `--ease-ios-in-out`, which is what keeps a
+     bigger swing from reading as a sudden flash rather than a slow breathe. */
+  @keyframes hero-marker-pulse {
+    0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    50% { opacity: 0.65; transform: translate(-50%, -50%) scale(1.18); }
+  }
+  /* Hovering/focusing settles the marker's own pulse rather than leaving it
      pulsing right next to the card that just appeared — same restraint
      LiveFactory's .machine-hotspot uses for its sensor-pin. Also bumps
      z-index so this marker's card can rise above a neighboring marker where
-     the two are close together (74%/85% left sit only 11pp apart) — a plain
-     `position` on the button already makes it a valid stacking/containing
-     context for its own card, so this is scoped correctly without needing
-     the parent layer's z-index touched. */
+     two sit close together (Power/Tool Wear are 15pp apart on `left`) — a
+     plain `position` on the button already makes it a valid stacking/
+     containing context for its own card, so this is scoped correctly
+     without needing the parent layer's z-index touched. */
   .hero-icon-marker:hover,
   .hero-icon-marker:focus-visible,
   .hero-icon-marker.is-tapped {
@@ -575,7 +608,7 @@ import { withBase } from '../lib/site';
      box aligns with its neighbors the normal way. One shared keyframe, each
      span offset by a negative delay of 1/4 of the total loop — same
      "phase-shift via negative delay" technique as the spinner dots above and
-     the failure markers' own ambient-breathe staggering. min-width holds the
+     the failure markers' own hero-marker-pulse staggering. min-width holds the
      longest label's width so the line doesn't reflow as the text changes. */
   .hero-status-cycle {
     display: inline-grid;
