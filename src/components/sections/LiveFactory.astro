@@ -44,12 +44,19 @@ function sparkPoints(name: string): string {
 // separate concern from `delay`, which offsets each pin's *continuous*
 // ambient pulse so five sensors don't breathe in lockstep. Both live on the
 // same element at once (see .sensor-pin's two-animation rule in <style>).
+// `detail` varies per healthy machine (human-requested, 2026-08-05) — four
+// identical "Nominal — no anomalies" cards read as one templated string
+// copy-pasted four times rather than four independently-monitored machines.
+// The status line above it (`No drift detected`, in the template below)
+// stays fixed across all four: that's the real signal this section is
+// demonstrating, so it matches the alert card's own fixed "Drift detected"
+// wording. Only this flavor caption varies, purely cosmetic.
 const machines = [
-  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false },
+  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false, detail: 'Nominal — no anomalies' },
   { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', bootDelay: '150ms', alert: true },
-  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false },
-  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false },
-  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false },
+  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false, detail: 'All parameters normal' },
+  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false, detail: 'Within safe operating band' },
+  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false, detail: 'Everything looks fine here' },
 ];
 
 // Scattered catwalk/background indicator lights (human-requested, 2026-07-28,
@@ -179,7 +186,7 @@ const structureLights = [
                   </span>
                   <span class="machine-card-name">{m.name}</span>
                 </span>
-                <span class="machine-card-detail">Nominal — no anomalies</span>
+                <span class="machine-card-detail">{m.detail}</span>
               </span>
             )}
           </button>
