@@ -217,10 +217,11 @@ them) now sits in a different part of the frame.
 
 **Used in:** [Hero.astro](../src/components/Hero.astro), full-bleed visual
 layer behind the copy at every breakpoint (near-opaque wash below `lg:`,
-full-bleed from `lg:` up with a soft blur/bokeh legibility transition —
-`backdrop-filter: blur()` + a mask-image gradient, not a flat color fade;
-see that file's own comments — swapped in 2026-08-07 so the factory stays
-visibly present behind the copy instead of fading to solid navy).
+full-bleed with a left→right legibility fade from `lg:` up — briefly tried
+as a `backdrop-filter: blur()`/bokeh transition on 2026-08-07, reverted same
+day: a blurred area reads as *less* visible photo detail than a sharp one
+cut off by a color fade, working against the actual goal of showing more of
+the factory).
 
 **Content decision (human-directed, 2026-07-31):** an early direction explored
 an *exploded/cutaway* CNC diagram with the machine's assemblies pulled apart.

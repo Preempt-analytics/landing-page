@@ -18,10 +18,11 @@ import { withBase } from '../lib/site';
     the photo being "off to the side" rather than a background for the whole
     section). A near-opaque wash on mobile keeps that view reading as faint
     texture, not a distinct photo (human review, 2026-07-28) — that part is
-    unchanged. From lg, the photo now spans the full section width; a soft
-    blur/bokeh transition (not a hard box edge, and — as of 2026-08-07 — not a
-    flat color fade either, see below) keeps the headline/copy legible against
-    it while letting the machine on the right stay clearly visible.
+    unchanged. From lg, the photo now spans the full section width; a wide
+    left→right gradient (not a hard box edge — see that div's own comment
+    below for a 2026-08-07 detour through backdrop-filter: blur() and back)
+    keeps the headline/copy legible against it while letting the machine on
+    the right stay clearly visible.
 
     ASSET: cnc-machine-hyperrealistic.png (design/visual-assets/
     Milling_fleet_dark_background_hyperrealistic.png, swapped in from the
@@ -79,45 +80,26 @@ import { withBase } from '../lib/site';
     />
     <!-- near-opaque wash below lg — the photo is felt, not seen, on narrow screens -->
     <div class="absolute inset-0 bg-navy-950/85 lg:hidden"></div>
-    <!-- Soft blur/bokeh, not a flat color fade (desktop only) — human-requested,
-         2026-08-07: "surface a bit more of the factory continuing in the
-         background," less fadeout, more blur. backdrop-filter blurs the photo
-         itself (same technique this codebase already uses for card chrome —
-         StatCard/InfoTip/LiveFactory's machine-card), so the factory stays
-         visibly *there*, just soft, instead of getting erased under solid
-         navy. mask-image feathers the blur's own strength from full at the
-         text edge to none by 58%, rather than a hard blurred/sharp boundary.
-         The photo's own scattered lights (ceiling lamps, machine status
-         screens) bloom into soft glowing blobs under the blur — genuine
-         bokeh from the real photo, not a simulated effect drawn on top. -->
+    <!-- Left→right fade (desktop only), reverted 2026-08-07 back to a flat
+         color gradient — tried backdrop-filter: blur() + a mask-image here
+         (see git history) to keep the factory visibly present instead of
+         fading to solid navy, but a blurred area reads as LESS visible
+         detail than a sharp one, not more: the blur softened a wide swath of
+         the photo, which worked against the actual goal (seeing more of the
+         factory) rather than for it. Human-requested reversal, 2026-08-07 —
+         a sharp photo cut off by a color fade shows more real detail, right
+         up to the cutoff, than a blurred one ever does. Opaque enough under
+         the headline/copy (through ~30%) to stay legible, fully transparent
+         by ~68% so the machine on the right reads at full contrast. -->
     <div
       class="absolute inset-0 hidden lg:block"
-      style="backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); mask-image: linear-gradient(to right, black 0%, black 30%, transparent 58%); -webkit-mask-image: linear-gradient(to right, black 0%, black 30%, transparent 58%);"
-    >
-    </div>
-    <!-- Thin residual color wash on top of the blur — blur alone can't
-         guarantee headline contrast over a bright blurred highlight, so a
-         much lighter version of the old solid fade still sits under the
-         text, fading out faster (55% vs the old 68%) since the blur layer
-         above now shares the obscuring work instead of doing all of it. -->
-    <div
-      class="absolute inset-0 hidden lg:block"
-      style="background: linear-gradient(to right, color-mix(in srgb, var(--color-navy-950) 80%, transparent) 0%, transparent 55%);"
-    >
-    </div>
-    <!-- Same soft-blur treatment on the bottom edge (desktop only) — the
-         plain fade-to-navy below still owns the final, hard seam into
-         LiveFactory.astro's section; this just softens the approach to it
-         instead of a flat color ramp doing all the work. -->
-    <div
-      class="absolute inset-0 hidden lg:block"
-      style="backdrop-filter: blur(26px); -webkit-backdrop-filter: blur(26px); mask-image: linear-gradient(to bottom, transparent 42%, black 72%); -webkit-mask-image: linear-gradient(to bottom, transparent 42%, black 72%);"
+      style="background: linear-gradient(to right, var(--color-navy-950) 0%, var(--color-navy-950) 20%, transparent 68%);"
     >
     </div>
     <!-- fade into the page background at the bottom edge -->
     <div
       class="absolute inset-0"
-      style="background: linear-gradient(to bottom, transparent 60%, var(--color-navy-950) 100%);"
+      style="background: linear-gradient(to bottom, transparent 55%, var(--color-navy-950) 100%);"
     >
     </div>
   </div>
@@ -243,7 +225,7 @@ import { withBase } from '../lib/site';
       <span class="hero-marker-card" role="tooltip">
         <span class="hero-marker-card-title">
           <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          Tool Wear Failure
+          <span>Tool Wear Failure</span>
         </span>
         <span class="hero-marker-card-detail">
           Watches wear-time climb and catches it before the tool fails outright.
@@ -264,7 +246,7 @@ import { withBase } from '../lib/site';
       <span class="hero-marker-card" role="tooltip">
         <span class="hero-marker-card-title">
           <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          Power Failure
+          <span>Power Failure</span>
         </span>
         <span class="hero-marker-card-detail">
           Tracks torque and speed together — it's the combination that signals trouble, not either alone.
@@ -285,7 +267,7 @@ import { withBase } from '../lib/site';
       <span class="hero-marker-card" role="tooltip">
         <span class="hero-marker-card-title">
           <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          Heat Dissipation Failure
+          <span>Heat Dissipation Failure</span>
         </span>
         <span class="hero-marker-card-detail">
           Watches the temperature gap and speed together, before heat has nowhere to go.
@@ -361,7 +343,7 @@ import { withBase } from '../lib/site';
     bottom: calc(100% + 12px);
     left: 50%;
     z-index: 10;
-    width: 12rem;
+    width: 13.5rem;
     transform: translate(-50%, 4px) scale(0.96);
     transform-origin: bottom center;
     border-radius: 0.5rem;
@@ -388,12 +370,21 @@ import { withBase } from '../lib/site';
        LiveFactory's .machine-card. */
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
   }
+  /* align-items: flex-start, not center — the two longer titles ("Heat
+     Dissipation Failure", "Tool Wear Failure") wrap to two lines inside this
+     card's width, and `center` was centering the dot against the whole
+     wrapped block instead of the first line, leaving it floating between
+     the two lines rather than sitting next to the text (the "malformed"
+     look, human-reported 2026-08-07). flex-start plus a small top margin on
+     the dot below aligns it with the first line's cap-height instead,
+     correct whether the title wraps or not. */
   .hero-marker-card-title {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.4rem;
     font-size: 0.78rem;
     font-weight: 600;
+    line-height: 1.35;
     color: var(--color-offwhite);
   }
   .hero-marker-card-dot {
@@ -401,6 +392,7 @@ import { withBase } from '../lib/site';
     height: 0.4rem;
     width: 0.4rem;
     flex-shrink: 0;
+    margin-top: 0.35em;
     border-radius: 9999px;
     background-color: var(--color-teal-400);
   }
