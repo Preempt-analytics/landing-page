@@ -342,6 +342,54 @@ triggers nothing.
 
 ---
 
+### Contract 7 — Savings Calculator Assumptions
+
+**Owner:** `src/lib/savings.ts`
+**Dependents:** `SavingsCalculator.astro` (homepage, directly after
+UserStory), `UserStory.astro`'s Overnight Impact card
+
+The homepage's "What could this save you?" slider (added 2026-08-07, moved
+below UserStory 2026-08-07) is partially grounded, not a fully invented
+marketing calculator: it applies `failureRecallPct()` (Contract 2, live
+production-model recall) directly to the visitor's own monthly
+unplanned-downtime cost — the share of failures the model currently catches
+is treated as the share of that cost avoided. That is the *only* multiplier
+in the formula; no second, invented percentage is stacked on top of it.
+
+`OVERNIGHT_IMPACT_EUR` (the €24,300 one-night figure) is defined once here,
+not inline in `UserStory.astro`, so the calculator's "≈ N days like the one
+above, every month" line can divide by the exact same number
+`UserStory.astro` displays — the two can't drift apart into two different
+"one night" figures. It says "days", not "nights": the thing being counted
+is a prevented-failure event, which isn't inherently nocturnal even though
+this particular example is.
+
+**The cross-component wiring, not just the shared constant:**
+`SavingsCalculator.astro`'s client script updates its own slider's output
+elements *and* reaches outside its own section to update
+`UserStory.astro`'s `[data-savings-days]` span, live, on every `input`
+event — the two components only work together because both render on the
+same page (`index.astro`) in the same DOM. `UserStory.astro` also computes
+that span's *initial* value at build time (using `SAVINGS_SLIDER.default`),
+so the line is correct even before the client script runs or if it fails.
+Because the calculator now renders *after* UserStory, UserStory's own line
+reads as a forward invitation ("try your own numbers in the calculator
+below ↓"), not a backward claim about a cost the visitor already set —
+worth preserving if either component moves again.
+
+| Field | Controls | If changed without updating dependents |
+|---|---|---|
+| `OVERNIGHT_IMPACT_EUR` | The calculator's "days like this" math, and (via `formatEur`) the €-figure `UserStory.astro`'s Overnight Impact card displays | The two components' "one night" figures silently diverge |
+| `SAVINGS_SLIDER` (`min`/`max`/`step`/`default`) | The slider's range and `UserStory.astro`'s server-rendered default "days" value | A changed `default` without re-reading it in `UserStory.astro` leaves that card's initial value inconsistent with the calculator's own starting position |
+| `estimateMonthlySavings()` | Both components' savings math | Diverging formulas between the calculator and the card |
+| `[data-savings-days]` (data attribute, not an export) | Which DOM node `SavingsCalculator.astro`'s script reaches into `UserStory.astro` to update | Renaming/removing it in one file without the other silently stops the live update (the build still succeeds — this fails quietly, not loudly) |
+
+Like the Overnight Impact card itself, every number this calculator shows is
+illustrative and must keep saying so (Danger Zones) — it estimates, it does
+not quote a price.
+
+---
+
 ## PRE-CHANGE CHECKLIST
 
 | Change type | Check |
@@ -356,6 +404,7 @@ triggers nothing.
 | Touch `.github/workflows/deploy.yml` | Still fails open if `DAGSHUB_TOKEN` is unset? Still only one workflow (§6's "why one, not two")? |
 | Add/flip a `/product` dashboard panel | Registry entry (`dashboard.ts`) **and** a matching branch/asset in `ProductPreview.astro` updated in the same change (Contract 5)? |
 | Re-record `live-machines.json` | Ran `scripts/record-live-machines.py` (never hand-edited)? Frame arity still matches `_meta.fields`? No drift/export flags used (Contract 6)? |
+| Edit `src/lib/savings.ts` or the `[data-savings-days]` hook | `SavingsCalculator.astro` **and** `UserStory.astro` both updated in the same change (Contract 7)? |
 
 ---
 
@@ -429,9 +478,10 @@ and the handover docs so they don't have to be rediscovered:
 | File | Role | Reads from | Writes to / consumed by |
 |---|---|---|---|
 | `scripts/fetch-metrics.mjs` | CI live-metrics fetch | DagsHub MLflow REST API | `src/data/metrics.json` |
-| `src/lib/metrics.ts` | Metrics accessor | `src/data/metrics.json` | `StatRow.astro` |
+| `src/lib/metrics.ts` | Metrics accessor | `src/data/metrics.json` | `StatRow.astro`, `ProductPreview.astro`, `SavingsCalculator.astro`, `UserStory.astro` |
 | `src/lib/site.ts` | Shared constants + `withBase()` | — | `Nav`, `Footer`, `Hero`, `MlopsSystem`, `try-it-yourself` |
 | `src/lib/dashboard.ts` | `/product` panel registry (`mode` per panel) | — | `ProductPreview.astro` |
+| `src/lib/savings.ts` | Savings-calculator constants + formula (Contract 7) | `metrics.ts` (recall) | `SavingsCalculator.astro`, `UserStory.astro` |
 | `scripts/record-live-machines.py` | **Manual** recorder (not CI) | DagsHub `@production` models + ML repo's sensor generator | `src/data/live-machines.json` |
 | `src/lib/live-machines.ts` | Recorded-run accessor | `src/data/live-machines.json` | `ProductPreview.astro`'s Live Machines panel |
 | `astro.config.mjs` | Site/base config | — | every internal link via `withBase()` |

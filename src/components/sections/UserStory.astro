@@ -4,6 +4,8 @@
 // and labelled as such. Part of #solutions.
 import { withBase } from '../../lib/site';
 import { Image } from 'astro:assets';
+import { failureRecallPct } from '../../lib/metrics';
+import { OVERNIGHT_IMPACT_EUR, SAVINGS_SLIDER, estimateMonthlySavings, formatEur } from '../../lib/savings';
 // Faceless illustration, not a stock photo of a real employee (see the
 // no-fabricated-people rule in docs/IMAGE_ASSETS.md item 4 and ARCHITECTURE §9.5).
 import maintenanceLead from '../../assets/maintenance-lead.png';
@@ -24,9 +26,19 @@ const beats = [
 const impact = [
   '1 potential failure prevented',
   '~8 hours of downtime avoided',
-  '€24,300 saved',
+  `${formatEur(OVERNIGHT_IMPACT_EUR)} saved`,
   'Production stayed on track',
 ];
+
+// "Days like this, every month" — ties this one-night example back to
+// SavingsCalculator.astro below it (CLAUDE.md Contract 7). "Days", not
+// "nights": the thing being counted is a prevented-failure event, which
+// isn't inherently nocturnal even though this particular example is.
+// Server-rendered against that component's own default slider value so it's
+// correct even before any JS runs; that component's script then live-updates
+// the [data-savings-days] span in place as the visitor drags its slider.
+const defaultMonthlySavings = estimateMonthlySavings(SAVINGS_SLIDER.default, failureRecallPct());
+const defaultDays = (defaultMonthlySavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
 ---
 
 <section class="border-t border-white/5 bg-navy-950 py-20">
@@ -107,6 +119,10 @@ const impact = [
         </ul>
         <p class="mt-4 text-xs italic text-muted/60">
           A walkthrough of one night — not aggregated customer data.
+        </p>
+        <p class="mt-3 border-t border-white/5 pt-3 text-xs text-muted">
+          ≈ <span class="font-semibold text-teal-300" data-savings-days>{defaultDays}</span> days like this,
+          every month — try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
         </p>
       </div>
 

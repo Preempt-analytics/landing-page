@@ -1,0 +1,195 @@
+---
+// "What could this save you?" — a one-slider savings calculator, partially
+// grounded in the real production model rather than a fully invented
+// marketing multiplier: it applies the model's own live failure-recall rate
+// (Contract 2, src/lib/metrics.ts) straight to the visitor's own monthly
+// unplanned-downtime cost. Cost-of-inaction framing (human-requested,
+// 2026-08-07): shows "if nothing changes" beside "with predictive
+// maintenance", not just a single savings delta, so the status-quo cost
+// stays visible instead of only the upside. Sits right after UserStory
+// (human-requested, 2026-08-07 follow-up) so the calculator generalizes the
+// one-night example that section just told, rather than pre-empting it. See
+// src/lib/savings.ts for the shared formula/constants and CLAUDE.md's
+// Contract 7 for the cross-component wiring into UserStory.astro's
+// Overnight Impact card.
+import { withBase } from '../../lib/site';
+import InfoTip from '../InfoTip.astro';
+import { isLive, failureRecallPct } from '../../lib/metrics';
+import { SAVINGS_SLIDER, OVERNIGHT_IMPACT_EUR, estimateMonthlySavings, formatEur } from '../../lib/savings';
+
+const live = isLive();
+const recall = failureRecallPct();
+const { min, max, step, default: defaultCost } = SAVINGS_SLIDER;
+
+const defaultSavings = estimateMonthlySavings(defaultCost, recall);
+const defaultWithPM = defaultCost - defaultSavings;
+const defaultWithPct = ((defaultWithPM / defaultCost) * 100).toFixed(1);
+// "Days", not "nights" (human-requested, 2026-08-07 follow-up): the
+// Overnight Impact card's example happens to be a night, but the thing
+// being counted here — a prevented-failure event — isn't inherently
+// nocturnal, so the more general unit reads correctly regardless of when a
+// caught failure actually happens.
+const defaultDays = (defaultSavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
+const liveCaption = live ? 'live · updated hourly' : 'sample metric';
+---
+
+<section id="savings-calculator" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
+  <div class="mx-auto max-w-7xl px-5 md:px-8">
+    <div class="mx-auto max-w-2xl text-center" data-reveal>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">See what it's worth</p>
+      <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
+        What could this save you?
+      </h2>
+      <p class="mt-4 text-lg text-muted">
+        Drag the slider to roughly what unplanned downtime costs you each month.
+      </p>
+    </div>
+
+    <!-- data-sc-recall carries the build-time recall value into the client
+         script below (same data-attribute handoff pattern as ProductPreview's
+         Live Machines panel), rather than importing lib/savings.ts into the
+         script — this stays a self-contained inline script like every other
+         one in this codebase. -->
+    <div
+      class="mx-auto mt-12 max-w-3xl rounded-xl border border-white/10 bg-navy-800/40 p-6 sm:p-8"
+      data-reveal
+      data-savings-calc
+      data-sc-recall={recall}
+      data-sc-overnight={OVERNIGHT_IMPACT_EUR}
+    >
+      <!-- Label + pill share a flex row (top-left / top-right) so the badge
+           has its own slot in normal flow, same pattern as UserStory's
+           Overnight Impact card header — nothing absolutely positioned, so
+           it can never overlap the value or slider below it. -->
+      <div class="flex items-start justify-between gap-4">
+        <label for="savings-slider" class="text-sm font-medium text-offwhite">
+          Your monthly unplanned downtime cost
+        </label>
+        <span class="inline-flex shrink-0 rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
+          Illustrative example
+        </span>
+      </div>
+      <div class="mt-2 text-3xl font-bold tabular-nums text-offwhite" data-sc-input-value>{formatEur(defaultCost)}</div>
+      <input
+        type="range"
+        id="savings-slider"
+        min={min}
+        max={max}
+        step={step}
+        value={defaultCost}
+        data-sc-slider
+        aria-label="Your monthly unplanned downtime cost, in euros"
+        class="mt-4 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-teal-400"
+      />
+      <div class="mt-1.5 flex justify-between text-xs text-muted/60">
+        <span>{formatEur(min)}</span>
+        <span>{formatEur(max)}</span>
+      </div>
+
+      <!-- Cost-of-inaction framing: status quo stays visible beside the
+           improved number, not just a single savings figure. -->
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-lg border border-alert-400/30 bg-alert-400/5 p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-alert-400">If nothing changes</p>
+          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-without>{formatEur(defaultCost)}</p>
+          <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div class="h-full rounded-full bg-alert-400" style="width: 100%" data-sc-without-bar></div>
+          </div>
+        </div>
+        <div class="rounded-lg border border-teal-400/30 bg-teal-400/5 p-4">
+          <p class="text-xs font-medium uppercase tracking-wide text-teal-300">With predictive maintenance</p>
+          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-with>{formatEur(defaultWithPM)}</p>
+          <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+            <div class="h-full rounded-full bg-teal-400" style={`width: ${defaultWithPct}%`} data-sc-with-bar></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-lg border border-teal-400/40 bg-teal-400/10 p-5 text-center">
+        <p class="text-xs font-medium uppercase tracking-wide text-teal-300">Estimated savings</p>
+        <p class="mt-1 text-3xl font-bold tabular-nums text-teal-300">
+          <span data-sc-savings>{formatEur(defaultSavings)}</span>
+          <span class="text-base font-medium text-teal-300/70"> / month</span>
+        </p>
+        <p class="mt-2 text-sm text-muted">
+          ≈ <span class="font-semibold text-offwhite" data-sc-days>{defaultDays}</span> days like the one above,
+          every month.
+        </p>
+      </div>
+
+      <!-- Live/sample badge kept visually separate from the sentence it
+           supports (a small leading fragment, not an adjective wedged into
+           the middle of it) — reads as plain English instead of the
+           noun-stack "this model's live · updated hourly failure recall". -->
+      <p class="mt-5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted/70">
+        <span class="inline-flex items-center gap-1.5">
+          {live && <span class="live-dot inline-block h-1.5 w-1.5 rounded-full bg-teal-400" aria-hidden="true" />}
+          {liveCaption}
+        </span>
+        · This model currently catches
+        <span class="font-semibold text-offwhite" data-sc-recall-display>{recall}%</span>
+        of failures before they happen.
+        <InfoTip label="How is this estimate calculated?" position="start">
+          We use the model's real recall rate — how many of the real failures it catches in advance. For example,
+          since it currently catches {recall}% of failures, we assume {recall}% of your downtime cost is avoided
+          too. It's one real, live number, not a marketing multiplier — but it's still an estimate. Your actual
+          savings depend on your own failure costs, response times, and operations.
+        </InfoTip>
+        <a
+          href={withBase('/product/#model-health')}
+          class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
+        >
+          See the live number →
+        </a>
+      </p>
+    </div>
+  </div>
+</section>
+
+<script>
+  // Bound to astro:page-load, not top-level — this section lives inside
+  // <main>, which isn't transition:persist-ed, so a fresh instance of this
+  // markup (and a fresh listener) arrives on every client-side navigation
+  // back to a page that renders it (same reasoning as UserStory's and
+  // ProductPreview's own scripts).
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-savings-calc]');
+    if (!root) return;
+
+    const recallPct = Number(root.dataset.scRecall ?? '0');
+    const overnightEur = Number(root.dataset.scOvernight ?? '0');
+    const slider = root.querySelector<HTMLInputElement>('[data-sc-slider]');
+    const inputValue = root.querySelector<HTMLElement>('[data-sc-input-value]');
+    const without = root.querySelector<HTMLElement>('[data-sc-without]');
+    const withEl = root.querySelector<HTMLElement>('[data-sc-with]');
+    const withBar = root.querySelector<HTMLElement>('[data-sc-with-bar]');
+    const savingsEl = root.querySelector<HTMLElement>('[data-sc-savings]');
+    const daysEl = root.querySelector<HTMLElement>('[data-sc-days]');
+    // Lives outside this section, inside UserStory.astro's Overnight Impact
+    // card — see CLAUDE.md Contract 7 for this cross-component data-attribute
+    // handoff. Looked up globally, not via `root`, since it isn't a
+    // descendant of this section.
+    const storyDaysEl = document.querySelector<HTMLElement>('[data-savings-days]');
+
+    if (!slider) return;
+
+    const fmt = (n: number) => `€${Math.round(n).toLocaleString('en-US')}`;
+
+    function render() {
+      const cost = Number(slider!.value);
+      const savings = cost * (recallPct / 100);
+      const withPM = cost - savings;
+      const days = overnightEur > 0 ? (savings / overnightEur).toFixed(1) : '0.0';
+
+      if (inputValue) inputValue.textContent = fmt(cost);
+      if (without) without.textContent = fmt(cost);
+      if (withEl) withEl.textContent = fmt(withPM);
+      if (withBar) withBar.style.width = `${((withPM / cost) * 100).toFixed(1)}%`;
+      if (savingsEl) savingsEl.textContent = `${fmt(savings)}`;
+      if (daysEl) daysEl.textContent = days;
+      if (storyDaysEl) storyDaysEl.textContent = days;
+    }
+
+    slider.addEventListener('input', render);
+  });
+</script>
