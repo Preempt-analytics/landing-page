@@ -25,6 +25,29 @@
   --color-success-400: #22c55e;
 
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  /* Registered here (not just in the @font-face below) so Tailwind's @theme
+     also generates a `font-led` utility — used sparingly (Footer.astro's
+     "no analytics" status readout, 2026-08-07) for short, all-caps,
+     device-status-style text only. A dot-matrix face reads as noise at
+     paragraph length; it earns its place on a short technical label, not
+     body copy. ui-monospace/monospace fallback keeps the tabular-digit feel
+     even before/if the webfont loads. */
+  --font-led: "LED Dot-Matrix Regular", ui-monospace, monospace;
+}
+
+/* Self-hosted, not a remote/CDN font link (Danger Zones: no third-party
+   scripts or remote font links — the footer's own "no analytics, no
+   tracking" claim would otherwise be false the moment this loaded from
+   someone else's server). Relative `url()`, not an absolute `/fonts/...`
+   path — Vite resolves and base-prefixes relative asset URLs in CSS
+   automatically, where a root-absolute path would need (and not get)
+   withBase() and 404 once deployed under /landing-page (Contract 3). */
+@font-face {
+  font-family: "LED Dot-Matrix Regular";
+  src: url("../fonts/led-dot-matrix.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 /* ---------------------------------------------------------------------------
