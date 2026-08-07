@@ -51,6 +51,7 @@ const precisionCaption = live ? 'live · updated hourly' : 'sample metric';
     caption={`Last retrained ${retrained}`}
     captionTone={live ? 'live' : 'plain'}
     info="The model isn't trained once and left alone. It automatically retrains itself as new sensor data comes in, so its predictions keep improving instead of slowly going stale."
+    hint
   >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 9a8 8 0 0 1 14-3l2 2M20 15a8 8 0 0 1-14 3l-2-2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />

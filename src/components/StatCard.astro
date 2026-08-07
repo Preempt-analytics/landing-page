@@ -11,8 +11,23 @@ interface Props {
   captionTone?: 'live' | 'illustrative' | 'plain';
   /** Optional plain-language explanation of the metric, surfaced via an InfoTip. */
   info?: string;
+  /** One-time "hover for details" callout pointing at this card's InfoTip —
+      meant for exactly one stat tile in StatRow.astro (currently "Retrains
+      Automatically" — moved there 2026-08-06 from "Failure Recall", which
+      had less vertical room above its icon before the value number), so a
+      first-time visitor learns the (i) icons are interactive at all. Only
+      ever set on one card at a time; move it by moving the prop, not by
+      duplicating this treatment. Deliberately not part of InfoTip itself,
+      which is reused at a dozen-plus other spots sitewide (HowItWorks,
+      Benefits, MlopsSystem, ProductPreview) — repeating this hint at every
+      one of those would be noise, not help. Dismiss is CSS-only (an adjacent-
+      sibling selector on the InfoTip's own :hover/:focus-within), matching
+      InfoTip's own no-client-JS approach — not a permanent one-time-ever
+      dismissal, so it can reappear if a visitor moves away and back, an
+      acceptable trade for staying dependency-free. */
+  hint?: boolean;
 }
-const { value, label, caption, captionTone = 'plain', info } = Astro.props;
+const { value, label, caption, captionTone = 'plain', info, hint = false } = Astro.props;
 ---
 
 <div class="tile-hover relative rounded-xl border border-white/10 border-t-teal-400/70 bg-navy-800/40 p-5 backdrop-blur-sm">
@@ -23,9 +38,16 @@ const { value, label, caption, captionTone = 'plain', info } = Astro.props;
   <div class="mt-0.5 flex items-center gap-1 text-sm font-medium text-offwhite/90">
     {label}
     {info && (
-      <InfoTip label={`What is ${label}?`} position="center">
-        {info}
-      </InfoTip>
+      <span class="relative inline-flex">
+        <InfoTip label={`What is ${label}?`} position="center">
+          {info}
+        </InfoTip>
+        {hint && (
+          <span class="stat-hint" aria-hidden="true">
+            Hover for details
+          </span>
+        )}
+      </span>
     )}
   </div>
   <div class="mt-2 flex items-center gap-1.5 text-xs text-muted/70">
@@ -49,6 +71,73 @@ const { value, label, caption, captionTone = 'plain', info } = Astro.props;
   .tile-hover:hover,
   .tile-hover:focus-within {
     z-index: 10;
+  }
+
+  /* "Hover for details" discovery bubble (see the `hint` prop comment above).
+     Nested inside its own `relative inline-flex` wrapper alongside the
+     InfoTip in the template so `bottom: 100%` anchors it directly above the
+     (i) icon itself — the actual thing it's telling you to hover. Left-
+     anchored (not centered) with the tail near its own left edge, so the
+     bubble body grows rightward into open card space instead of spreading
+     left back over the row's own label text or the value number above
+     (human-requested follow-up, 2026-08-06: tail on the left pointing
+     straight down at the icon, bubble shouldn't block either piece of text).
+     z-index is scoped safely within this card's own stacking context
+     (backdrop-filter on .tile-hover already creates one, same as `filter`),
+     so it never needs to out-rank a neighboring card. */
+  .stat-hint {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    z-index: 15;
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(45, 212, 191, 0.35);
+    background: color-mix(in srgb, var(--color-navy-800) 95%, transparent);
+    color: var(--color-teal-300);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    animation: stat-hint-bob 2.2s var(--ease-ios-in-out) infinite;
+    transition: opacity var(--dur-fast) var(--ease-ios);
+  }
+  /* Speech-bubble tail: a rotated square clipped to its bottom-right border,
+     `border/background: inherit` so it always matches the bubble exactly
+     regardless of future color tweaks, rather than a second hardcoded color.
+     Fixed 8px from the bubble's own left edge — roughly the icon's own
+     horizontal center (the icon is 1.15rem/18.4px wide) — not centered under
+     the whole bubble, since the bubble itself is left-anchored to the icon
+     now, not centered over it. */
+  .stat-hint::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 8px;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    transform: rotate(45deg);
+    background: inherit;
+    border: inherit;
+    border-top: none;
+    border-left: none;
+  }
+  @keyframes stat-hint-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+  }
+  /* Adjacent-sibling, not :has() — .stat-hint is a plain sibling of .info-tip
+     inside their shared wrapper span now, so this is the simpler selector. */
+  .info-tip:hover + .stat-hint,
+  .info-tip:focus-within + .stat-hint {
+    opacity: 0;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .stat-hint {
+      animation: none;
+    }
   }
 
   /* Apple-style "live" status pulse — slow, gentle breathing, not an urgent
