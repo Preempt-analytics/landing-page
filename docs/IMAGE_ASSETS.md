@@ -172,27 +172,40 @@ which cuts the number of regenerations more than any prompt wording does.
 
 ## 1. Hero background photo — CNC machine, mid-operation
 
-**Status:** DONE (2026-07-31, regenerated 2026-08-05). Replaces the original
-macro-gears close-up (`design/visual-assets/gears.png`), which read as generic
-"industrial" stock imagery — could be almost any manufacturing product —
-rather than this project's actual machine. The gears photo wasn't discarded:
-it moved to the Try It Yourself subpage instead (item 11 below). Asset:
-`design/visual-assets/hero-image-cnc-dark-realistic.png` →
-`public/images/hero/cnc-machine.png`.
+**Status:** DONE (2026-07-31, regenerated 2026-08-05, swapped again 2026-08-07).
+Replaces the original macro-gears close-up (`design/visual-assets/gears.png`),
+which read as generic "industrial" stock imagery — could be almost any
+manufacturing product — rather than this project's actual machine. The gears
+photo wasn't discarded: it moved to the Try It Yourself subpage instead (item
+11 below). Current asset: `design/visual-assets/Milling_fleet_dark_background.png`
+→ `public/images/hero/cnc-machine.png`.
 
 **2026-08-05 regeneration ("Detroit style"):** the original render
 (`design/mockups/hero-page-cnc.png`, moved out of `visual-assets/` since it's
 no longer the live asset) left roughly its left two-thirds nearly flat black —
 correct per its own prompt below, but it visually read as if the photo itself
 had been narrowed to only the section's right side, not just faded there by
-CSS. The replacement keeps dim, low-contrast factory/catwalk detail across the
-full frame (same 1672×941, ~16:9 dimensions, so no code-side layout change was
-needed) so the photo fills the existing right-62% box edge-to-edge instead of
-leaving a visibly empty strip inside it, while staying dark enough for the
-headline to still read clearly over it.
+CSS. The "Detroit style" replacement (`hero-image-cnc-dark-realistic.png`,
+still on disk, no longer used) kept dim, low-contrast factory/catwalk detail
+across the full frame instead.
 
-**Used in:** [Hero.astro](../src/components/Hero.astro), visual layer behind
-the copy (right 62% at `lg:`, full-bleed faded wash below `lg:`).
+**2026-08-07 swap (current asset):** by this point `Hero.astro`'s container
+had also gone fully full-bleed (`inset-0` at every breakpoint, no more
+`lg:w-[62%]` box — see that file's own comments), so even the "Detroit style"
+photo's dim-but-still-largely-empty left portion read as a void once actually
+cropped in practice. `Milling_fleet_dark_background.png` — a receding row of
+CNC mills down a factory aisle — has real content across the *entire* frame
+(other machines, floor reflections, ceiling lights fading into the distance),
+so there's no void left to expose regardless of crop. Also a better content
+fit: the product's whole pitch is fleet-wide failure prediction, not a single
+machine. Same 1672×941 (~16:9) dimensions as its predecessor, so no code-side
+layout/crop-cap change was needed — only the three failure-mode icon markers'
+coordinates, since the nearest machine (the only one detailed enough to host
+them) now sits in a different part of the frame.
+
+**Used in:** [Hero.astro](../src/components/Hero.astro), full-bleed visual
+layer behind the copy at every breakpoint (near-opaque wash below `lg:`,
+full-bleed with a left→right legibility fade from `lg:` up).
 
 **Content decision (human-directed, 2026-07-31):** an early direction explored
 an *exploded/cutaway* CNC diagram with the machine's assemblies pulled apart.

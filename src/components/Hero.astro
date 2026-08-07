@@ -22,18 +22,20 @@ import { withBase } from '../lib/site';
     left→right gradient (not a hard box edge) keeps the headline/copy legible
     against it while letting the machine on the right stay clearly visible.
 
-    ASSET: cnc-machine.png (design/visual-assets/hero-image-cnc-dark-realistic.png,
-    "Detroit style" regeneration swapped in 2026-08-05), a grittier, more atmospheric
-    re-shoot of the same whole, mid-operation CNC milling machine — the mockup-only
-    predecessor (design/mockups/hero-page-cnc.png, moved there 2026-08-05) had a
-    largely empty/flat-black left two-thirds; this version keeps dim factory/catwalk
-    detail across the full frame instead, which is what makes a true full-bleed
-    treatment (below) work instead of exposing a visibly empty stretch of photo.
-    Original CNC swap replaced the earlier macro-gears close-up
-    (design/visual-assets/gears.png), which moved to the Try It Yourself subpage
-    instead (see try-it-yourself.astro). Reasoning: macro-gears is generic
-    "industrial" stock imagery that could be almost any manufacturing product; a
-    real CNC mill visually grounds the actual product (docs/IMAGE_ASSETS.md item 1).
+    ASSET: cnc-machine.png (design/visual-assets/Milling_fleet_dark_background.png,
+    swapped in 2026-08-07), a receding row of CNC mills down a factory aisle —
+    replaces the single-machine "Detroit style" photo (hero-image-cnc-dark-
+    realistic.png, still on disk, unused). That photo's own left two-thirds was
+    still a fairly empty/dim void once cropped in practice, which is exactly the
+    "confined to the right side" complaint this full-bleed treatment exists to
+    fix; this one has real, if dim, content (receding machines, floor, ceiling
+    lights) across the ENTIRE frame, so there's no void left to expose no matter
+    how the crop lands. "Fleet" framing also fits the product better than a
+    single machine: the whole pitch is fleet-wide failure prediction, not one
+    mill. Before that: the single-machine CNC photo replaced the earlier macro-
+    gears close-up (design/visual-assets/gears.png), which moved to the Try It
+    Yourself subpage instead (see try-it-yourself.astro) — generic "industrial"
+    stock imagery vs. an actual CNC mill (docs/IMAGE_ASSETS.md item 1).
 
     Container is a plain `inset-0` at every breakpoint now (no more lg:w-[62%]
     box) — `object-cover` crops the ~16:9 photo to whatever the section's actual
@@ -63,7 +65,7 @@ import { withBase } from '../lib/site';
   -->
   <div class="pointer-events-none absolute inset-0 -z-20 lg:max-h-[50vw]" aria-hidden="true">
     <img
-      src={withBase('/images/hero/cnc-machine.png')}
+      src={withBase('/images/hero/cnc-machine-hyperrealistic.png')}
       alt=""
       class="h-full w-full object-cover"
     />
@@ -85,80 +87,6 @@ import { withBase } from '../lib/site';
       class="absolute inset-0"
       style="background: linear-gradient(to bottom, transparent 55%, var(--color-navy-950) 100%);"
     >
-    </div>
-
-    <!-- Failure-mode hotspots (human-requested, 2026-07-31) — restrained version of
-         LiveFactory.astro's pin-overlay pattern: icons only, no text/labels baked
-         into the image or drawn here (gpt-image-2 can't render small text reliably,
-         and acronyms like "TWF" would need explaining before a first-time visitor
-         has any context — the Krug/Redish plain-language problem this site
-         otherwise solves with InfoTip). Three of the dataset's real failure
-         classes; still no hover card and still lg-only (this photo is just a
-         felt-not-seen wash below lg, so a pinned icon would be nearly invisible
-         there) — that restraint stands. RNF (random failure) has no icon on
-         purpose: it has no predictable sensor signature by definition in the
-         dataset, so implying this system flags it too would overclaim.
-         Coordinates are eyeballed off cnc-machine.png and expected to need a small
-         nudge once seen rendered — same as LiveFactory's own pin coordinates.
-
-         `left`/`top` values are the photo's own native coordinates (0-100% of
-         cnc-machine.png), same as when the old lg:w-[62%] aspect-video box
-         showed it uncropped. Briefly shifted inward for the full-bleed change
-         above under an assumption that desktop widths crop the photo
-         horizontally — reverted 2026-08-05 once an actual wide-screen
-         screenshot showed the opposite: width:height climbs past the photo's
-         native ratio as the viewport widens, so object-cover was cropping
-         top/bottom, not the sides, and getting worse the wider the screen —
-         which the lg:max-h-[50vw] cap above now bounds. With that cap in
-         place, native coordinates land close to correct again in both
-         regimes (uncapped-but-close-to-native at normal widths, capped-and-
-         top-anchored-so-near-native at wide ones) — still eyeballed, still
-         plausibly needing a small nudge after an actual visual check.
-
-         Toned down (human-requested, 2026-08-05, reversing part of the
-         2026-07-31 visibility pass above): the ring, tight glow, and one-time
-         brightness flash read as competing UI chrome — bright badges the eye
-         snags on — rather than ambient detail sitting on the photo. All three
-         are gone here (no border, no `hero-icon-flash`), the icons themselves
-         are smaller, and each marker sits ~4pp further left than the native
-         coordinates above (56/69/89 instead of 60/73/93) — close enough to
-         still read as "on the machine" at each of those same physical points,
-         but pulled back from the crop-risk right edge the coordinate note
-         already flags, and off the empty gap between the two housings. -->
-    <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
-      style="left: 56%; top: 46%; animation-duration: 9.5s; animation-delay: 0s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
-      aria-hidden="true"
-    >
-      <svg width="19" height="15" viewBox="0 0 30 24" fill="none">
-        <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
-        <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
-        <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
-      </svg>
-    </div>
-    <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
-      style="left: 69%; top: 46%; animation-duration: 11s; animation-delay: -3.5s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
-      aria-hidden="true"
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-        <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
-        <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
-        <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
-      </svg>
-    </div>
-    <div
-      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 lg:block"
-      style="left: 89%; top: 48%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 8px 2px rgba(45,212,191,0.18);"
-      aria-hidden="true"
-    >
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-        <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
-        <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
-        <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
-      </svg>
     </div>
   </div>
 
@@ -227,7 +155,138 @@ import { withBase } from '../lib/site';
       <StatRow />
     </div>
   </div>
+
+  <!-- Failure-mode hotspots (human-requested, 2026-07-31; interactive cards
+       added 2026-08-07) — same idea as LiveFactory.astro's pin-overlay
+       pattern: real failure classes from this project's dataset, pinned to
+       machines in the photo, revealing a plain-language card on hover/tap.
+       Three of the dataset's real classes (TWF/PWF/HDF); RNF (random
+       failure) has no icon on purpose — it has no predictable sensor
+       signature by definition, so implying this system flags it too would
+       overclaim.
+
+       THIS LAYER IS DELIBERATELY A SEPARATE, LATER SIBLING of the photo div
+       above, not nested inside it. The photo div sits at -z-20 so it paints
+       behind the ambient glow (-z-10) and the real copy/CTA content (z-
+       auto/0) — exactly the stacking-context lesson this file's own opening
+       `z-0` comment already flags. Any popover card nested inside that -z-20
+       div would be trapped there too: no child z-index can outrank its own
+       ancestor's stacking position. Pulling the hotspots out to their own
+       later sibling (implicit stacking wins by DOM order at the same level,
+       reinforced here with an explicit z-10 for clarity) is what lets their
+       cards actually paint on top instead of invisibly behind everything.
+       `lg:max-h-[50vw]` is repeated from the photo div so this layer's own
+       box matches it exactly — `left`/`top` percentages below are relative
+       to THIS box, and they only mean the same physical point on the photo
+       if both boxes are identically sized.
+
+       Icons/positions still lg-only and still `pointer-events-none` at the
+       wrapper level (this photo is a felt-not-seen wash below lg, so a
+       pinned icon would be nearly invisible there) — each button opts back
+       into `pointer-events-auto` individually so it stays clickable/
+       hoverable despite the wrapper.
+
+       Coordinates recomputed 2026-08-07 for Milling_fleet_dark_background.png
+       (a receding row of machines, not one machine filling the frame) and
+       depth-staggered per human direction the same day: the closest machine's
+       two markers are largest and sit highest (smallest `top`); the second
+       machine's single marker, further back in the row, is smallest and sits
+       lowest — using the photo's own receding perspective as the ordering cue
+       rather than fighting it. Still eyeballed off a static preview, not a
+       rendered browser — expect a small nudge once actually seen. -->
+  <div class="pointer-events-none absolute inset-0 z-10 lg:max-h-[50vw]">
+    <button
+      type="button"
+      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-2 pointer-events-auto lg:block"
+      style="left: 74%; top: 38%; animation-duration: 9.5s; animation-delay: 0s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 10px 3px rgba(45,212,191,0.2);"
+      aria-label="Tool Wear Failure: watches wear-time climb and catches it before the tool fails outright."
+    >
+      <svg width="22" height="17.5" viewBox="0 0 30 24" fill="none" aria-hidden="true">
+        <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
+        <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
+        <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
+        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
+      </svg>
+      <span class="hero-marker-card" role="tooltip">
+        <span class="hero-marker-card-title">
+          <span class="hero-marker-card-dot" aria-hidden="true"></span>
+          Tool Wear Failure
+        </span>
+        <span class="hero-marker-card-detail">
+          Watches wear-time climb and catches it before the tool fails outright.
+        </span>
+      </span>
+    </button>
+    <button
+      type="button"
+      class="hero-icon-marker hero-icon-marker--near absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1.5 pointer-events-auto lg:block"
+      style="left: 85%; top: 44%; animation-duration: 11s; animation-delay: -3.5s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 9px 2.5px rgba(45,212,191,0.19);"
+      aria-label="Power Failure: tracks torque and speed together, since it's the combination that signals trouble."
+    >
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
+        <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
+        <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
+      </svg>
+      <span class="hero-marker-card" role="tooltip">
+        <span class="hero-marker-card-title">
+          <span class="hero-marker-card-dot" aria-hidden="true"></span>
+          Power Failure
+        </span>
+        <span class="hero-marker-card-detail">
+          Tracks torque and speed together — it's the combination that signals trouble, not either alone.
+        </span>
+      </span>
+    </button>
+    <button
+      type="button"
+      class="hero-icon-marker absolute hidden -translate-x-1/2 -translate-y-1/2 rounded-full p-1 pointer-events-auto lg:block"
+      style="left: 58%; top: 50%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 6px 1.5px rgba(45,212,191,0.16);"
+      aria-label="Heat Dissipation Failure: watches the temperature gap and speed together, before heat has nowhere to go."
+    >
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
+        <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
+        <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
+      </svg>
+      <span class="hero-marker-card" role="tooltip">
+        <span class="hero-marker-card-title">
+          <span class="hero-marker-card-dot" aria-hidden="true"></span>
+          Heat Dissipation Failure
+        </span>
+        <span class="hero-marker-card-detail">
+          Watches the temperature gap and speed together, before heat has nowhere to go.
+        </span>
+      </span>
+    </button>
+  </div>
 </section>
+
+<script>
+  // Touch devices have no :hover, and iOS Safari never moves real focus to a
+  // tapped <button> — without this, the failure-mode cards would be
+  // unreachable on mobile/tablet touch. Same tap-toggle technique as
+  // LiveFactory.astro's machine hotspots, kept as a separate script/selector
+  // here rather than a shared import: two small independent listeners cost
+  // less than the indirection of sharing one, per the Second Law.
+  document.addEventListener('astro:page-load', () => {
+    const hotspots = document.querySelectorAll<HTMLButtonElement>('.hero-icon-marker');
+
+    hotspots.forEach((hotspot) => {
+      hotspot.addEventListener('click', (event) => {
+        event.stopPropagation();
+        const wasOpen = hotspot.classList.contains('is-tapped');
+        hotspots.forEach((h) => h.classList.remove('is-tapped'));
+        if (!wasOpen) hotspot.classList.add('is-tapped');
+      });
+    });
+
+    document.addEventListener('click', () => {
+      hotspots.forEach((h) => h.classList.remove('is-tapped'));
+    });
+  });
+</script>
 
 <style>
   /* Failure-mode icon markers (see the markup comment above — toned down
@@ -235,8 +294,95 @@ import { withBase } from '../lib/site';
      now, no flash. animation-duration/-delay are set inline per marker with
      different values/negative offsets so the three breathe out of phase —
      otherwise they'd read as one fake blinking light instead of three
-     independent markers. */
+     independent markers. Reset to look like nothing (no button chrome) until
+     its own background/box-shadow (inline) and the card below are styled. */
   .hero-icon-marker {
     animation: ambient-breathe 10s ease-in-out infinite;
+    border: none;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Hovering/focusing settles the marker's own breathe rather than leaving it
+     pulsing right next to the card that just appeared — same restraint
+     LiveFactory's .machine-hotspot uses for its sensor-pin. Also bumps
+     z-index so this marker's card can rise above a neighboring marker where
+     the two are close together (74%/85% left sit only 11pp apart) — a plain
+     `position` on the button already makes it a valid stacking/containing
+     context for its own card, so this is scoped correctly without needing
+     the parent layer's z-index touched. */
+  .hero-icon-marker:hover,
+  .hero-icon-marker:focus-visible,
+  .hero-icon-marker.is-tapped {
+    animation-play-state: paused;
+    z-index: 30;
+  }
+
+  /* Failure-mode card — same hover+focus+tap popover technique as
+     LiveFactory's .machine-card (opacity/visibility/transform, not display,
+     so it can transition; :hover/:focus-visible/.is-tapped all reveal it,
+     the last for touch devices via the tap-toggle script above), recolored
+     to teal/informational rather than LiveFactory's alert red — this is
+     "here's what the model watches for," not an active alert. */
+  .hero-marker-card {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    left: 50%;
+    z-index: 10;
+    width: 12rem;
+    transform: translate(-50%, 4px) scale(0.96);
+    transform-origin: bottom center;
+    border-radius: 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--color-teal-400) 40%, transparent);
+    background: color-mix(in srgb, var(--color-navy-950) 92%, transparent);
+    backdrop-filter: blur(4px);
+    padding: 0.65rem 0.75rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios),
+      visibility 0s linear var(--dur-base);
+  }
+  .hero-icon-marker:hover .hero-marker-card,
+  .hero-icon-marker:focus-visible .hero-marker-card,
+  .hero-icon-marker.is-tapped .hero-marker-card {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0) scale(1);
+    /* --ease-spring only on reveal (a slight overshoot reads as a small
+       "discovery" delight) — hiding stays --ease-ios, an overshoot on the
+       way OUT would look like a glitch, not a pop. Same asymmetry as
+       LiveFactory's .machine-card. */
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
+  }
+  .hero-marker-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-offwhite);
+  }
+  .hero-marker-card-dot {
+    display: inline-block;
+    height: 0.4rem;
+    width: 0.4rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+    background-color: var(--color-teal-400);
+  }
+  .hero-marker-card-detail {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.72rem;
+    line-height: 1.45;
+    color: var(--color-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-icon-marker {
+      animation: none;
+    }
   }
 </style>
