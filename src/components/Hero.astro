@@ -159,7 +159,45 @@ import { withBase } from '../lib/site';
         </Button>
       </div>
 
-      <p class="hero-fade-in mt-5 text-xs text-muted/60" style="animation-delay: 280ms">
+      <!-- Ambient "system's actively working" status line (human-requested,
+           2026-08-07) — cycles all four of the dataset's real, non-random
+           failure modes (RNF/random failure excluded everywhere in this
+           codebase on purpose — see the markers' own comment below). Three
+           of the four (Tool Wear / Power / Heat Dissipation) also have a
+           marker on the hero photo; Overstrain doesn't (only three markers
+           fit the composition), but this ambient line isn't limited to what
+           fits on the photo, so it names all four — added 2026-08-07 per
+           follow-up request. Pure CSS, no client JS: a chasing-dot spinner
+           (8 dots, opacity staggered via animation-delay — same technique
+           this file's own markers and LiveFactory's pins already use to
+           desync repeated elements) and a 4-way cross-fading text cycle
+           (four stacked spans, each on-screen for its own quarter of one
+           shared loop via a negative animation-delay per span). Purely
+           decorative/cosmetic — it doesn't convey anything not already
+           explained by the markers' own hover cards — so the whole line is
+           aria-hidden rather than adding screen-reader noise for an endless
+           loop with no unique content. -->
+      <p
+        class="hero-fade-in hero-status-line mt-5 flex items-center gap-2 text-xs text-muted/60"
+        style="animation-delay: 280ms"
+        aria-hidden="true"
+      >
+        <span class="hero-spinner">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
+        <span>
+          Checking for
+          <span class="hero-status-cycle">
+            <span>Tool Wear Failure</span>
+            <span>Power Failure</span>
+            <span>Heat Dissipation Failure</span>
+            <span>Overstrain Failure</span>
+          </span>
+          …
+        </span>
+      </p>
+
+      <p class="hero-fade-in mt-2 text-xs text-muted/60" style="animation-delay: 300ms">
         A capstone project showcase, running on simulated CNC sensor data.
       </p>
     </div>
@@ -223,10 +261,13 @@ import { withBase } from '../lib/site';
         <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
       </svg>
       <span class="hero-marker-card" role="tooltip">
-        <span class="hero-marker-card-title">
-          <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          <span>Tool Wear Failure</span>
+        <span class="hero-marker-card-status">
+          <span class="hero-marker-card-spinner" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          Checking for…
         </span>
+        <span class="hero-marker-card-title">Tool Wear Failure</span>
         <span class="hero-marker-card-detail">
           Watches wear-time climb and catches it before the tool fails outright.
         </span>
@@ -244,10 +285,13 @@ import { withBase } from '../lib/site';
         <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
       </svg>
       <span class="hero-marker-card" role="tooltip">
-        <span class="hero-marker-card-title">
-          <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          <span>Power Failure</span>
+        <span class="hero-marker-card-status">
+          <span class="hero-marker-card-spinner" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          Checking for…
         </span>
+        <span class="hero-marker-card-title">Power Failure</span>
         <span class="hero-marker-card-detail">
           Tracks torque and speed together — it's the combination that signals trouble, not either alone.
         </span>
@@ -265,10 +309,13 @@ import { withBase } from '../lib/site';
         <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
       </svg>
       <span class="hero-marker-card" role="tooltip">
-        <span class="hero-marker-card-title">
-          <span class="hero-marker-card-dot" aria-hidden="true"></span>
-          <span>Heat Dissipation Failure</span>
+        <span class="hero-marker-card-status">
+          <span class="hero-marker-card-spinner" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+          </span>
+          Checking for…
         </span>
+        <span class="hero-marker-card-title">Heat Dissipation Failure</span>
         <span class="hero-marker-card-detail">
           Watches the temperature gap and speed together, before heat has nowhere to go.
         </span>
@@ -370,31 +417,104 @@ import { withBase } from '../lib/site';
        LiveFactory's .machine-card. */
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
   }
-  /* align-items: flex-start, not center — the two longer titles ("Heat
-     Dissipation Failure", "Tool Wear Failure") wrap to two lines inside this
-     card's width, and `center` was centering the dot against the whole
-     wrapped block instead of the first line, leaving it floating between
-     the two lines rather than sitting next to the text (the "malformed"
-     look, human-reported 2026-08-07). flex-start plus a small top margin on
-     the dot below aligns it with the first line's cap-height instead,
-     correct whether the title wraps or not. */
-  .hero-marker-card-title {
+  /* Restructured 2026-08-07 (human-reported: still not matching LiveFactory's
+     own "Drift Detected" card) — the previous version put the status dot
+     directly on the title line, which fought with the two longer titles
+     ("Heat Dissipation Failure", "Tool Wear Failure") wrapping to two lines
+     inside this card's width. LiveFactory's own .machine-card sidesteps this
+     entirely by keeping the dot+label as its own short, never-wrapping
+     status row (white-space: nowrap — the label is always short, so this is
+     safe), completely separate from the bold title below it. Copying that
+     three-tier structure (status row → title → detail) here instead of
+     re-fighting the wrap/align problem in a two-tier layout. */
+  .hero-marker-card-status {
     display: flex;
-    align-items: flex-start;
-    gap: 0.4rem;
-    font-size: 0.78rem;
-    font-weight: 600;
-    line-height: 1.35;
-    color: var(--color-offwhite);
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+    font-size: 0.62rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-teal-400);
   }
-  .hero-marker-card-dot {
+  /* Same chasing-dot spinner as .hero-spinner further down (shares its
+     hero-spinner-fade keyframe), just scaled down to fit this tiny nowrap
+     status row — human-requested, 2026-08-07: "Checking for…" + a spinner
+     in place of the static "Failure mode" label, with the specific type
+     (Tool Wear Failure / Power Failure / Heat Dissipation Failure) already
+     covered by the title line right below. Deliberately generic/identical
+     text across all three cards rather than naming the type here too — the
+     full names are long enough ("Heat Dissipation Failure") that fitting one
+     into this same nowrap row risked overflowing past the card's edge, the
+     same class of bug the title's own wrap/align fix above already dealt
+     with once. */
+  .hero-marker-card-spinner {
+    position: relative;
     display: inline-block;
-    height: 0.4rem;
-    width: 0.4rem;
+    width: 0.55rem;
+    height: 0.55rem;
     flex-shrink: 0;
-    margin-top: 0.35em;
+  }
+  .hero-marker-card-spinner i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.08rem;
+    height: 0.08rem;
+    margin: -0.04rem 0 0 -0.04rem;
     border-radius: 9999px;
-    background-color: var(--color-teal-400);
+    background: var(--color-teal-400);
+    animation: hero-spinner-fade 1s linear infinite;
+  }
+  .hero-marker-card-spinner i:nth-child(1) { transform: rotate(0deg) translateY(-0.22rem); animation-delay: -0.875s; }
+  .hero-marker-card-spinner i:nth-child(2) { transform: rotate(45deg) translateY(-0.22rem); animation-delay: -0.75s; }
+  .hero-marker-card-spinner i:nth-child(3) { transform: rotate(90deg) translateY(-0.22rem); animation-delay: -0.625s; }
+  .hero-marker-card-spinner i:nth-child(4) { transform: rotate(135deg) translateY(-0.22rem); animation-delay: -0.5s; }
+  .hero-marker-card-spinner i:nth-child(5) { transform: rotate(180deg) translateY(-0.22rem); animation-delay: -0.375s; }
+  .hero-marker-card-spinner i:nth-child(6) { transform: rotate(225deg) translateY(-0.22rem); animation-delay: -0.25s; }
+  .hero-marker-card-spinner i:nth-child(7) { transform: rotate(270deg) translateY(-0.22rem); animation-delay: -0.125s; }
+  .hero-marker-card-spinner i:nth-child(8) { transform: rotate(315deg) translateY(-0.22rem); animation-delay: 0s; }
+  /* Red, not offwhite (human-requested, 2026-08-07) — the same alert-400 red
+     LiveFactory's "Drift Detected" card uses, though on a different piece of
+     text: that card puts red on its generic alert LABEL ("Drift Detected")
+     and keeps the specific issue name ("Tool Wear Shift") white. Here, the
+     label ("Checking for…") stays generic across all three cards, so there's
+     no card-specific text for red to land on except the title itself — that
+     ends up being what actually reads as "the failure mode" in this card, so
+     red goes there instead. */
+  .hero-marker-card-title {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--color-alert-400);
+  }
+  /* "Bootup" flicker (human-requested, 2026-08-07) — plays once per card-open,
+     not a loop: a CSS `animation` only runs while its rule actually matches,
+     so scoping it to the same :hover/:focus-visible/.is-tapped states that
+     reveal the card means it restarts fresh from 0% every time the card
+     opens, with no JS needed to "reset" it. opacity + text-shadow, not
+     filter:brightness() — brightness() barely affects text that's already
+     near-max channel values, which alert-400 (#ff6b6b) is close enough to
+     that the effect was nearly invisible; a glow pulse reads clearly
+     regardless of the underlying color. animation-delay (180ms = --dur-fast)
+     lets the card's own opacity fade-in finish first, so the flicker plays
+     on an already-visible card instead of fighting that transition. */
+  .hero-icon-marker:hover .hero-marker-card-title,
+  .hero-icon-marker:focus-visible .hero-marker-card-title,
+  .hero-icon-marker.is-tapped .hero-marker-card-title {
+    animation: hero-marker-title-boot 700ms var(--ease-ios) 180ms both;
+  }
+  @keyframes hero-marker-title-boot {
+    0% { opacity: 0; text-shadow: 0 0 10px color-mix(in srgb, var(--color-alert-400) 90%, transparent); }
+    12% { opacity: 1; text-shadow: 0 0 10px color-mix(in srgb, var(--color-alert-400) 90%, transparent); }
+    22% { opacity: 0.25; text-shadow: none; }
+    32% { opacity: 1; text-shadow: 0 0 6px color-mix(in srgb, var(--color-alert-400) 60%, transparent); }
+    42% { opacity: 0.45; text-shadow: none; }
+    58% { opacity: 1; text-shadow: 0 0 3px color-mix(in srgb, var(--color-alert-400) 35%, transparent); }
+    100% { opacity: 1; text-shadow: none; }
   }
   .hero-marker-card-detail {
     display: block;
@@ -404,8 +524,92 @@ import { withBase } from '../lib/site';
     color: var(--color-muted);
   }
 
+  /* Chasing-dot spinner: 8 dots at 45° increments around a fixed circle
+     (transform is set once, statically, per dot — never animated — so there's
+     no risk of the mismatched-transform-function-list bug this codebase has
+     hit before, e.g. .mlops-node/.sensor-pin). Only `opacity` animates, each
+     dot staggered by 1/8 of the loop via animation-delay, giving the
+     "chasing light" illusion around the ring. */
+  .hero-spinner {
+    position: relative;
+    display: inline-block;
+    width: 0.8rem;
+    height: 0.8rem;
+    flex-shrink: 0;
+  }
+  .hero-spinner i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.11rem;
+    height: 0.11rem;
+    margin: -0.055rem 0 0 -0.055rem;
+    border-radius: 9999px;
+    background: var(--color-teal-400);
+    animation: hero-spinner-fade 1s linear infinite;
+  }
+  .hero-spinner i:nth-child(1) { transform: rotate(0deg) translateY(-0.33rem); animation-delay: -0.875s; }
+  .hero-spinner i:nth-child(2) { transform: rotate(45deg) translateY(-0.33rem); animation-delay: -0.75s; }
+  .hero-spinner i:nth-child(3) { transform: rotate(90deg) translateY(-0.33rem); animation-delay: -0.625s; }
+  .hero-spinner i:nth-child(4) { transform: rotate(135deg) translateY(-0.33rem); animation-delay: -0.5s; }
+  .hero-spinner i:nth-child(5) { transform: rotate(180deg) translateY(-0.33rem); animation-delay: -0.375s; }
+  .hero-spinner i:nth-child(6) { transform: rotate(225deg) translateY(-0.33rem); animation-delay: -0.25s; }
+  .hero-spinner i:nth-child(7) { transform: rotate(270deg) translateY(-0.33rem); animation-delay: -0.125s; }
+  .hero-spinner i:nth-child(8) { transform: rotate(315deg) translateY(-0.33rem); animation-delay: 0s; }
+  @keyframes hero-spinner-fade {
+    0%, 100% { opacity: 0.15; }
+    12.5% { opacity: 1; }
+  }
+
+  /* Four stacked spans (all real dataset failure modes except RNF, which has
+     no icon anywhere in this codebase on purpose — see the markers' own
+     comment) cross-fading in place. Fixed 2026-08-07 (human-reported: not
+     vertically aligned with the surrounding "Checking for"/"…" text) — the
+     previous version used `position: absolute` to stack the spans, which
+     takes them out of normal flow entirely, so the browser had no real text
+     baseline to align this inline-block against and fell back to aligning
+     its bottom edge instead, sitting noticeably off from the plain text
+     around it. `display: inline-grid` with every span sharing the same
+     `grid-area` stacks them identically without removing them from flow —
+     each span is still real inline text with a real baseline, so the whole
+     box aligns with its neighbors the normal way. One shared keyframe, each
+     span offset by a negative delay of 1/4 of the total loop — same
+     "phase-shift via negative delay" technique as the spinner dots above and
+     the failure markers' own ambient-breathe staggering. min-width holds the
+     longest label's width so the line doesn't reflow as the text changes. */
+  .hero-status-cycle {
+    display: inline-grid;
+    min-width: 11.5rem;
+  }
+  .hero-status-cycle span {
+    grid-area: 1 / 1;
+    white-space: nowrap;
+    opacity: 0;
+    animation: hero-status-cycle-fade 12s ease-in-out infinite;
+  }
+  .hero-status-cycle span:nth-child(1) { animation-delay: 0s; }
+  .hero-status-cycle span:nth-child(2) { animation-delay: -3s; }
+  .hero-status-cycle span:nth-child(3) { animation-delay: -6s; }
+  .hero-status-cycle span:nth-child(4) { animation-delay: -9s; }
+  @keyframes hero-status-cycle-fade {
+    0%, 1.5% { opacity: 0; }
+    4.5%, 21% { opacity: 1; }
+    24%, 100% { opacity: 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .hero-icon-marker {
+      animation: none;
+    }
+    .hero-status-line {
+      display: none;
+    }
+    .hero-marker-card-spinner i {
+      animation: none;
+    }
+    .hero-icon-marker:hover .hero-marker-card-title,
+    .hero-icon-marker:focus-visible .hero-marker-card-title,
+    .hero-icon-marker.is-tapped .hero-marker-card-title {
       animation: none;
     }
   }
