@@ -15,7 +15,13 @@
 import { withBase } from '../../lib/site';
 import InfoTip from '../InfoTip.astro';
 import { isLive, failureRecallPct } from '../../lib/metrics';
-import { SAVINGS_SLIDER, OVERNIGHT_IMPACT_EUR, estimateMonthlySavings, formatEur } from '../../lib/savings';
+import {
+  SAVINGS_SLIDER,
+  EUR_PER_TREE_EQUIVALENT,
+  estimateMonthlySavings,
+  estimateTreesSaved,
+  formatEur,
+} from '../../lib/savings';
 
 const live = isLive();
 const recall = failureRecallPct();
@@ -24,13 +30,135 @@ const { min, max, step, default: defaultCost } = SAVINGS_SLIDER;
 const defaultSavings = estimateMonthlySavings(defaultCost, recall);
 const defaultWithPM = defaultCost - defaultSavings;
 const defaultWithPct = ((defaultWithPM / defaultCost) * 100).toFixed(1);
-// "Days", not "nights" (human-requested, 2026-08-07 follow-up): the
-// Overnight Impact card's example happens to be a night, but the thing
-// being counted here — a prevented-failure event — isn't inherently
-// nocturnal, so the more general unit reads correctly regardless of when a
-// caught failure actually happens.
-const defaultDays = (defaultSavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
 const liveCaption = live ? 'live · updated hourly' : 'sample metric';
+
+// Trees-saved figure (human-requested, 2026-08-07) — see savings.ts for why
+// this is a deliberately round illustrative ratio, not a carbon calculation.
+// The clearing's trees scale by *fraction of the slider's own max*, not by
+// literal tree count (a literal count would range from ~6 to ~320 across the
+// slider, which a handful of icons can't represent honestly) — maxTrees
+// anchors that fraction to this deployment's actual live recall rate, not a
+// guess.
+const defaultTrees = estimateTreesSaved(defaultSavings);
+const maxTrees = estimateTreesSaved(estimateMonthlySavings(max, recall));
+const defaultTreeFrac = Math.min(1, defaultTrees / maxTrees);
+
+// Growth-stage + "how many trees have started" math (human-requested
+// follow-up, 2026-08-07 — the original single-glyph scaleY approach read as
+// "compressed and unnatural," separately "increase the amount of trees at
+// certain increments," and separately again "we have a lot more horizontal
+// space to work with to make it into a forest"). Replaces both the old
+// scaleY-per-tree AND the 0.35-floor hack it needed: each slot owns its own
+// equal-width band of the overall frac (slot 0 = the first Nth, slot 1 the
+// next, …) — a slot stays fully invisible ("not planted yet") until frac
+// reaches its band's start, then grows seed → sapling → full tree by the
+// time frac reaches its band's end. One mechanism gets all three asks: the
+// CLEARING fills in (more trees appear, at N clear increments) as savings
+// increase, each tree that IS growing does so as a recognizable shape
+// change rather than a stretched glyph, and — by simply having more slots —
+// it now spreads across the card's actual width instead of a tight cluster
+// in the center. TREE_BASE_SCALES' own length is what N is; the varied
+// per-tree values (not all 1) are what keep a full clearing from reading as
+// one shape copy-pasted a dozen times — same reasoning as the original
+// 5-value array, just extended. The client script (below) applies this
+// exact same math on `input`, and infers N from how many slots actually
+// rendered rather than a second hardcoded count.
+//
+// Row layout (human-requested follow-up, 2026-08-07: "7 trees per row with
+// the option to add more rows"). TREE_ROW_SIZES is the one place row COUNT
+// and per-row SIZE are declared — add another entry to grow the forest by
+// another row, no other constant needs to change in step. Two rows, not
+// three (human-requested follow-up, same day, after seeing a screenshot —
+// "remove the last row and just have the 2 first rows… I think it looks
+// better"): a third, offset row was tried (see the template's own comment
+// on `.tree-clearing`'s history for why the negative-margin/translateX
+// version of that got reverted first) and simply centering two plain rows
+// won out on its own merits once seen. Rows just stack with a small
+// positive gap now — no overlap/offset trick to reintroduce if a third row
+// comes back later, just append to this array.
+const TREE_ROW_SIZES = [7, 6];
+const TREE_SLOTS = TREE_ROW_SIZES.reduce((sum, n) => sum + n, 0);
+// Hand-varied per-tree heights (not all 1) so a full clearing doesn't read
+// as one shape copy-pasted N times — same reasoning as the original 5-value
+// array, just extended to TREE_SLOTS entries, in growth order (index 0
+// plants first).
+const TREE_BASE_SCALES = [1, 0.85, 0.9, 0.78, 0.94, 0.72, 0.88, 0.7, 0.97, 0.75, 0.8, 0.92, 0.68];
+// Returns this row's own visual positions (0..rowSize-1), ordered by growth
+// order — human-requested follow-up, 2026-08-07: "the forest should grow on
+// either side of the single first tree, which should be centered in the
+// middle." Scoped per-row (not one global center) now that there are
+// multiple rows: each row fills starting from its own middle and fans
+// outward, one tree at a time. Implemented as a straight distance-from-
+// center sort rather than a step/direction formula (an earlier version of
+// this function) — the formula version assumed an exact integer center,
+// which only exists for odd row sizes; the middle row here is 6 (even, no
+// single center index), and the formula produced an out-of-range position
+// for it. Sorting by |position − center| naturally handles both: for an
+// even size the two positions straddling the fractional center tie on
+// distance, and the `|| b - a` tiebreak (arbitrary but consistent) picks
+// one side first rather than crashing or leaving a gap.
+function centerOutOrder(rowSize: number): number[] {
+  const center = (rowSize - 1) / 2;
+  return Array.from({ length: rowSize }, (_, position) => position).sort(
+    (a, b) => Math.abs(a - center) - Math.abs(b - center) || b - a
+  );
+}
+// Builds the row structure once: each row gets its slice of TREE_BASE_SCALES
+// (consumed in growth order, i.e. array order) laid out via `order` at that
+// row's own center-out position, so a row's own FIRST-planted tree renders
+// at/near dead-center in that row and the rest fan out from it.
+let cursor = 0;
+const treeRows = TREE_ROW_SIZES.map((rowSize) => {
+  const visualOrder = centerOutOrder(rowSize);
+  const row = TREE_BASE_SCALES.slice(cursor, cursor + rowSize).map((baseScale, indexInRow) => ({
+    baseScale,
+    growthIndex: cursor + indexInRow,
+    order: visualOrder[indexInRow],
+  }));
+  cursor += rowSize;
+  return row;
+});
+function clamp01(n: number) {
+  return Math.max(0, Math.min(1, n));
+}
+// `local` is this slot's OWN progress, 0 (just planted) to 1 (fully grown).
+// The seed/sapling/mature journey is compressed into a narrow window (local
+// 0.35–0.65) rather than spanning the whole 0–1 range — human-requested
+// follow-up, 2026-08-07: a screenshot at a resting slider position showed a
+// tree sitting as a bare seed dot right next to fully-grown neighbors, and
+// "our saplings are considerably lower fidelity" than the mature glyph, so a
+// tree resting there for a wide stretch of its own range reads as broken/
+// unfinished rather than "still growing." Below local 0.35 it now rounds
+// DOWN to fully invisible (not a lingering dot); at/above 0.65 it rounds UP
+// to fully mature. Only the narrow middle 30% actually shows the seed→
+// sapling→mature progression — since each of the TREE_SLOTS slots is itself
+// only 1/TREE_SLOTS of the overall frac range, that 30% window is a small
+// sliver of frac in absolute terms, so landing exactly inside it at rest is
+// uncommon, and even then it's one tree, briefly. `t` remaps the narrow
+// window back onto 0–1 so the crossfade shape inside it (still 25/20/10/20/
+// 25 seed/blend/sapling/blend/mature, same proportions as before) doesn't
+// need its own separate set of thresholds to maintain.
+function growthStages(local: number) {
+  if (local < 0.35) return { seed: 0, sapling: 0, mature: 0 };
+  const t = clamp01((local - 0.35) / 0.3);
+  const toSapling = clamp01((t - 0.25) / 0.2);
+  const toMature = clamp01((t - 0.55) / 0.2);
+  return { seed: 1 - toSapling, mature: toMature, sapling: 1 - (1 - toSapling) - toMature };
+}
+function slotStages(frac: number, slotIndex: number) {
+  const bandWidth = 1 / TREE_SLOTS;
+  const local = (frac - slotIndex * bandWidth) / bandWidth;
+  return growthStages(local);
+}
+// A stage fully appears at 1x its base size, and starts its own fade-in a
+// little smaller (0.7x) rather than fading in at full size — a subtle
+// "budding" pop synced with the opacity crossfade, same motion language as
+// the transition tuning below. `baseScale` is per-slot (varied final tree
+// heights, unrelated to growth — see the JSX below), applied uniformly so a
+// slot's seed/sapling/tree all share one consistent size personality.
+function stageScale(opacity: number, baseScale: number) {
+  return ((0.7 + 0.3 * opacity) * baseScale).toFixed(3);
+}
 ---
 
 <section id="savings-calculator" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
@@ -51,19 +179,28 @@ const liveCaption = live ? 'live · updated hourly' : 'sample metric';
          script — this stays a self-contained inline script like every other
          one in this codebase. -->
     <div
-      class="mx-auto mt-12 max-w-3xl rounded-xl border border-white/10 bg-navy-800/40 p-6 sm:p-8"
+      class="mx-auto mt-12 max-w-4xl rounded-xl border border-white/10 bg-navy-800/40 p-6 sm:p-8"
       data-reveal
       data-savings-calc
       data-sc-recall={recall}
-      data-sc-overnight={OVERNIGHT_IMPACT_EUR}
+      data-sc-eur-per-tree={EUR_PER_TREE_EQUIVALENT}
+      data-sc-max-trees={maxTrees}
     >
       <!-- Label + pill share a flex row (top-left / top-right) so the badge
            has its own slot in normal flow, same pattern as UserStory's
            Overnight Impact card header — nothing absolutely positioned, so
            it can never overlap the value or slider below it. -->
       <div class="flex items-start justify-between gap-4">
-        <label for="savings-slider" class="text-sm font-medium text-offwhite">
+        <label for="savings-slider" class="inline-flex items-center gap-1 text-sm font-medium text-offwhite">
           Your monthly unplanned downtime cost
+          <!-- Plain-language aside (Redish-style: short, concrete, contrasts
+               what it IS vs. what it ISN'T) for a label that's really asking
+               visitors to do a bit of mental math before they can even use
+               the slider — what should they actually be adding up? -->
+          <InfoTip label="What does this include?" position="start">
+            Lost production, rushed repairs, idle staff — the real cost each time a machine breaks down without
+            warning. Not the routine maintenance you already budget for.
+          </InfoTip>
         </label>
         <span class="inline-flex shrink-0 rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
           Illustrative example
@@ -106,15 +243,141 @@ const liveCaption = live ? 'live · updated hourly' : 'sample metric';
       </div>
 
       <div class="mt-6 rounded-lg border border-teal-400/40 bg-teal-400/10 p-5 text-center">
-        <p class="text-xs font-medium uppercase tracking-wide text-teal-300">Estimated savings</p>
+        <p class="text-xs font-medium uppercase tracking-wide text-offwhite">Estimated savings</p>
         <p class="mt-1 text-3xl font-bold tabular-nums text-teal-300">
           <span data-sc-savings>{formatEur(defaultSavings)}</span>
-          <span class="text-base font-medium text-teal-300/70"> / month</span>
+          <span class="text-base font-medium text-offwhite"> / month</span>
         </p>
-        <p class="mt-2 text-sm text-muted">
-          ≈ <span class="font-semibold text-offwhite" data-sc-days>{defaultDays}</span> days like the one above,
-          every month.
-        </p>
+
+        <!-- Trees saved — parallel illustrative figure in the same card
+             (human-requested, 2026-08-07). Deliberately not a literal 1:1
+             tree count in the clearing below: the real number ranges from
+             ~6 to ~320 across the slider's own min/max, which a handful of
+             icons can't represent honestly as a count — instead the slots
+             fill in and each one grows seed → sapling → full tree as
+             *fraction of this deployment's live max* (data-sc-max-trees)
+             increases, and the exact number is still given as plain text
+             above it for anyone who wants the real figure, not just the
+             visual. Each slot renders all 3 growth stages stacked in the
+             same spot (grid-area-style crossfade, opacity/scale driven by
+             `slotStages()` above) rather than swapping which shape is in
+             the DOM — simpler to keep in sync with the client script, which
+             only ever has to update existing elements, never add/remove
+             them.
+
+             Rows (human-requested, 2026-08-07 — "7 trees per row with the
+             option to add more rows"): `treeRows`/TREE_ROW_SIZES in the
+             frontmatter is the single source of truth for how many rows and
+             how wide each is; append to that array to grow the forest.
+             Plain stacked rows, small positive gap, no overlap/offset
+             tricks — a 3rd, offset row nestled between the other two via
+             negative-margin + translateX was tried first, but that CSS
+             shipped unverified (this sandbox can reach the dev server over
+             plain HTTP — confirmed via curl — but a spawned browser process
+             can't connect at all, so nothing here could actually be seen
+             before shipping) and a screenshot showed most of it missing;
+             once removed in favor of these plain rows, a follow-up
+             screenshot showed the two-row version rendering correctly, and
+             was then preferred outright on its own look ("I think it looks
+             better") rather than reintroduced as a third row. -->
+        <div class="mt-5 border-t border-teal-400/20 pt-5">
+          <p class="flex items-center justify-center gap-1 text-xs font-medium uppercase tracking-wide text-offwhite">
+            Trees saved (equivalent)
+            <InfoTip icon="eco" label="How is this estimated?" position="center">
+              A rough, illustrative comparison, not a carbon calculation — this project's model predicts failures,
+              not emissions. Unplanned downtime commonly wastes energy (idle machines, restart surges, scrapped
+              material); we compare the scale of that avoided waste to a mature tree's yearly CO2 absorption
+              (~21kg), using {formatEur(EUR_PER_TREE_EQUIVALENT)} saved per year ≈ one tree. Meant to give a feel
+              for the scale, not a precise figure.
+            </InfoTip>
+          </p>
+          <p class="mt-1 text-3xl font-bold tabular-nums text-teal-300">
+            <span data-sc-trees>{defaultTrees.toFixed(0)}</span>
+            <span class="text-base font-medium text-offwhite"> / year</span>
+          </p>
+          <div class="tree-clearing-wrap mt-4 mb-3">
+          <div
+            class="hero-glow tree-clearing-glow pointer-events-none absolute inset-0 -z-10"
+            style="background: radial-gradient(55% 65% at 50% 65%, color-mix(in srgb, var(--color-success-400) 18%, transparent), transparent 70%); animation-duration: 14s;"
+            aria-hidden="true"
+          >
+          </div>
+          <div
+            class="tree-clearing flex flex-col items-center gap-y-3"
+            data-sc-clearing
+            data-sc-max-trees={maxTrees}
+            aria-hidden="true"
+          >
+            {treeRows.map((row) => (
+                <div class="flex items-end justify-center gap-x-5">
+                {row.map(({ baseScale, growthIndex, order }) => {
+                  const stages = slotStages(defaultTreeFrac, growthIndex);
+                  return (
+                    <svg
+                      class="tree-icon"
+                      data-sc-tree
+                      data-slot={growthIndex}
+                      data-base-scale={baseScale}
+                      width="24"
+                      height="32"
+                      viewBox="0 0 24 32"
+                      style={`order: ${order};`}
+                    >
+                      {/* Seed: a small dot at ground level — a slot's very first stage,
+                          and the only one visible while `local` is still near 0. */}
+                      <circle
+                        class="tree-stage"
+                        data-stage="seed"
+                        cx="12"
+                        cy="29"
+                        r="2.4"
+                        fill="var(--color-success-400)"
+                        style={`opacity: ${stages.seed}; transform: scale(${stageScale(stages.seed, baseScale)});`}
+                      />
+                      {/* Sapling: a thin stem with one soft, round tuft of new growth —
+                          deliberately NOT yet the jagged conifer silhouette below, so
+                          the mature stage reads as a distinct, later milestone rather
+                          than the same shape just bigger. */}
+                      <g
+                        class="tree-stage"
+                        data-stage="sapling"
+                        fill="var(--color-success-400)"
+                        style={`opacity: ${stages.sapling}; transform: scale(${stageScale(stages.sapling, baseScale)});`}
+                      >
+                        <rect x="11.3" y="18" width="1.4" height="11" rx="0.7" />
+                        <circle cx="12" cy="15" r="4.2" />
+                      </g>
+                      {/* Mature: the original pine glyph + trunk, at full detail. A
+                          thin round-jointed stroke in the same fill color (human-
+                          requested polish pass, 2026-08-07: "polished apple style…
+                          not just in the animation but in the look and feel") softens
+                          the path's own sharp zigzag vertices — it doesn't change the
+                          silhouette's shape, just rounds its corners, the same "soft
+                          over sharp" instinct behind rx on the trunk/sapling stem
+                          below. .tree-stage-mature's own drop-shadow (CSS) is what
+                          gives it a grounded, sitting-on-something feel instead of a
+                          flat cutout — see that rule for why only this stage gets one. */}
+                      <g
+                        class="tree-stage tree-stage-mature"
+                        data-stage="mature"
+                        fill="var(--color-success-400)"
+                        stroke="var(--color-success-400)"
+                        stroke-width="0.6"
+                        stroke-linejoin="round"
+                        stroke-linecap="round"
+                        style={`opacity: ${stages.mature}; transform: scale(${stageScale(stages.mature, baseScale)});`}
+                      >
+                        <path d="M12 2 4 16h5L3 26h18l-6-10h5z" />
+                        <rect x="10" y="26" width="4" height="5" rx="0.6" />
+                      </g>
+                    </svg>
+                  );
+                })}
+                </div>
+            ))}
+          </div>
+        </div>
+      </div>
       </div>
 
       <!-- Live/sample badge kept visually separate from the sentence it
@@ -157,39 +420,160 @@ const liveCaption = live ? 'live · updated hourly' : 'sample metric';
     if (!root) return;
 
     const recallPct = Number(root.dataset.scRecall ?? '0');
-    const overnightEur = Number(root.dataset.scOvernight ?? '0');
+    const eurPerTree = Number(root.dataset.scEurPerTree ?? '0');
     const slider = root.querySelector<HTMLInputElement>('[data-sc-slider]');
     const inputValue = root.querySelector<HTMLElement>('[data-sc-input-value]');
     const without = root.querySelector<HTMLElement>('[data-sc-without]');
     const withEl = root.querySelector<HTMLElement>('[data-sc-with]');
     const withBar = root.querySelector<HTMLElement>('[data-sc-with-bar]');
     const savingsEl = root.querySelector<HTMLElement>('[data-sc-savings]');
-    const daysEl = root.querySelector<HTMLElement>('[data-sc-days]');
-    // Lives outside this section, inside UserStory.astro's Overnight Impact
-    // card — see CLAUDE.md Contract 7 for this cross-component data-attribute
-    // handoff. Looked up globally, not via `root`, since it isn't a
-    // descendant of this section.
-    const storyDaysEl = document.querySelector<HTMLElement>('[data-savings-days]');
+    const treesEl = root.querySelector<HTMLElement>('[data-sc-trees]');
+    const clearing = root.querySelector<HTMLElement>('[data-sc-clearing]');
+    const maxTrees = Number(clearing?.dataset.scMaxTrees ?? '0');
+    const treeIcons = Array.from(root.querySelectorAll<SVGElement>('[data-sc-tree]'));
+    const TREE_SLOTS = treeIcons.length || 5;
 
     if (!slider) return;
 
     const fmt = (n: number) => `€${Math.round(n).toLocaleString('en-US')}`;
 
+    // Exact mirror of the frontmatter's growthStages()/slotStages()/
+    // stageScale() (see that comment for the full rationale) — duplicated
+    // rather than imported, same self-contained-inline-script convention
+    // every other script in this file already follows.
+    const clamp01 = (n: number) => Math.max(0, Math.min(1, n));
+    function growthStages(local: number) {
+      if (local < 0.35) return { seed: 0, sapling: 0, mature: 0 };
+      const t = clamp01((local - 0.35) / 0.3);
+      const toSapling = clamp01((t - 0.25) / 0.2);
+      const toMature = clamp01((t - 0.55) / 0.2);
+      return { seed: 1 - toSapling, mature: toMature, sapling: 1 - (1 - toSapling) - toMature };
+    }
+    function slotStages(frac: number, slotIndex: number) {
+      const bandWidth = 1 / TREE_SLOTS;
+      const local = (frac - slotIndex * bandWidth) / bandWidth;
+      return growthStages(local);
+    }
+    function stageScale(opacity: number, baseScale: number) {
+      return ((0.7 + 0.3 * opacity) * baseScale).toFixed(3);
+    }
+
     function render() {
       const cost = Number(slider!.value);
       const savings = cost * (recallPct / 100);
       const withPM = cost - savings;
-      const days = overnightEur > 0 ? (savings / overnightEur).toFixed(1) : '0.0';
 
       if (inputValue) inputValue.textContent = fmt(cost);
       if (without) without.textContent = fmt(cost);
       if (withEl) withEl.textContent = fmt(withPM);
       if (withBar) withBar.style.width = `${((withPM / cost) * 100).toFixed(1)}%`;
       if (savingsEl) savingsEl.textContent = `${fmt(savings)}`;
-      if (daysEl) daysEl.textContent = days;
-      if (storyDaysEl) storyDaysEl.textContent = days;
+
+      // Trees saved — same annual €-per-tree ratio and same per-slot growth
+      // bands as the server-rendered markup above (see that comment for why
+      // this is a fraction of the slider's own max, not a literal tree
+      // count). --ease-ios-in-out (CSS, see below) is what turns each
+      // opacity/scale change into a quick, direct "growing" motion that
+      // still tracks a continuously-firing slider drag responsively.
+      if (eurPerTree > 0) {
+        const annualSavings = savings * 12;
+        const trees = annualSavings / eurPerTree;
+        if (treesEl) treesEl.textContent = trees.toFixed(0);
+        const frac = maxTrees > 0 ? Math.min(1, trees / maxTrees) : 0;
+        treeIcons.forEach((icon) => {
+          const slotIndex = Number(icon.dataset.slot ?? '0');
+          const baseScale = Number(icon.dataset.baseScale ?? '1');
+          const stages = slotStages(frac, slotIndex);
+          (['seed', 'sapling', 'mature'] as const).forEach((stage) => {
+            const el = icon.querySelector<SVGElement>(`[data-stage="${stage}"]`);
+            if (!el) return;
+            const opacity = stages[stage];
+            el.style.opacity = String(opacity);
+            el.style.transform = `scale(${stageScale(opacity, baseScale)})`;
+          });
+        });
+      }
     }
 
     slider.addEventListener('input', render);
   });
 </script>
+
+<style>
+  .tree-icon {
+    display: block;
+  }
+  /* Each of the 3 growth-stage shapes per tree (seed/sapling/mature — see
+     the frontmatter's growthStages() for the full rationale) is stacked in
+     the same spot and crossfades via opacity + a small scale pop, rather
+     than one glyph being stretched — that stretch was the original
+     "compressed and unnatural" complaint (human-requested follow-up,
+     2026-08-07). `transform-box: fill-box; transform-origin: 50% 100%` is
+     what makes each shape scale from ITS OWN bottom edge in its own local
+     bounding box — without `fill-box` (the default view-box behavior),
+     `transform-origin` on a raw SVG shape resolves against the whole SVG
+     viewport, not the shape itself, and a %-based origin would anchor to
+     the wrong point entirely.
+
+     --dur-fast + --ease-ios-in-out (not --dur-slow + --ease-spring, the
+     first pass here) — human-requested follow-up, 2026-08-07: the spring's
+     overshoot read as a bouncy toy next to a €-figure, and separately,
+     --dur-slow's 650ms was the real "doesn't look very Apple like at all"
+     problem — these values are rewritten on every slider `input` event,
+     which fires continuously while dragging, so a slow transition restarts
+     every tick and never catches up, reading as laggy/rubbery rather than
+     responsive. Apple's own direct-manipulation UI (a slider dragging a
+     live value) tracks the input near-instantly — --dur-fast is this
+     codebase's own token for exactly that "press/tap, the instant ones"
+     case (global.css). --ease-ios-in-out over plain --ease-ios: growing and
+     shrinking are equally likely as the slider moves either direction, and
+     --ease-ios-in-out is this codebase's documented curve for symmetric
+     back-and-forth motion, where --ease-ios is a one-directional entrance
+     curve (sheets, pushes). */
+  .tree-stage {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transition: opacity var(--dur-fast) var(--ease-ios-in-out), transform var(--dur-fast) var(--ease-ios-in-out);
+  }
+  /* Layered shadow (human-requested follow-up, 2026-08-07 — "clever tricks
+     with layered shadows to create depth and more of a 3d tree effect"):
+     two chained `drop-shadow()`s, not one — a real shadow isn't a single
+     blur, it's a tight, darker CONTACT shadow right where the object meets
+     the ground plus a softer, wider AMBIENT shadow around it; one blurry
+     shadow alone reads as "floating," the pair reads as "sitting on
+     something." `filter: drop-shadow()` accepts a space-separated list of
+     shadows exactly like `box-shadow` does, applied in the order written —
+     same layered-shadow instinct behind every card/popover's own
+     `box-shadow` elsewhere in this codebase, just via `filter` since these
+     are raw SVG shapes, not boxes with a real box-shadow to use. Mature
+     gets the full pair; sapling gets one lighter shadow so growing INTO a
+     shadow doesn't pop in suddenly at full maturity — still skipped on seed
+     outright, where even one shadow under a 2px dot reads as noise, not
+     depth. Transitions alongside opacity (inherited from .tree-stage above)
+     so the shadow fades in with the shape instead of snapping on. */
+  .tree-stage-mature {
+    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.38)) drop-shadow(0 3px 5px rgba(0, 0, 0, 0.22));
+  }
+  .tree-stage[data-stage='sapling'] {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.25));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tree-stage {
+      transition: none;
+    }
+  }
+  /* Ambient glow behind the clearing (human-requested polish pass,
+     2026-08-07 — "not just in the animation but in the look and feel").
+     Positioning only — the breathing animation itself comes from the
+     shared `.hero-glow` class (global.css, already used by Hero.astro and
+     LiveFactory.astro), applied directly in the markup alongside this
+     class rather than reimplemented here, so this reads as the same "the
+     scene is alive" system already established sitewide instead of a
+     one-off effect with its own slightly-different timing. `-z-10` (inline,
+     with `.hero-glow`) needs a positioned ancestor to actually contain it —
+     `.tree-clearing-wrap`'s `position: relative` is that anchor, same
+     stacking-context reasoning as Hero.astro's own `z-0` comment. */
+  .tree-clearing-wrap {
+    position: relative;
+  }
+</style>
