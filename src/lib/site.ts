@@ -18,6 +18,14 @@ export const TEAM = [
 
 export const PROGRAM = 'neuefische AI Engineering Bootcamp · Cohort 2026';
 
+// The real-world dataset behind every failure-mode number/label on the site
+// (Hero's TWF/PWF/HDF markers, the model's own training data) — credited once
+// here, footer-only for now, so a future second reference can't drift onto a
+// different URL/name for the same dataset.
+export const KAGGLE_DATASET_URL =
+  'https://www.kaggle.com/datasets/stephanmatzka/predictive-maintenance-dataset-ai4i-2020';
+export const KAGGLE_DATASET_NAME = 'AI4I 2020 Predictive Maintenance Dataset';
+
 // Nav order is settled in ARCHITECTURE.md §5 — do not re-litigate.
 // 'Product' points at its own subpage (not a homepage anchor) — see product.astro.
 // The other four are anchors on the homepage itself, so they need the homepage's

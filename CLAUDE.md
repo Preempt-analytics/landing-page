@@ -217,10 +217,11 @@ site. Check every applicable contract before committing.
 list, program name, nav links, or `withBase()`)
 
 Single source of truth for content that would otherwise drift if copy-pasted:
-the ML repo's URL, the team's names/handles, the bootcamp credit line, and the
-nav's label/href pairs. **Never hardcode any of these inline in a component** —
-import from here so a change (e.g. a renamed repo, a new team member) is a
-one-file edit instead of a grep-and-replace across the codebase.
+the ML repo's URL, the team's names/handles, the bootcamp credit line, the
+Kaggle source-dataset URL/name, and the nav's label/href pairs. **Never
+hardcode any of these inline in a component** — import from here so a change
+(e.g. a renamed repo, a new team member) is a one-file edit instead of a
+grep-and-replace across the codebase.
 
 ---
 
@@ -446,6 +447,16 @@ and the handover docs so they don't have to be rediscovered:
   `'image'`-mode panel without it, and never put a fabricated live-looking
   number (e.g. a notification-count badge) on the *real* sidebar nav item
   itself, outside the labelled image.
+- **The hero's three failure-mode cards (Hero.astro) must stay true to the
+  real dataset's failure definitions**, not invented mechanics — Power
+  Failure (torque × rotational speed outside a working band), Tool Wear
+  Failure (tool wear time crossing into a replacement/failure window, with
+  the outcome inside that window randomly assigned — not something the model
+  can perfectly "catch"), Heat Dissipation Failure (a low air/process
+  temperature gap *and* low rotational speed at once). Source of truth: the
+  Kaggle AI4I 2020 dataset now credited in the footer (Contract 1's
+  `KAGGLE_DATASET_URL`). RNF (random failure) deliberately has no marker —
+  it has no sensor signature by definition, so giving it one would overclaim.
 - **`fetch-metrics.mjs` must fail open, always.** A missing/invalid
   `DAGSHUB_TOKEN`, a DagsHub outage, or an API shape change should keep the
   last-committed `metrics.json` values and log a warning — never break the build,

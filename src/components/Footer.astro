@@ -1,6 +1,6 @@
 ---
 import Logo from './Logo.astro';
-import { REPO_URL, TEAM, PROGRAM, withBase } from '../lib/site';
+import { REPO_URL, TEAM, PROGRAM, KAGGLE_DATASET_URL, KAGGLE_DATASET_NAME, withBase } from '../lib/site';
 const year = new Date().getFullYear();
 ---
 
@@ -44,6 +44,36 @@ const year = new Date().getFullYear();
           }
         </ul>
         <p class="mt-4 text-xs text-muted/70">{PROGRAM}</p>
+
+        <!-- Data-source credit — lives in this column (human-requested
+             2026-08-07, moved out of its own full-width row below) since it's
+             the same kind of "credit," not a fourth item competing for its
+             own row. Generic "dataset" glyph (a 2×2 grid, stroke="currentColor"
+             so it inherits the link's teal-400), not Kaggle's own trademarked
+             mark — see Contract 4: no one-off hex, no third-party logo asset.
+             The icon is an INLINE child of the <p> itself (not a flex sibling
+             before it) — human-requested 2026-08-07, so a wrapped second line
+             returns flush to the icon's own left edge instead of hanging-
+             indented under where "Built" starts on line one. A flex layout
+             can't do that: both lines of a wrapped flex-sibling <p> share the
+             p's own box edge, which sits to the right of the icon. -->
+        <p class="mt-4 text-xs text-muted/60">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true" class="mr-1.5 inline-block align-text-bottom text-teal-400">
+            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
+            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
+            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
+            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
+          </svg>
+          Built using open data from{' '}
+          <a
+            href={KAGGLE_DATASET_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link text-teal-400 hover:text-teal-300"
+          >
+            Kaggle — {KAGGLE_DATASET_NAME}
+          </a>.
+        </p>
       </div>
 
       <!-- Links -->

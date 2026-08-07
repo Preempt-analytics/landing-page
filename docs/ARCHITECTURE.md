@@ -817,6 +817,14 @@ content, no longer just a structural placeholder.**
   ever deliberately added.
 - **Legal/meta** — copyright line, "built with" credit line (placeholder text —
   minor, non-blocking).
+- **Data-source credit (added 2026-08-07, moved into the Team column same
+  day, human-requested)** — sits under the Team column's program line
+  ("neuefische AI Engineering Bootcamp · Cohort 2026"), not as its own
+  full-width row: "Built using open data from Kaggle — AI4I 2020 Predictive
+  Maintenance Dataset," linking out to the dataset page, with a small
+  generic dataset-grid glyph (not Kaggle's own trademarked mark). Ties back
+  to the hero's TWF/PWF/HDF failure-mode cards, which describe that same
+  dataset's real failure definitions (CLAUDE.md Danger Zones).
 
 **Capstone-showcase framing (panel finding, actioned).** Right now the page reads
 as a polished SaaS until the footer quietly reveals it's a bootcamp capstone —
