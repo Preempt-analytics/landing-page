@@ -23,14 +23,22 @@ interface Props {
       one of those would be noise, not help. Says "Tap", not "Hover"
       (mobile-audit fix, 2026-08-07) — most visitors are on a touch device,
       which has no hover, so telling them to hover was asking for something
-      they couldn't do; "tap" reads fine for a mouse user too. Dismiss is
-      CSS-only (an adjacent-sibling selector on the InfoTip's own
-      :hover/:focus-within), matching InfoTip's own no-client-JS approach —
-      not a permanent one-time-ever dismissal, so it can reappear if a
-      visitor moves away and back, an acceptable trade for staying
-      dependency-free. InfoTip.astro's own tap-to-focus script (same 2026-
-      08-07 fix) is what makes :focus-within — and therefore this dismissal —
-      actually reachable by tapping, not just by mouse hover. */
+      they couldn't do; "tap" reads fine for a mouse user too. Dismiss was
+      originally CSS-only (an adjacent-sibling :hover/:focus-within rule,
+      still present below as a no-JS fallback) but that snapped the bubble
+      straight back the instant the pointer left — human-requested follow-up,
+      2026-08-07: make the first real interaction dismiss it for good instead
+      of it being able to reappear on a later pass over the icon. Permanence
+      needs the small client script below (CSS alone has no memory once
+      :hover/:focus-within stops matching), mirroring Hero.astro's
+      hero-marker-hint fade-out animation. InfoTip.astro's own tap-to-focus
+      script (2026-08-07) is what makes :focus-within/focusin — and
+      therefore this dismissal — actually reachable by tapping, not just by
+      mouse hover. Hidden outright on fine-pointer/hover-capable devices (see
+      the `@media (hover: hover)` rule below, 2026-08-07 follow-up) — a mouse
+      user already gets the popover from a plain hover with no instruction
+      needed, so "Tap for details" would be both wrong (they didn't tap) and
+      redundant there. */
   hint?: boolean;
 }
 const { value, label, caption, captionTone = 'plain', info, hint = false } = Astro.props;
@@ -65,6 +73,29 @@ const { value, label, caption, captionTone = 'plain', info, hint = false } = Ast
     <span>{caption}</span>
   </div>
 </div>
+
+<script>
+  // Permanent one-time dismissal for `.stat-hint` (see the `hint` prop
+  // comment above) — the CSS-only adjacent-sibling rule further down can
+  // only ever react to the CURRENT :hover/:focus-within state, so it snaps
+  // the bubble straight back the moment the pointer leaves instead of
+  // remembering it was already shown once. `{ once: true }` on both
+  // listeners is what makes this "first interaction only": the handler
+  // removes itself after firing, so there's no extra state to track beyond
+  // the class it adds. Astro dedupes a component's own inline module script
+  // across every usage of that component on a page (same note as
+  // InfoTip.astro's own script), so this still runs once regardless of how
+  // many StatCard instances render.
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('.stat-hint').forEach((hint) => {
+      const infoTip = hint.previousElementSibling;
+      if (!(infoTip instanceof HTMLElement)) return;
+      const dismiss = () => hint.classList.add('stat-hint--dismissed');
+      infoTip.addEventListener('mouseenter', dismiss, { once: true });
+      infoTip.addEventListener('focusin', dismiss, { once: true });
+    });
+  });
+</script>
 
 <style>
   /* Same fix as HowItWorks.astro's li.tile-hover:hover and MlopsSystem's
@@ -135,17 +166,46 @@ const { value, label, caption, captionTone = 'plain', info, hint = false } = Ast
     50% { transform: translateY(-3px); }
   }
   /* Adjacent-sibling, not :has() — .stat-hint is a plain sibling of .info-tip
-     inside their shared wrapper span now, so this is the simpler selector. */
+     inside their shared wrapper span now, so this is the simpler selector.
+     Kept as a no-JS fallback even though the script above now also handles
+     dismissal permanently: if JS fails to load, hovering/focusing the (i)
+     still hides the bubble out of the popover's way while it's open, even
+     though it isn't able to stay dismissed afterward in that case. */
   .info-tip:hover + .stat-hint,
   .info-tip:focus-within + .stat-hint {
     opacity: 0;
+  }
+  /* Permanent dismissal (see the `hint` prop comment and the script above) —
+     added once, by JS, on the first real hover/focus and never removed.
+     Fades and lifts out through its own @keyframes rather than just
+     snapping to `display: none`, echoing Hero.astro's hero-marker-hint exit
+     — then `forwards` holds the 100% end state so it stays gone instead of
+     reverting once the (short) animation finishes. */
+  .stat-hint--dismissed {
+    animation: stat-hint-dismiss var(--dur-base) var(--ease-ios) forwards;
+  }
+  @keyframes stat-hint-dismiss {
+    0% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-4px); }
   }
   @media (prefers-reduced-motion: reduce) {
     .stat-hint {
       animation: none;
     }
   }
-
+  /* Fine-pointer + hover-capable devices (mouse/trackpad, not touch) don't
+     need telling to "Tap" — hovering the (i) icon already opens the popover
+     with no extra step needed, and an always-visible bubble reads as
+     overwhelming next to a row of stat cards on a desktop viewport
+     (human-requested, 2026-08-07 — briefly tried swapping the wording to
+     "Hover for details" instead of hiding it, reverted same session: simply
+     not showing it there won out). Same feature-detection pattern
+     MlopsSystem.astro already uses to gate its own hover-only affordance. */
+  @media (hover: hover) and (pointer: fine) {
+    .stat-hint {
+      display: none;
+    }
+  }
   /* Apple-style "live" status pulse — slow, gentle breathing, not an urgent
      blink. Reuses global.css's ambient-breathe keyframe (already used for
      the hero's background glow layers) rather than pulse-pin, which bakes
