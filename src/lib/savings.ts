@@ -35,3 +35,27 @@ export function estimateMonthlySavings(monthlyCostEur: number, recallPct: number
 export function formatEur(amount: number): string {
   return `€${Math.round(amount).toLocaleString('en-US')}`;
 }
+
+/** Illustrative €-to-trees ratio for the calculator's "trees saved" figure
+    (human-requested, 2026-08-07) — unlike estimateMonthlySavings above, this
+    one has no real production number to anchor to (this project's model
+    predicts failures, not energy/carbon), so it's a deliberately round,
+    easy-to-explain illustrative comparison rather than a chain of invented
+    intermediate stats (kWh avoided, grid carbon intensity, etc. stacked on
+    top of each other would each need their own justification and just move
+    the honesty problem around instead of solving it). Loosely grounded in
+    two widely-cited public figures — a mature tree absorbs roughly 21kg CO2
+    per year, and unplanned industrial downtime commonly correlates with
+    wasted energy (idle machines, restart surges, scrapped material) — but
+    treat this as "roughly the scale of," not a carbon-accounting result.
+    Always disclosed as illustrative next to where it's shown, same as the
+    Overnight Impact card's own €24,300 example. */
+export const EUR_PER_TREE_EQUIVALENT = 1_500;
+
+/** Annual, not monthly — "2.3 trees saved per month" reads oddly (trees are
+    naturally an annual/CO2-per-year comparison), where "28 trees a year"
+    reads the way sustainability figures normally get communicated. */
+export function estimateTreesSaved(monthlySavingsEur: number): number {
+  const annualSavings = monthlySavingsEur * 12;
+  return annualSavings / EUR_PER_TREE_EQUIVALENT;
+}
