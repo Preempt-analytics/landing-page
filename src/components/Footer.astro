@@ -1,5 +1,6 @@
 ---
 import Logo from './Logo.astro';
+import InfoTip from './InfoTip.astro';
 import { REPO_URL, TEAM, PROGRAM, KAGGLE_DATASET_URL, KAGGLE_DATASET_NAME, withBase } from '../lib/site';
 const year = new Date().getFullYear();
 ---
@@ -106,12 +107,124 @@ const year = new Date().getFullYear();
 
     <div class="mt-12 flex flex-col gap-3 border-t border-white/5 pt-6 text-xs text-muted/60 md:flex-row md:items-center md:justify-between">
       <p>© {year} Preempt Analytics — capstone project. Built with Astro &amp; Tailwind.</p>
-      <p>This site uses no analytics and no tracking. Nothing you do here is logged.</p>
+      <!-- LED dot-matrix treatment on just the short status phrase, plain
+           text for the rest (human-requested, 2026-08-07) — a dot-matrix
+           face reads as noise at paragraph length, but a short all-caps
+           "device status readout" phrase is exactly what it was designed
+           for, and doubles as a quiet nod to the machines' own status
+           screens shown in the hero photo.
+
+           Scrolling marquee (human-requested follow-up, 2026-08-07 — "scroll
+           horizontally very slowly/smoothly at the bottom like an LED
+           screen"): the visible, animated `.led-ticker` is a decorative
+           duplicate-content loop (two identical copies of the phrase back
+           to back, scrolled by exactly one copy's own width so the loop has
+           no visible seam/reset) — aria-hidden, since a screen reader
+           reading two concatenated copies of the same phrase on a loop
+           would be nonsense. `.sr-only` carries the one real reading of it.
+           `.led-ticker-fallback` is a third, un-duplicated, unanimated copy
+           that's hidden by default and only shown under
+           prefers-reduced-motion (see <style> below) — without it, reduced-
+           motion users would get a frozen frame of the scrolling version,
+           which (being narrower than the full phrase by design, so it has
+           something to scroll) would permanently show only PART of "NO
+           ANALYTICS · NO TRACKING", cut off — worse than not animating it,
+           not just less delightful. -->
+      <p class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+        <span class="led-ticker" aria-hidden="true">
+          <span class="led-ticker-track">
+            <span class="led-readout">NO ANALYTICS · NO TRACKING</span>
+            <span class="led-readout">NO ANALYTICS · NO TRACKING</span>
+          </span>
+        </span>
+        <span class="led-readout led-ticker-fallback" aria-hidden="true">NO ANALYTICS · NO TRACKING</span>
+        <span class="sr-only">No analytics. No tracking.</span>
+        <span class="inline-flex items-center gap-1">
+          — nothing you do here is logged.
+          <InfoTip label="Our privacy approach" position="end">
+            No cookies — not even "necessary" ones. No analytics, no trackers, no fingerprinting, and nothing sent
+            to a third party. This site doesn't collect anything about your visit, so there's nothing to ask your
+            consent for under GDPR/ePrivacy — which is also why there's no cookie banner here.
+          </InfoTip>
+        </span>
+      </p>
     </div>
   </div>
 </footer>
 
 <style>
+  /* LED Dot-Matrix (global.css's font-led/@font-face) at a size/spacing tuned
+     for its own shapes — dot-matrix glyphs are drawn on a coarse pixel grid,
+     so they need more breathing room than a normal typeface at the same
+     visual weight to stay legible rather than clumping into a smear. A
+     restrained teal glow (not a full alert-style bloom) is the one liberty
+     taken here — it's what reads as "lit segment" rather than "printed
+     text pretending to be an LED," but stays subtle enough for a footer
+     credit line, not a hero moment. */
+  .led-readout {
+    font-family: var(--font-led);
+    font-size: 0.85em;
+    letter-spacing: 0.08em;
+    color: var(--color-teal-300);
+    text-shadow: 0 0 6px color-mix(in srgb, var(--color-teal-400) 45%, transparent);
+  }
+
+  /* Scrolling "porthole" (see the markup comment above) — a fixed-width
+     window narrower than the phrase itself, so there's actually something
+     to scroll. 11rem is an estimate, not a measurement (this sandbox can't
+     render a browser to check the LED font's real rendered width — see
+     other comments this session for why); it's a plain `width`, the
+     lowest-risk kind of value to nudge later; getting it slightly wrong
+     just makes the window a bit bigger/smaller, it can't break anything. */
+  .led-ticker {
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: bottom;
+    width: 11rem;
+    white-space: nowrap;
+  }
+  /* Two identical .led-readout copies laid out in a row (`display: flex`
+     so there's no stray inline-whitespace gap between them from the
+     template's own line breaks), each padded on its trailing edge —
+     padding, not a flex `gap`, deliberately: with padding baked into each
+     item's own box, both items end up EXACTLY the same width (text + its
+     own trailing space), so "half the track's total width" is
+     mathematically identical to "one item's full width" regardless of how
+     wide the phrase actually renders. That identity is what makes the loop
+     seamless: sliding left by exactly one item's width lands copy 2 exactly
+     where copy 1 started, so the animation can jump back to 0% with no
+     visible seam. A flex `gap` would break that — the gap only appears
+     BETWEEN items, not after the last one, so "half the track" and "one
+     item + its gap" stop being equal. */
+  .led-ticker-track {
+    display: flex;
+    width: max-content;
+    animation: led-scroll 16s linear infinite;
+  }
+  .led-ticker-track > .led-readout {
+    padding-right: 2.5rem;
+    flex-shrink: 0;
+  }
+  @keyframes led-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  /* Static fallback, hidden unless prefers-reduced-motion (see the markup
+     comment above for why this exists at all — the animated version alone
+     would otherwise permanently show only a clipped fragment of the phrase
+     for these visitors). */
+  .led-ticker-fallback {
+    display: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .led-ticker {
+      display: none;
+    }
+    .led-ticker-fallback {
+      display: inline;
+    }
+  }
+
   /* Animated underline-in rather than a flat color swap, matching Nav.astro's
      .nav-link treatment so hover feedback reads as one system across the site. */
   .footer-link {
