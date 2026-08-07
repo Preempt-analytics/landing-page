@@ -105,11 +105,11 @@ const ICONS: Record<string, string> = {
         The product
       </p>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
-        Here's what the dashboard could look like . .
+        Here's what the dashboard could look like.
       </h2>
       <p class="mt-4 text-lg leading-relaxed text-muted">
         in a real factory setting: A maintenance control center: fleet health, machines ranked by failure
-        probability, and live sensor readings. The sidebar is <b>interactive</b>, and serve either mockups or real data—
+        probability, and live sensor readings. The sidebar is <b>interactive</b>, and serves either mockups or real data—
         click through the sections yourself to explore.
       </p>
     </div>
@@ -146,11 +146,26 @@ const ICONS: Record<string, string> = {
         </div>
 
         <div class="dashboard-shell flex flex-col md:flex-row" data-dashboard>
-          <!-- Real sidebar nav — a plain tablist, not baked into any image. -->
+          <!-- Real sidebar nav — a plain tablist, not baked into any image.
+               `contain-layout` (mobile-audit fix, 2026-08-07): below `md` this
+               is a horizontally-scrollable strip of `shrink-0` tab buttons
+               inside its own `overflow-x-auto` box — that box measured
+               correctly self-contained (its own scrollWidth/clientWidth both
+               ~348px) under direct inspection, yet without `contain: layout`
+               the off-screen tab buttons' positions still inflated
+               `document.documentElement.scrollWidth` to ~1200px, making the
+               ENTIRE PAGE horizontally scrollable on a real mobile browser —
+               confirmed empirically (Playwright, real Chromium) both live and
+               via targeted A/B toggles; `min-width:0` and an explicit `width`
+               on the nav did NOT fix it, only `contain: layout` did. This
+               isolates the tab strip's internal layout from leaking into
+               ancestor size calculations, which is exactly what a scrollable
+               strip that's already visually clipped by its own
+               `overflow-x-auto` should have done on its own. -->
           <nav
             role="tablist"
             aria-label="Dashboard sections"
-            class="dashboard-sidebar flex shrink-0 gap-1 overflow-x-auto border-b border-white/10 bg-navy-950/60 p-2 md:w-52 md:flex-col md:gap-0.5 md:overflow-x-visible md:border-b-0 md:border-r md:p-3"
+            class="dashboard-sidebar flex shrink-0 gap-1 overflow-x-auto contain-layout border-b border-white/10 bg-navy-950/60 p-2 md:w-52 md:flex-col md:gap-0.5 md:overflow-x-visible md:border-b-0 md:border-r md:p-3"
           >
             {
               DASHBOARD_PANELS.map((panel, i) => (
@@ -911,6 +926,27 @@ const ICONS: Record<string, string> = {
   /* Perspective tilt target for the cursor-parallax script above. */
   .product-mockup {
     transition: transform 300ms var(--ease-ios-in-out);
+  }
+
+  /* Mobile-audit fix (2026-08-07): below `md` the sidebar is a horizontally-
+     scrollable tab strip (`overflow-x-auto`/`contain-layout` above) with no
+     visual hint that more tabs sit off-screen to the right — a first-time
+     visitor could easily read "Overview, Live Machines" as the whole list
+     and never discover Alerts/Predictions/Model Health/etc. A static right-
+     edge fade (mask-image, not JS scroll-tracked — Second Law) signals
+     "more this way" without adding a scroll listener. Right-edge only, not
+     both: a left fade too would falsely suggest earlier content even at
+     scrollLeft 0. Turned off from `md` up, where the sidebar becomes a
+     vertical, non-scrolling column instead. */
+  .dashboard-sidebar {
+    mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - 28px), transparent 100%);
+  }
+  @media (min-width: 768px) {
+    .dashboard-sidebar {
+      mask-image: none;
+      -webkit-mask-image: none;
+    }
   }
 
   /* Sidebar tabs: same focus-ring rule as everywhere else (global.css), just

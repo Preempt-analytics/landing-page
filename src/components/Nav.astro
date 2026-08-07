@@ -40,8 +40,17 @@ import { NAV_LINKS, withBase } from '../lib/site';
       aria-expanded="false"
       aria-controls="mobile-menu"
     >
+      <!-- Mobile-audit fix (2026-08-07): three independently-transformable
+           lines instead of one combined path, so the icon can morph into an
+           X when open (below) — the button already toggled `aria-expanded`
+           correctly, but with a static hamburger glyph that never changed,
+           there was no visual confirmation the menu was actually open, or
+           an obvious "tap here to close" affordance beyond re-tapping the
+           same unchanged icon. -->
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path class="nav-toggle-line nav-toggle-line--top" d="M4 6h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path class="nav-toggle-line nav-toggle-line--mid" d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        <path class="nav-toggle-line nav-toggle-line--bottom" d="M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
     </button>
   </nav>
@@ -122,6 +131,28 @@ import { NAV_LINKS, withBase } from '../lib/site';
   .nav-link:hover::after,
   .nav-link:focus-visible::after {
     transform: scaleX(1);
+  }
+
+  /* Hamburger → X morph (mobile-audit fix, 2026-08-07), keyed off the same
+     `aria-expanded` the click handler above already sets — no extra JS.
+     transform-origin is the icon's own center (12,12 in its 24×24 viewBox);
+     translating each outer line to the middle position and rotating 45°
+     around that shared center is the standard hamburger/X recipe — the
+     translate happens in the untransformed (screen) axis since it's listed
+     before rotate() in the function list, so "down"/"up" stay literal
+     regardless of the rotation stacked after them. */
+  .nav-toggle-line {
+    transform-origin: 12px 12px;
+    transition: transform var(--dur-base) var(--ease-ios), opacity var(--dur-fast) var(--ease-ios);
+  }
+  #nav-toggle[aria-expanded='true'] .nav-toggle-line--top {
+    transform: translateY(6px) rotate(45deg);
+  }
+  #nav-toggle[aria-expanded='true'] .nav-toggle-line--mid {
+    opacity: 0;
+  }
+  #nav-toggle[aria-expanded='true'] .nav-toggle-line--bottom {
+    transform: translateY(-6px) rotate(-45deg);
   }
 
   /* Height/opacity reveal instead of an instant display cut. visibility (not

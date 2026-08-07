@@ -68,7 +68,14 @@ const benefits = [
                 <path d={b.icon} stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </div>
-            <div>
+            <div class="pr-6">
+              {/* pr-6 (mobile-audit fix, 2026-08-07): reserves space for the
+                  absolutely-positioned eco-leaf pinned to the card's own
+                  top-right corner below — without it, "Lower Maintenance
+                  Costs" (the longest title) ran its last word right up
+                  against the leaf icon on a single-column mobile card,
+                  since an absolutely-positioned sibling doesn't reflow text
+                  around itself the way inline content would. */}
               <h3 class="text-lg font-semibold text-offwhite">{b.title}</h3>
               <p class="mt-1 text-sm leading-relaxed text-muted">{b.body}</p>
             </div>

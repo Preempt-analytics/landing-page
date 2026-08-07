@@ -53,6 +53,45 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
   </span>
 </span>
 
+<script>
+  // Mobile-audit fix (2026-08-07): this popover is revealed purely via CSS
+  // `:hover`/`:focus-within` (Second Law — no client JS for the reveal
+  // itself). That's fine for a mouse, but touch devices have no `:hover`,
+  // and — as Hero.astro's and LiveFactory.astro's own hover-card hotspots
+  // already document from hitting this exact issue — iOS Safari doesn't
+  // reliably move real DOM focus to a tapped <button> either. Without this,
+  // every info-tip on the site (15+ instances) would be unopenable on an
+  // iPhone: tapping the (i) would just do nothing.
+  //
+  // Rather than repeat those components' `.is-tapped` class + duplicated
+  // CSS-selector approach (this component's popover has a lot more
+  // hover/focus-within selectors to fork: position variants, the eco-leaf,
+  // the sprout — see the style block below), this calls `.focus()` on the
+  // button directly. An explicit JS `.focus()` call works on iOS Safari even
+  // though an implicit tap-to-focus doesn't — so every existing
+  // `:focus-within` rule below starts working correctly as-is, with zero
+  // CSS changes. A document-level listener blurs whatever's focused on any
+  // OTHER tap, so an open popover doesn't linger once you've tapped away
+  // from it (`stopPropagation` on the button's own handler keeps the tap
+  // that OPENS it from immediately blurring it via that same listener).
+  //
+  // One script, defined once in this component file — Astro dedupes a
+  // component's own inline module script across multiple usages of that
+  // component on the same page, so this still runs exactly once per page
+  // regardless of how many <InfoTip> instances it renders.
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLButtonElement>('.info-tip-btn').forEach((btn) => {
+      btn.addEventListener('click', (event) => {
+        event.stopPropagation();
+        btn.focus();
+      });
+    });
+    document.addEventListener('click', () => {
+      (document.activeElement as HTMLElement | null)?.blur?.();
+    });
+  });
+</script>
+
 <style>
   .info-tip {
     position: relative;
@@ -78,6 +117,7 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     z-index: 20;
   }
   .info-tip-btn {
+    position: relative; /* anchors the invisible expanded tap target below */
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -91,6 +131,23 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     cursor: help;
     opacity: 0.75;
     transition: color var(--dur-fast) var(--ease-ios-in-out), opacity var(--dur-fast) var(--ease-ios-in-out);
+  }
+  /* Mobile-audit fix (2026-08-07): the drawn circle is a deliberately small
+     1.15rem (18.4px) glyph so it reads as an inline aside, not a competing
+     button — shrinking the actual TAP target to match it, though, is well
+     under the ~44px touch target every mobile guideline recommends (this
+     repeats ~20 times across the site, so it's worth fixing once here
+     rather than per-caller). A transparent pseudo-element enlarges only the
+     hit area, centered on the visible glyph, without changing the button's
+     own layout box — nothing around it has to shift. */
+  .info-tip-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
   }
   .info-tip:hover .info-tip-btn,
   .info-tip:focus-visible .info-tip-btn {
@@ -227,6 +284,39 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     left: auto;
     right: 0;
     transform-origin: top right;
+  }
+
+  /* Mobile-audit fix (2026-08-07): the default ('start') anchor above pins
+     the popover's LEFT edge to the TRIGGER's own position, not the
+     viewport's — fine on desktop, where there's slack on both sides, but on
+     a narrow phone a trigger that isn't near the left edge (e.g. a stat
+     tile's "Failure Recall ⓘ") pushes this 17rem-wide popover past the
+     right edge; the existing `max-width: calc(100vw - 3rem)` above only caps
+     its OWN size, it can't fix a start position that's already off toward
+     the edge. Confirmed empirically: the homepage's default info-tip
+     measured 100px past the right edge of a 390px viewport before this fix.
+     Below `sm`, fall back to the same centered-under-trigger behavior
+     `data-pos="center"` already uses — roughly equal breathing room on both
+     sides regardless of where the trigger sits. Deliberately does NOT touch
+     `data-pos="end"`: that variant is chosen precisely for triggers already
+     pinned near the right edge (e.g. Benefits.astro's corner eco-tip), and
+     its `right: 0` anchor already keeps the popover on-screen by opening
+     leftward — forcing it to center too was tried and made it overflow the
+     right edge instead (its own earlier bug, caught by re-running this same
+     audit after the first fix). 'start-lg'/'end-lg' don't need a rule here
+     either: they already fall back to the centered `data-pos="center"`
+     behavior below `lg` via the grouped selector above, unrelated to `sm`. */
+  @media (max-width: 639px) {
+    .info-tip-pop {
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%) translateY(2px) scale(0.97);
+      transform-origin: top center;
+    }
+    .info-tip:hover .info-tip-pop,
+    .info-tip:focus-within .info-tip-pop {
+      transform: translateX(-50%) translateY(0) scale(1);
+    }
   }
 
   /* From lg up, HowItWorks' cards form one row — Collect and Business Impact

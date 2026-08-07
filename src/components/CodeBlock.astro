@@ -1,0 +1,53 @@
+---
+// Terminal command block with a copy button (mobile-audit fix, 2026-08-07).
+// The whole point of these snippets is to be pasted into a terminal — on a
+// narrow phone screen the command scrolls off the edge of its own box (long
+// git clone URLs especially), so selecting the exact text by hand is fiddly
+// even though the box scrolls correctly. A copy button sidesteps that
+// entirely: tap once, paste, done, without ever needing to read or select
+// the full command. Extracted here rather than repeated three times inline
+// on try-it-yourself.astro (the only page with commands to copy).
+interface Props {
+  code: string;
+}
+const { code } = Astro.props;
+---
+
+<div class="code-block relative mt-5 overflow-x-auto rounded-lg border border-white/10 bg-navy-950 p-4">
+  <button
+    type="button"
+    class="copy-btn absolute right-2 top-2 rounded-md border border-white/10 bg-navy-800/80 px-2 py-1 text-xs font-medium text-muted transition-colors duration-[var(--dur-fast)] hover:bg-white/10 hover:text-offwhite"
+    aria-label="Copy command to clipboard"
+  >
+    Copy
+  </button>
+  <pre class="pr-14 text-sm text-teal-200"><code>{code}</code></pre>
+</div>
+
+<script>
+  // Reads from the rendered <code> element's own textContent rather than a
+  // separate copy of the string, so the copied text can never drift from
+  // what's actually displayed. Astro dedupes this module script once per
+  // page regardless of how many <CodeBlock> instances render (same reasoning
+  // as InfoTip.astro's own script).
+  document.addEventListener('astro:page-load', () => {
+    document.querySelectorAll<HTMLElement>('.code-block').forEach((block) => {
+      const btn = block.querySelector<HTMLButtonElement>('.copy-btn');
+      const code = block.querySelector('code');
+      if (!btn || !code) return;
+      const label = btn.textContent;
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(code.textContent ?? '');
+          btn.textContent = 'Copied!';
+          setTimeout(() => {
+            btn.textContent = label;
+          }, 1500);
+        } catch {
+          // Clipboard API can fail (permissions, insecure context) — fail
+          // quietly rather than showing a misleading "Copied!" state.
+        }
+      });
+    });
+  });
+</script>

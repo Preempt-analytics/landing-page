@@ -11,7 +11,7 @@ interface Props {
   captionTone?: 'live' | 'illustrative' | 'plain';
   /** Optional plain-language explanation of the metric, surfaced via an InfoTip. */
   info?: string;
-  /** One-time "hover for details" callout pointing at this card's InfoTip —
+  /** One-time "tap for details" callout pointing at this card's InfoTip —
       meant for exactly one stat tile in StatRow.astro (currently "Retrains
       Automatically" — moved there 2026-08-06 from "Failure Recall", which
       had less vertical room above its icon before the value number), so a
@@ -20,11 +20,17 @@ interface Props {
       duplicating this treatment. Deliberately not part of InfoTip itself,
       which is reused at a dozen-plus other spots sitewide (HowItWorks,
       Benefits, MlopsSystem, ProductPreview) — repeating this hint at every
-      one of those would be noise, not help. Dismiss is CSS-only (an adjacent-
-      sibling selector on the InfoTip's own :hover/:focus-within), matching
-      InfoTip's own no-client-JS approach — not a permanent one-time-ever
-      dismissal, so it can reappear if a visitor moves away and back, an
-      acceptable trade for staying dependency-free. */
+      one of those would be noise, not help. Says "Tap", not "Hover"
+      (mobile-audit fix, 2026-08-07) — most visitors are on a touch device,
+      which has no hover, so telling them to hover was asking for something
+      they couldn't do; "tap" reads fine for a mouse user too. Dismiss is
+      CSS-only (an adjacent-sibling selector on the InfoTip's own
+      :hover/:focus-within), matching InfoTip's own no-client-JS approach —
+      not a permanent one-time-ever dismissal, so it can reappear if a
+      visitor moves away and back, an acceptable trade for staying
+      dependency-free. InfoTip.astro's own tap-to-focus script (same 2026-
+      08-07 fix) is what makes :focus-within — and therefore this dismissal —
+      actually reachable by tapping, not just by mouse hover. */
   hint?: boolean;
 }
 const { value, label, caption, captionTone = 'plain', info, hint = false } = Astro.props;
@@ -44,7 +50,7 @@ const { value, label, caption, captionTone = 'plain', info, hint = false } = Ast
         </InfoTip>
         {hint && (
           <span class="stat-hint" aria-hidden="true">
-            Hover for details
+            Tap for details
           </span>
         )}
       </span>
@@ -73,7 +79,7 @@ const { value, label, caption, captionTone = 'plain', info, hint = false } = Ast
     z-index: 10;
   }
 
-  /* "Hover for details" discovery bubble (see the `hint` prop comment above).
+  /* "Tap for details" discovery bubble (see the `hint` prop comment above).
      Nested inside its own `relative inline-flex` wrapper alongside the
      InfoTip in the template so `bottom: 100%` anchors it directly above the
      (i) icon itself — the actual thing it's telling you to hover. Left-
