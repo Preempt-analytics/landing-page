@@ -119,9 +119,15 @@ const ICONS: Record<string, string> = {
          Dashboard preview = a labelled concept mockup; "Soon" panels already
          self-explain via their own tag, so they don't need a legend entry).
          Right-aligned to match the frame's edge below it on md+; centered and
-         wrapping on mobile, where there's no "side" to sit in. -->
+         wrapping on mobile, where there's no "side" to sit in. `2xl:max-w-[1100px]`
+         (human-requested, 2026-08-07 — "reduce the dashboard size on super
+         widescreen by maybe 4-5%") shaves the same ~4.5% off max-w-6xl's 1152px
+         as the figure below gets, at the same breakpoint — this legend has to
+         shrink in lockstep with the figure, not just the figure alone, or its
+         own "right-aligned to match the frame's edge" claim above breaks the
+         moment their two max-widths diverge. -->
     <div
-      class="mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted/70 md:justify-end"
+      class="mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs text-muted/70 md:justify-end 2xl:max-w-[1100px]"
       data-reveal
     >
       <span class="inline-flex items-center gap-1.5">
@@ -134,8 +140,12 @@ const ICONS: Record<string, string> = {
       </span>
     </div>
 
-    <!-- Framed dashboard shell -->
-    <figure class="relative mx-auto mt-6 max-w-6xl" data-reveal>
+    <!-- Framed dashboard shell. `2xl:max-w-[1100px]` (human-requested, 2026-08-07
+         — "reduce the dashboard size on super widescreen by maybe 4-5%"): max-w-6xl
+         (1152px) already caps it at every OTHER breakpoint, so on typical widescreen
+         monitors this changes nothing — only 2xl (1536px+ viewports, i.e. actual
+         super-widescreen territory) gets the extra ~4.5% reduction to 1100px. -->
+    <figure class="relative mx-auto mt-6 max-w-6xl 2xl:max-w-[1100px]" data-reveal>
       <div class="product-mockup group overflow-hidden rounded-xl border border-white/10 bg-navy-900 shadow-2xl shadow-black/40">
         <!-- browser chrome -->
         <div class="flex items-center gap-2 border-b border-white/10 bg-navy-800/60 px-4 py-2.5">
