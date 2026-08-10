@@ -29,6 +29,9 @@ when CSS can't express the relationship.
    - [Card hover-lift utility](#card-hover-lift-utility)
    - [Animated underline](#animated-underline)
    - [Accessible hover+focus popover](#accessible-hoverfocus-popover)
+   - [Corner-bracket reticle ("target lock")](#corner-bracket-reticle-target-lock)
+   - [Rapid hover blink ("bootup")](#rapid-hover-blink-bootup)
+   - [Auto-playing hover hint (discovery nudge)](#auto-playing-hover-hint-discovery-nudge)
 4. [Ambient "alive" loops](#ambient-alive-loops)
    - [Breathing glow](#breathing-glow)
    - [Roaming spotlight](#roaming-spotlight)
@@ -548,6 +551,172 @@ focus inside an invisible element while hidden.
   *instantly* on the way in (so it appears the moment opacity starts
   rising), but delay the `visibility: hidden` until the fade-out transition
   has actually finished (so it doesn't vanish before the fade completes).
+
+### Corner-bracket reticle ("target lock")
+
+Four small L-shaped brackets that self-draw around a hoverable data point —
+reads as "scanning/locking onto this," borrowed from game-HUD targeting
+overlays (Watch Dogs 2 and similar) but kept clean rather than glitchy: thin
+strokes, the site's own smooth easing, no scan-line sweep or chromatic
+aberration. The line between "cool sci-fi UI" and "edgy hacker UI" is
+almost entirely in the execution, not the concept — a geometric draw-in
+reads as refined, a glitch effect reads as rebellious.
+
+```html
+<button class="hotspot">
+  <svg class="reticle" viewBox="0 0 40 40" width="48" height="48" aria-hidden="true">
+    <path pathLength="1" d="M1 11V1h10" />
+    <path pathLength="1" d="M29 1h10v10" />
+    <path pathLength="1" d="M39 29v10H29" />
+    <path pathLength="1" d="M11 39H1V29" />
+  </svg>
+  <!-- ...the actual hoverable icon/content... -->
+</button>
+```
+
+```css
+.reticle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  overflow: visible;
+  pointer-events: none;
+}
+.reticle path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  transition: stroke-dashoffset var(--dur-base) var(--ease-ios);
+}
+/* Corners draw in with a slight stagger, not all four at once. */
+.reticle path:nth-child(2) { transition-delay: 40ms; }
+.reticle path:nth-child(3) { transition-delay: 80ms; }
+.reticle path:nth-child(4) { transition-delay: 120ms; }
+.hotspot:hover .reticle path,
+.hotspot:focus-visible .reticle path {
+  stroke-dashoffset: 0;
+}
+```
+
+**Tips:**
+- White reads cleaner and more "iOS focus ring" than the site's own accent
+  color — if the hovered element already glows in the accent color, a
+  same-color reticle blends into that glow instead of standing apart as its
+  own layer.
+- Same `pathLength="1"` self-draw technique as [SVG stroke draw-in](#svg-stroke-draw-in)
+  below, just four short corner paths instead of one longer continuous one.
+- Size the frame noticeably larger than the hit target it surrounds — a
+  bracket drawn flush against the icon reads as cramped, not a spotlight.
+
+### Rapid hover blink ("bootup")
+
+A short, hard on/off/on/off/on sequence that plays once each time an
+element is hovered — reads as a display "powering up" rather than a smooth
+fade-in. Binary opacity states only (`0`/`1` — never a partial value like
+`0.3`, which reads as the element going translucent, not blinking), with a
+smooth easing curve between each hard state so the blink still feels
+considered rather than a jarring digital cut.
+
+```css
+.boot-text {
+  opacity: 1; /* resting state, e.g. before its parent hotspot is hovered */
+}
+.hotspot:hover .boot-text,
+.hotspot:focus-visible .boot-text {
+  animation: boot-blink 550ms var(--ease-ios-in-out) 180ms both;
+}
+@keyframes boot-blink {
+  0%        { opacity: 0; }
+  10%       { opacity: 1; }
+  20%       { opacity: 0; }
+  30%       { opacity: 1; }
+  40%       { opacity: 0; }
+  50%, 100% { opacity: 1; }
+}
+```
+
+**Tips:**
+- Scoped to `:hover`/`:focus-visible` rather than gated by a class toggle,
+  this replays fresh from 0% every single time — no JS "reset" needed,
+  unlike the [scroll-triggered power-up](#one-time-gated-animation-power-up)
+  variant above, which needs `animation-play-state` gating specifically
+  because it must *not* replay on every scroll-into-view.
+- The `180ms` delay lets a *parent* container's own reveal transition (a
+  popover card fading/scaling in) finish first, so the blink plays on an
+  already-visible surface instead of racing it.
+- Resist `steps()` here even though the transitions are between hard
+  values — an *eased* transition between two flat opacity states still
+  reads as considered/refined, where `steps()`'s instant jump reads as a
+  mechanical strobe. Smooth easing between binary values, not an instant
+  cut, is what keeps a blink from looking like a glitch effect.
+- Don't substitute a glow pulse (`text-shadow`/`filter`) for this — a glow
+  ramping up and down reads as breathing, not blinking. If the goal is "the
+  text itself flickers into existence," animate the text's own presence
+  (`opacity`), not a halo around it.
+
+### Auto-playing hover hint (discovery nudge)
+
+A small callout that plays automatically once — no interaction needed — to
+teach a first-time visitor that a nearby element is hoverable/tappable,
+then fades itself out for good rather than lingering as permanent clutter.
+
+```html
+<button class="hotspot">
+  <span class="hint-bubble" aria-hidden="true">Hover for details</span>
+  <!-- ...the actual hoverable icon/content, plus its real popover... -->
+</button>
+```
+
+```css
+.hint-bubble {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translate(-50%, 0);
+  opacity: 0;
+  pointer-events: none;
+  animation: hint-fade 5s var(--ease-ios-in-out) both;
+}
+@keyframes hint-fade {
+  0%, 8% { opacity: 0; transform: translate(-50%, 4px); }
+  18%    { opacity: 1; transform: translate(-50%, 0); }
+  70%    { opacity: 1; transform: translate(-50%, 0); }
+  100%   { opacity: 0; transform: translate(-50%, 0); }
+}
+/* Hovering/tapping the real target means the hint already did its job —
+   cut it immediately instead of letting it run out its own timeline
+   underneath the real popover about to appear on top of it. */
+.hotspot:hover .hint-bubble,
+.hotspot:focus-visible .hint-bubble,
+.hotspot.is-tapped .hint-bubble {
+  animation: none;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-ios);
+}
+```
+
+**Tips:**
+- A plain `animation` with a fixed duration (`both` fill mode holds the
+  0%-opacity start and 100%-opacity end) needs no JS trigger at all — a
+  freshly-inserted element's `animation` just runs on page load.
+- Several of these on one scene (multiple hoverable data points)? Stagger
+  each one's `animation-delay` inline so they don't all pop in at once —
+  same reasoning as any other multi-element stagger in this doc.
+- `aria-hidden="true"` is appropriate here *specifically* because the hint
+  duplicates no unique information — it's purely "try hovering," and
+  whatever it's pointing at already has its own accessible name/label.
+  Don't hide something this way if it conveys anything a screen-reader
+  user wouldn't otherwise get.
+- Pairs naturally with the [reticle](#corner-bracket-reticle-target-lock)
+  and [bootup blink](#rapid-hover-blink-bootup) above: hint nudges toward
+  hovering → reticle locks on → revealed content blinks in. Three small
+  patterns that read as one considered "discover a data point" sequence
+  when used together on the same hotspot, rather than three unrelated
+  effects layered on top of each other.
 
 ---
 

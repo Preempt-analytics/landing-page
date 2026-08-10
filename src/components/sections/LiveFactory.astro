@@ -51,13 +51,31 @@ function sparkPoints(name: string): string {
 // stays fixed across all four: that's the real signal this section is
 // demonstrating, so it matches the alert card's own fixed "Drift detected"
 // wording. Only this flavor caption varies, purely cosmetic.
+//
+// `hint`/`hintDelay` (human-requested, 2026-08-07; eased down to just one
+// pin the same day — two, even fully sequenced one-at-a-time, was still more
+// than needed to make the point). Only CNC-05 gets a "Hover for details"
+// discovery bubble, not all four — it's the healthy machine sitting
+// bottom-right of CNC-01's always-open drift card, so a first-time visitor
+// who's already looking at that card has it in the corner of their eye,
+// nudging them to notice the OTHER dots are interactive too without needing
+// a bubble on every one of them.
 const machines = [
   { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false, detail: 'Nominal — no anomalies' },
   { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', bootDelay: '150ms', alert: true },
   { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false, detail: 'All parameters normal' },
   { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false, detail: 'Within safe operating band' },
-  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false, detail: 'Everything looks fine here' },
+  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false, detail: 'Everything looks fine here', hint: true, hintDelay: '2.2s' },
 ];
+// The always-visible drift-card below reads its position off this SAME
+// machine's own left/top rather than a separate hand-picked coordinate
+// (mobile-audit follow-up, 2026-08-07 — a fixed top-left-corner placement
+// on narrow viewports put the card far from CNC-01's actual pin, closer in
+// screen space to a healthy machine, which read as "the alert is about the
+// wrong machine"). Deriving the card's position from `alertMachine` makes
+// that class of bug structurally impossible — there is only one machine
+// with `alert: true`, and the card is always anchored to its exact pin.
+const alertMachine = machines.find((m) => m.alert)!;
 
 // Scattered catwalk/background indicator lights (human-requested, 2026-07-28,
 // replacing an earlier roaming-spotlight version) — deliberately placed away
@@ -93,6 +111,60 @@ const structureLights = [
         The system can watch CNC milling machines around the clock. The moment
         tool wear, or process temperature starts to shift, it catches the change — often
         hours before that could cause a failure.
+      </p>
+
+      <!-- Ambient "system's actively working" status line — moved here from
+           Hero.astro 2026-08-07 (human-requested relocation, larger) rather
+           than embedded in the photo on the right: that photo is already
+           busy (5 machine pins, the drift-detected callout, structure
+           lights), so another moving element there risked competing for
+           attention right next to CNC-05's own pin. This line's content —
+           the general failure TAXONOMY the model watches for — is also a
+           different scope than the photo's per-machine status pins, so it
+           reads more naturally as supporting prose next to this section's
+           own copy. Cycles all four of the dataset's real, non-random
+           failure modes (RNF excluded everywhere in this codebase on
+           purpose — see Hero.astro's markers for why). Pure CSS, no client
+           JS: a chasing-dot spinner (8 dots, opacity staggered via
+           animation-delay) and a 4-way cross-fading text cycle (four
+           stacked spans sharing one grid-area, each on-screen for its own
+           quarter of one shared loop via a negative animation-delay per
+           span) — same techniques as Hero.astro's own markers, just sized
+           up here since this section has the room for it. Purely
+           decorative — doesn't convey anything the photo's own pins don't
+           already — so aria-hidden rather than screen-reader noise for an
+           endless loop with no unique content.
+
+           Order is "Checking for" → spinner → failure mode (human-requested
+           follow-up, 2026-08-07 — a Krug-style pass on the original "spinner
+           → Checking for [mode] …" layout): the spinner is the "something's
+           happening" cue, so it reads better sitting directly before the
+           thing it's about to reveal instead of stranded at the front of
+           the line with a trailing "…" doing the same job a second time at
+           the far end. That trailing ellipsis is gone outright now that the
+           spinner already covers "in progress" — keeping both was two
+           different loading affordances for one idea, and the ellipsis sat
+           past `.factory-status-cycle`'s own reserved min-width, reading as
+           a stray period floating in dead space whenever the current word
+           was shorter than the longest one ("Power Failure" vs. "Heat
+           Dissipation Failure"). The failure-mode text itself is now a
+           small pill (see `.factory-status-cycle span` below), not plain
+           text — the one piece of this line that's actually changing gets
+           its own visual chunk instead of blending into the static prefix. -->
+      <p
+        class="factory-status-line mt-5 flex items-center gap-2 text-base text-muted/80"
+        aria-hidden="true"
+      >
+        <span>Checking for</span>
+        <span class="factory-status-spinner">
+          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+        </span>
+        <span class="factory-status-cycle">
+          <span>Tool Wear Failure</span>
+          <span>Power Failure</span>
+          <span>Heat Dissipation Failure</span>
+          <span>Overstrain Failure</span>
+        </span>
       </p>
     </div>
 
@@ -145,11 +217,13 @@ const structureLights = [
            mount stub in the photo (coordinates read directly off
            cnc-factory-floor.png, not the old placeholder-SVG percentages).
            4 teal = healthy; CNC-01 (back-center) is red — its callout card
-           below sits immediately above it, close enough that proximity alone
-           says which machine it's about (no leader line needed: a long
-           diagonal across the whole scene makes the viewer trace a line
-           to find the answer, where sitting right next to it gives the
-           answer for free — Krug/Redish, human review 2026-07-28).
+           below is anchored directly off this same machine's coordinates
+           (alertMachine, computed above) so it always sits immediately next
+           to its own pin at every viewport width, close enough that
+           proximity alone says which machine it's about (no leader line
+           needed: a long diagonal across the whole scene makes the viewer
+           trace a line to find the answer, where sitting right next to it
+           gives the answer for free — Krug/Redish, human review 2026-07-28).
 
            Each pin is now wrapped in a real <button> hotspot (human-requested,
            2026-07-28): hovering/focusing a healthy machine reveals its own
@@ -159,7 +233,18 @@ const structureLights = [
            CNC-01 keeps its callout always visible (the section's main "aha"
            moment shouldn't require a hover to see) but still gets the same
            hotspot wrapper so its glow gets the same hover-pause affordance
-           as the other four. -->
+           as the other four.
+
+           One healthy pin, CNC-05 (see `hint`/`hintDelay` in the `machines`
+           comment above), also gets a one-time "Hover for details" bubble —
+           same self-fading technique as Hero.astro's hero-marker-hint.
+           Deliberately just the one, not two or all four (human-requested
+           follow-up, 2026-08-07, eased down from an earlier two-pin pass):
+           CNC-05 sits bottom-right of CNC-01's always-open drift card, so it
+           nudges a visitor already looking at that card to notice the other
+           dots are interactive too, without its own competing show. CNC-01's
+           card is already always open, so it never gets one — there's
+           nothing left for "hover for details" to invite there. -->
       {
         machines.map((m) => (
           <button
@@ -177,6 +262,11 @@ const structureLights = [
               style={`animation-delay: ${m.bootDelay}, ${m.delay};`}
               aria-hidden="true"
             />
+            {m.hint && (
+              <span class="machine-hover-hint" aria-hidden="true" style={`animation-delay: ${m.hintDelay};`}>
+                Hover for details
+              </span>
+            )}
             {!m.alert && (
               <span class="machine-card machine-card--healthy">
                 <span class="machine-card-header">
@@ -194,13 +284,39 @@ const structureLights = [
       }
 
       <!-- Drift callout card (UI overlay, independent of the photo underneath).
-           Sits directly above the alerting machine, its bottom edge almost
-           touching that pin and clearly closer to it than to the left or
-           right machine — proximity alone disambiguates which one it means.
-           Left always-visible by default (unchanged from before) rather than
-           folded into the hover-only .machine-card treatment above, so a
-           visitor who never hovers anything still sees the section's point. -->
-      <a href={withBase('/product/#live-machines')} class="drift-card tile-hover">
+           `left`/`bottom` come from an inline style keyed directly off
+           alertMachine's own left/top (mobile-audit follow-up, 2026-08-07 —
+           see the frontmatter comment on alertMachine). Horizontal centering
+           on the pin's exact x is the STYLESHEET's `.drift-card { transform:
+           translateX(-50%); }` below, deliberately NOT inlined alongside
+           left/bottom — .tile-hover's own hover/active rules (global.css)
+           set a plain `transform: translateY(...)`, and an inline transform
+           always wins the cascade over any stylesheet rule regardless of
+           :hover, which would freeze this card at rest and silently kill
+           the hover lift rather than combine with it. Keeping `transform`
+           itself out of the inline style is what lets the stylesheet's own
+           :hover/:active overrides (see below) actually take effect. Same
+           centering technique the hover-only `.machine-card` above already
+           uses on its own pin, so the always-visible drift card now reads
+           as the same kind of object instead of a bespoke one-off. (An
+           earlier right-edge-anchored pass put the pin under the card's
+           corner rather than its middle — human-reported same-day follow-
+           up: "should be more centered above the red dot".) Bottom edge a
+           fixed 14px above the pin's y, growing up from there — into the
+           open padding above the photo, not down into the pin — so it stays
+           correct with no separate mobile/tablet/desktop breakpoint
+           overrides, at every viewport width. `max-width` below keeps this
+           safe on a narrow phone even centered — CNC-01 sits at 61.5%,
+           comfortably clear of both edges for this card's capped width.
+           Always-visible by default (unchanged from before) rather than
+           folded into the hover-only `.machine-card` treatment above, so a
+           visitor who never hovers anything still sees the section's
+           point. -->
+      <a
+        href={withBase('/product/#live-machines')}
+        class="drift-card tile-hover"
+        style={`left: ${alertMachine.left}%; bottom: calc(${100 - alertMachine.top}% + 14px);`}
+      >
         <span class="machine-card-header">
           <span class="machine-card-status">
             <span class="machine-card-dot" aria-hidden="true"></span>
@@ -365,18 +481,20 @@ const structureLights = [
     }
   }
 
-  /* Always-visible drift callout. Below sm it moves to the top-left corner:
-     at phone widths the photo is short, so a card anchored above CNC-01 (at
-     61.5%/24.4%) inevitably collided with that machine's own pin. Top-left
-     keeps it horizontally clear of the pin instead of stacked on top of it. */
+  /* Always-visible drift callout. Position (left/bottom) comes from the
+     inline style in the markup above, derived from alertMachine's own
+     left/top — a single formula that holds at every breakpoint, so there's
+     no separate mobile/tablet/desktop override to keep in sync. max-width
+     is a safety net, same reasoning as InfoTip.astro's own popover: without
+     it, a very narrow viewport could still push this max-content box past
+     the opposite edge. */
   .drift-card {
     position: absolute;
     display: block;
     text-decoration: none;
-    left: 1%;
-    top: 2%;
     z-index: 10;
     width: max-content;
+    max-width: min(80vw, 15rem);
     border-radius: 0.5rem;
     border: 1px solid color-mix(in srgb, var(--color-alert-400) 50%, transparent);
     background: color-mix(in srgb, var(--color-navy-950) 90%, transparent);
@@ -384,11 +502,28 @@ const structureLights = [
     padding: var(--fc-pad);
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
   }
-  @media (min-width: 640px) {
-    .drift-card {
-      left: 47%;
-      top: 3%;
+  /* The inline `transform: translateX(-50%)` centers the card on the pin
+     (see the markup comment above). .tile-hover's own hover/active rules
+     (global.css) set a PLAIN `transform: translateY(...)` on this same
+     element, which would replace rather than combine with that centering —
+     the exact transform-composition bug already fixed once on .mlops-node
+     and .sensor-pin (see MlopsSystem.astro's .mlops-node comment for the
+     full mechanics). Re-authoring the resting/hover/active states here,
+     each keeping translateX(-50%) as the first function, is the same fix:
+     a component-scoped class selector already outranks global.css's plain
+     .tile-hover class regardless of source order (Astro adds a scoping
+     attribute to every selector in this block), so these three rules win
+     without needing !important. */
+  .drift-card {
+    transform: translateX(-50%);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .drift-card:hover {
+      transform: translateX(-50%) translateY(-4px);
     }
+  }
+  .drift-card:active {
+    transform: translateX(-50%) translateY(-1px) scale(0.99);
   }
   .drift-card .machine-card-status,
   .drift-card .machine-card-dot {
@@ -404,6 +539,76 @@ const structureLights = [
     font-size: var(--fc-title);
     font-weight: 600;
     color: var(--color-offwhite);
+  }
+
+  /* One-time "Hover for details" discovery bubble, on two of the four
+     healthy pins only (see the `hint`/`hintDelay` comment on `machines` in
+     the frontmatter, and the markup comment above) — same visual recipe and
+     self-fading `animation-delay` + `both` fill-mode technique as
+     Hero.astro's .hero-marker-hint, duplicated rather than shared for the
+     same reason the spinner/cycle CSS above already is (Astro scopes
+     <style> per component). Anchored identically to .machine-card just
+     below (bottom: calc(100% + 10px); left: 50%) so it sits exactly where
+     the real card will appear, and gets out of the way immediately once
+     that card opens (see the :hover/:focus/.is-tapped override further
+     down) rather than letting its own animation finish underneath it.
+     Gated behind .factory-scene.is-visible — same paused/running technique
+     as .sensor-pin's boot-flash — so each one's `hintDelay` only starts
+     counting once the section has actually scrolled into view. */
+  .machine-hover-hint {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    z-index: 15;
+    transform: translate(-50%, 0);
+    white-space: nowrap;
+    border-radius: 0.5rem;
+    border: 1px solid rgba(45, 212, 191, 0.35);
+    background: color-mix(in srgb, var(--color-navy-800) 95%, transparent);
+    color: var(--color-teal-300);
+    padding: 0.3rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+    opacity: 0;
+    animation: machine-hover-hint-fade 5s var(--ease-ios-in-out) both;
+    animation-play-state: paused;
+  }
+  .factory-scene.is-visible .machine-hover-hint {
+    animation-play-state: running;
+  }
+  .machine-hover-hint::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    margin-left: -4px;
+    transform: rotate(45deg);
+    background: inherit;
+    border: inherit;
+    border-top: none;
+    border-left: none;
+  }
+  @keyframes machine-hover-hint-fade {
+    0%, 8% { opacity: 0; transform: translate(-50%, 4px); }
+    18% { opacity: 1; transform: translate(-50%, 0); }
+    70% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, 0); }
+  }
+  /* Hovering/focusing/tapping means the visitor already found it — cut the
+     hint immediately rather than letting it run out its own animation
+     underneath the real .machine-card that's about to appear on top of it. */
+  .machine-hotspot:hover .machine-hover-hint,
+  .machine-hotspot:focus-visible .machine-hover-hint,
+  .machine-hotspot:focus .machine-hover-hint,
+  .machine-hotspot.is-tapped .machine-hover-hint {
+    animation: none;
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-ios);
   }
 
   .machine-card {
@@ -626,6 +831,131 @@ const structureLights = [
     @keyframes factory-parallax {
       from { transform: scale(1.06) translateY(-2.5%); }
       to { transform: scale(1.06) translateY(2.5%); }
+    }
+  }
+
+  /* Chasing-dot spinner + cross-fading text cycle for the "Checking for…"
+     status line above (see its own markup comment for the full rationale).
+     Same technique as Hero.astro's .hero-marker-card-spinner/.hero-status-
+     cycle, duplicated rather than shared — Astro scopes <style> per
+     component, so there's no import path for CSS between them — and sized
+     up here to match this section's text-base line height instead of
+     Hero's smaller text. */
+  .factory-status-spinner {
+    position: relative;
+    display: inline-block;
+    width: 1.05rem;
+    height: 1.05rem;
+    flex-shrink: 0;
+  }
+  /* History: started as a 1s chase, got slowed to 1.5s, then simplified to a
+     flat static ring entirely (human-requested, 2026-08-07 — even the 1.5s
+     chase still competed for attention). Restored again the same day
+     (human-requested follow-up) — a fully static glyph read as broken/
+     stalled rather than calm, not the intended effect. Two slower/subtler
+     attempts in between (3s/0.3–0.65, then 2s/0.2–0.85) both undershot —
+     settled back on the ORIGINAL 1s/0.15–1 chase, same as before any of
+     this tuning started. */
+  .factory-status-spinner i {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0.14rem;
+    height: 0.14rem;
+    margin: -0.07rem 0 0 -0.07rem;
+    border-radius: 9999px;
+    background: var(--color-teal-400);
+    animation: factory-spinner-fade 1s linear infinite;
+  }
+  .factory-status-spinner i:nth-child(1) { transform: rotate(0deg) translateY(-0.43rem); animation-delay: -0.875s; }
+  .factory-status-spinner i:nth-child(2) { transform: rotate(45deg) translateY(-0.43rem); animation-delay: -0.75s; }
+  .factory-status-spinner i:nth-child(3) { transform: rotate(90deg) translateY(-0.43rem); animation-delay: -0.625s; }
+  .factory-status-spinner i:nth-child(4) { transform: rotate(135deg) translateY(-0.43rem); animation-delay: -0.5s; }
+  .factory-status-spinner i:nth-child(5) { transform: rotate(180deg) translateY(-0.43rem); animation-delay: -0.375s; }
+  .factory-status-spinner i:nth-child(6) { transform: rotate(225deg) translateY(-0.43rem); animation-delay: -0.25s; }
+  .factory-status-spinner i:nth-child(7) { transform: rotate(270deg) translateY(-0.43rem); animation-delay: -0.125s; }
+  .factory-status-spinner i:nth-child(8) { transform: rotate(315deg) translateY(-0.43rem); animation-delay: 0s; }
+  @keyframes factory-spinner-fade {
+    0%, 100% { opacity: 0.15; }
+    12.5% { opacity: 1; }
+  }
+
+  /* Four stacked spans sharing one grid-area so they cross-fade in place
+     without needing position:absolute (which would strip the real baseline
+     these need to sit level with "Checking for" and the spinner beside them
+     — the exact bug already fixed once on Hero.astro's own copy of this
+     pattern). min-width holds the longest label's width so the line doesn't
+     reflow as the text changes — grid's own auto track-sizing already grows
+     past it to fit "Heat Dissipation Failure" plus the pill padding below,
+     this is just a floor for the shorter words. */
+  .factory-status-cycle {
+    display: inline-grid;
+    min-width: 13.5rem;
+  }
+  /* Pill, not plain text (human-requested follow-up, 2026-08-07 — see the
+     markup comment above) — the one word in this line that's actually
+     changing gets its own visual chunk instead of reading as more of the
+     same static sentence. Teal/informational, matching Hero.astro's own
+     failure-mode markers ("here's what the model watches for," not an
+     alert, so no alert-400 red). `justify-self: start` keeps each pill
+     hugging its own text width rather than stretching to fill the grid
+     track's full reserved min-width (a plain background/border on a
+     stretched item would recreate the exact "floating in dead space" bug
+     this pass fixes) — the track itself still reserves the wider space
+     behind the scenes, so the line's overall width stays stable regardless
+     of which word is showing. */
+  .factory-status-cycle span {
+    grid-area: 1 / 1;
+    justify-self: start;
+    white-space: nowrap;
+    opacity: 0;
+    border-radius: 9999px;
+    border: 1px solid color-mix(in srgb, var(--color-teal-400) 35%, transparent);
+    background: color-mix(in srgb, var(--color-teal-400) 12%, transparent);
+    padding: 0.2rem 0.75rem;
+    font-weight: 600;
+    color: var(--color-teal-300);
+    /* 12s → 16s loop (same follow-up as the spinner above) — each word now
+       lingers longer between cross-fades, reading as a slower, calmer
+       rotation instead of a busy flicker next to the machine hotspots. */
+    animation: factory-status-cycle-fade 16s ease-in-out infinite;
+  }
+  /* Delays stay each span's own quarter of the (now 16s) loop — 0/4/8/12s,
+     scaled up from 0/3/6/9s in step with the duration change above so the
+     four words still hand off cleanly with no overlap or gap. */
+  .factory-status-cycle span:nth-child(1) { animation-delay: 0s; }
+  .factory-status-cycle span:nth-child(2) { animation-delay: -4s; }
+  .factory-status-cycle span:nth-child(3) { animation-delay: -8s; }
+  .factory-status-cycle span:nth-child(4) { animation-delay: -12s; }
+  @keyframes factory-status-cycle-fade {
+    0%, 1.5% { opacity: 0; }
+    4.5%, 21% { opacity: 1; }
+    24%, 100% { opacity: 0; }
+  }
+
+  /* Simplified back down from a timed boot/reveal/settle keyframe
+     (human-requested, 2026-08-07 — "leave it on always, don't need to
+     reveal it only after 3 sec"): rather than staying hidden through the
+     photo's boot-up, fading in, holding, then dimming, the line now just
+     renders at this same quiet opacity from the start. Still "alive"
+     underneath (the chase/cycle keep running at this low opacity), just
+     without the multi-second choreography — simpler to reason about and one
+     less thing timed against the photo's own boot-flash/boot-flicker. */
+  .factory-status-line {
+    opacity: 0.4;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .factory-status-line {
+      display: none;
+    }
+    /* Same reasoning as Hero.astro's own .hero-marker-hint override — no
+       good reduced-motion middle ground for a bubble whose entire job is to
+       fade in and out, so it's simply skipped rather than shown statically
+       forever. */
+    .machine-hover-hint {
+      animation: none;
+      opacity: 0;
     }
   }
 </style>

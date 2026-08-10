@@ -23,7 +23,7 @@ const year = new Date().getFullYear();
         </p>
         <p class="mt-4 max-w-sm text-xs leading-relaxed text-muted/70">
           A capstone project showcase built on <strong class="font-medium text-muted">simulated CNC sensor data</strong> —
-          not a live paying-customer deployment.
+          not a live paying-customer deployment, yet.
         </p>
       </div>
 
@@ -73,6 +73,42 @@ const year = new Date().getFullYear();
             class="footer-link text-teal-400 hover:text-teal-300"
           >
             Kaggle — {KAGGLE_DATASET_NAME}
+          </a>.
+        </p>
+
+        <!-- Digital-sovereignty credit (human-requested, 2026-08-07) — the
+             on-page expression of the same stance CLAUDE.md's own "Digital
+             Sovereignty & Privacy" standing protocol holds about the
+             site's tooling/infra: default to European-hosted/operated
+             wherever a real choice exists. Same icon technique as the
+             Kaggle credit above (generic abstracted glyph, stroke/fill via
+             currentColor, no third-party trademarked mark or one-off hex —
+             Contract 4) — twelve dots ringed like the EU flag's stars
+             rather than the flag's actual blue/gold, which would both
+             introduce a one-off color pair and imitate an official mark. -->
+        <p class="mt-2 text-xs text-muted/60">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="mr-1.5 inline-block align-text-bottom text-teal-400">
+            <circle cx="12" cy="4" r="1.3" />
+            <circle cx="16" cy="5.07" r="1.3" />
+            <circle cx="18.93" cy="8" r="1.3" />
+            <circle cx="20" cy="12" r="1.3" />
+            <circle cx="18.93" cy="16" r="1.3" />
+            <circle cx="16" cy="18.93" r="1.3" />
+            <circle cx="12" cy="20" r="1.3" />
+            <circle cx="8" cy="18.93" r="1.3" />
+            <circle cx="5.07" cy="16" r="1.3" />
+            <circle cx="4" cy="12" r="1.3" />
+            <circle cx="5.07" cy="8" r="1.3" />
+            <circle cx="8" cy="5.07" r="1.3" />
+          </svg>
+          Made with love in{' '}
+          <a
+            href="https://digital-strategy.ec.europa.eu/en/policies/eu-tech-sovereignty"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="footer-link text-teal-400 hover:text-teal-300"
+          >
+            Europe
           </a>.
         </p>
       </div>
@@ -133,12 +169,12 @@ const year = new Date().getFullYear();
       <p class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <span class="led-ticker" aria-hidden="true">
           <span class="led-ticker-track">
-            <span class="led-readout">NO ANALYTICS · NO TRACKING</span>
-            <span class="led-readout">NO ANALYTICS · NO TRACKING</span>
+            <span class="led-readout">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
+            <span class="led-readout">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
           </span>
         </span>
-        <span class="led-readout led-ticker-fallback" aria-hidden="true">NO ANALYTICS · NO TRACKING</span>
-        <span class="sr-only">No analytics. No tracking.</span>
+        <span class="led-readout led-ticker-fallback" aria-hidden="true">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
+        <span class="sr-only">No analytics. No tracking. No surveillance capitalism.</span>
         <span class="inline-flex items-center gap-1">
           — nothing you do here is logged.
           <InfoTip label="Our privacy approach" position="end">

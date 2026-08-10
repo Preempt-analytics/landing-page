@@ -4,8 +4,7 @@
 // and labelled as such. Part of #solutions.
 import { withBase } from '../../lib/site';
 import { Image } from 'astro:assets';
-import { failureRecallPct } from '../../lib/metrics';
-import { OVERNIGHT_IMPACT_EUR, SAVINGS_SLIDER, estimateMonthlySavings, formatEur } from '../../lib/savings';
+import { OVERNIGHT_IMPACT_EUR, formatEur } from '../../lib/savings';
 // Faceless illustration, not a stock photo of a real employee (see the
 // no-fabricated-people rule in docs/IMAGE_ASSETS.md item 4 and ARCHITECTURE §9.5).
 import maintenanceLead from '../../assets/maintenance-lead.png';
@@ -30,15 +29,6 @@ const impact = [
   'Production stayed on track',
 ];
 
-// "Days like this, every month" — ties this one-night example back to
-// SavingsCalculator.astro below it (CLAUDE.md Contract 7). "Days", not
-// "nights": the thing being counted is a prevented-failure event, which
-// isn't inherently nocturnal even though this particular example is.
-// Server-rendered against that component's own default slider value so it's
-// correct even before any JS runs; that component's script then live-updates
-// the [data-savings-days] span in place as the visitor drags its slider.
-const defaultMonthlySavings = estimateMonthlySavings(SAVINGS_SLIDER.default, failureRecallPct());
-const defaultDays = (defaultMonthlySavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
 ---
 
 <section class="border-t border-white/5 bg-navy-950 py-20">
@@ -121,53 +111,95 @@ const defaultDays = (defaultMonthlySavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
           A walkthrough of one night — not aggregated customer data.
         </p>
         <p class="mt-3 border-t border-white/5 pt-3 text-xs text-muted">
-          ≈ <span class="font-semibold text-teal-300" data-savings-days>{defaultDays}</span> days like this,
-          every month — try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
+          Try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
         </p>
       </div>
 
-      <!-- Illustration: anonymous maintenance lead, faceless/seen-from-behind,
-           checking an abstract dashboard on a factory floor (no photo of a
-           real person — docs/IMAGE_ASSETS.md item 4). mx-auto + max-w-sm below
-           lg: this grid is single-column until lg (same breakpoint as the
-           Overnight Impact/Morning Summary cards either side of it), so
-           without a cap the square image stretched to the full row width —
-           on a tablet-width viewport (e.g. iPad portrait) that's a
-           near-viewport-height image (human-requested, 2026-07-30). At lg
-           the column itself is already narrow enough, so the cap is lifted. -->
-      <div class="mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 lg:max-w-none">
-        <Image
-          src={maintenanceLead}
-          alt="A maintenance lead, seen from behind with no identifiable face, checking an abstract glowing dashboard on a tablet on a factory floor at night."
-          widths={[320, 480]}
-          sizes="(min-width: 1024px) 33vw, 90vw"
-          class="aspect-square w-full object-cover"
-        />
-      </div>
-
-      <!-- Morning Summary. CTA deliberately reads "See the dashboard" rather than the
-           site's standard "See it in action" (human review, 2026-07-23) — this one
-           button mirrors the exact action the maintenance lead takes in the story
-           beat above it, an intentional one-off exception to the settled two-verb
-           CTA label, not a new third verb introduced sitewide. justify-center
-           for the same reason as the Overnight Impact card: keeps content
-           centered in the taller, photo-driven row instead of top-pinned. -->
-      <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
-        <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
-        <div class="mt-4 flex items-center gap-3">
-          <span class="inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-          </span>
-          <p class="text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
-        </div>
-        <a
-          href={withBase('/product')}
-          class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
+      <!-- Illustration + Morning Summary share this wrapper (added 2026-08-07,
+           human-requested) purely so the trace-line SVG below has one common
+           `position: relative` ancestor to draw across — they were previously
+           two independent grid siblings with a gap between them, which an
+           absolutely-positioned line can't span without knowing exact
+           cross-column pixel offsets. `lg:col-span-2 lg:grid-cols-2` at the
+           OUTER 3-col grid's own lg breakpoint reproduces the identical
+           visual layout as before (still effectively 3 equal-width columns
+           at lg — this wrapper just internally re-splits its own 2/3 share
+           into the same two panels), so this is a structural change for the
+           trace line's benefit, not a visual one. Below lg it's a plain
+           single-column stack, same as before. -->
+      <div class="relative grid gap-6 lg:col-span-2 lg:grid-cols-2" data-tablet-trace>
+        <!-- Illustration: anonymous maintenance lead, faceless/seen-from-behind,
+             checking an abstract dashboard on a factory floor (no photo of a
+             real person — docs/IMAGE_ASSETS.md item 4). mx-auto + max-w-sm below
+             lg: this grid is single-column until lg (same breakpoint as the
+             Overnight Impact/Morning Summary cards either side of it), so
+             without a cap the square image stretched to the full row width —
+             on a tablet-width viewport (e.g. iPad portrait) that's a
+             near-viewport-height image (human-requested, 2026-07-30). At lg
+             the column itself is already narrow enough, so the cap is lifted.
+             data-trace-start: the trace line's own start point is computed
+             from THIS element's rect (below), not a hardcoded pixel value —
+             see the script's own comment for why. -->
+        <div
+          class="mx-auto w-full max-w-sm overflow-hidden rounded-xl border border-white/10 bg-gradient-to-b from-navy-800/60 to-navy-900 lg:max-w-none"
+          data-trace-start
         >
-          See the dashboard →
-        </a>
+          <Image
+            src={maintenanceLead}
+            alt="A maintenance lead, seen from behind with no identifiable face, checking an abstract glowing dashboard on a tablet on a factory floor at night."
+            widths={[320, 480]}
+            sizes="(min-width: 1024px) 33vw, 90vw"
+            class="aspect-square w-full object-cover"
+          />
+        </div>
+
+        <!-- Morning Summary. CTA deliberately reads "See the dashboard" rather than the
+             site's standard "See it in action" (human review, 2026-07-23) — this one
+             button mirrors the exact action the maintenance lead takes in the story
+             beat above it, an intentional one-off exception to the settled two-verb
+             CTA label, not a new third verb introduced sitewide. justify-center
+             for the same reason as the Overnight Impact card: keeps content
+             centered in the taller, photo-driven row instead of top-pinned. -->
+        <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
+          <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
+          <div class="mt-4 flex items-center gap-3">
+            <!-- data-trace-end: the line's arrival point. This badge is what
+                 the trace visually "delivers" the tablet's data into. -->
+            <span
+              class="inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400"
+              data-trace-end
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </span>
+            <p class="text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
+          </div>
+          <a
+            href={withBase('/product')}
+            class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
+          >
+            See the dashboard →
+          </a>
+        </div>
+
+        <!-- Watch Dogs 2-style data trace (human-requested, 2026-08-07: "that
+             kind of watchdogs 2 white tracing line", same reticle family as
+             Hero.astro's target-lock corners — white, self-drawing, Apple-
+             sophisticated rather than glitch/scan-line). Desktop-only: below
+             lg the two panels stack vertically in one column and read fine on
+             their own without a connecting line; the line's whole point is
+             showing a spatial relationship that only exists once they're
+             side-by-side. Coordinates are set by the script below via
+             getBoundingClientRect on data-trace-start/data-trace-end, not
+             hardcoded percentages — a hardcoded guess can't account for the
+             two panels' own heights differing (the image is a fixed square,
+             the card's height is content-driven) or for the wrapper resizing
+             between lg and 2xl. */ -->
+        <svg class="tablet-trace hidden lg:block" data-trace-svg aria-hidden="true">
+          <line data-trace-line pathLength="1" x1="0" y1="0" x2="0" y2="0" />
+          <circle data-trace-start-dot r="3" cx="0" cy="0" />
+        </svg>
       </div>
     </div>
 
@@ -206,6 +238,91 @@ const defaultDays = (defaultMonthlySavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
     } else {
       // No IntersectionObserver support — skip straight to the settled end state.
       timeline.classList.add('is-playing');
+    }
+  });
+
+  // Tablet-to-Morning-Summary trace line — a separate listener, not folded
+  // into the one above, since it targets a different element and has no
+  // dependency on the timeline's own reveal. Computed via
+  // getBoundingClientRect rather than hardcoded percentages: the two panels
+  // it connects have different heights (the illustration is a fixed square,
+  // the Morning Summary card's height is content-driven), so a straight
+  // percentage-of-wrapper guess can't land on both the tablet's actual glow
+  // point and the badge's actual center at once, and would drift further
+  // wrong at 2xl where the wrapper itself is wider.
+  document.addEventListener('astro:page-load', () => {
+    const wrapper = document.querySelector<HTMLElement>('[data-tablet-trace]');
+    const svg = wrapper?.querySelector<SVGSVGElement>('[data-trace-svg]');
+    const line = wrapper?.querySelector<SVGLineElement>('[data-trace-line]');
+    const startDot = wrapper?.querySelector<SVGCircleElement>('[data-trace-start-dot]');
+    const startEl = wrapper?.querySelector<HTMLElement>('[data-trace-start]');
+    const endEl = wrapper?.querySelector<HTMLElement>('[data-trace-end]');
+    if (!wrapper || !svg || !line || !startDot || !startEl || !endEl) return;
+
+    function layout() {
+      const wrapperRect = wrapper!.getBoundingClientRect();
+      const startRect = startEl!.getBoundingClientRect();
+      const endRect = endEl!.getBoundingClientRect();
+
+      // Tablet glow point (corrected 2026-08-07 — human-reported: the line
+      // was starting from a machine in the background, not the tablet). The
+      // original 80%/40% guess was the single brightest PIXEL in the source
+      // photo, which turned out to be an isolated stray highlight elsewhere
+      // in the scene — a real screen glow is a coherent bright AREA, not one
+      // pixel. Block-averaging brightness across the image instead (scripts/
+      // one-off analysis, not run at build time) found a clear cluster of
+      // bright pixels around 50%/56% — center-ish, waist-height — which also
+      // just makes more physical sense for a tablet held by a person seen
+      // from behind than a point 80% over toward the frame's edge.
+      const startX = startRect.left - wrapperRect.left + startRect.width * 0.5;
+      const startY = startRect.top - wrapperRect.top + startRect.height * 0.56;
+
+      // End point: the circle's EDGE closest to the line's start, not its
+      // center (human-reported, 2026-08-07 — the line was piercing through
+      // to the middle of the badge instead of stopping at its border). Pull
+      // the raw center-point back along the start→center direction by
+      // exactly the circle's own radius, so the line always lands flush on
+      // the ring regardless of the angle it's approaching from.
+      const centerX = endRect.left - wrapperRect.left + endRect.width / 2;
+      const centerY = endRect.top - wrapperRect.top + endRect.height / 2;
+      const radius = endRect.width / 2;
+      const dx = centerX - startX;
+      const dy = centerY - startY;
+      const dist = Math.hypot(dx, dy) || 1;
+      const endX = centerX - (dx / dist) * radius;
+      const endY = centerY - (dy / dist) * radius;
+
+      svg!.setAttribute('width', String(wrapperRect.width));
+      svg!.setAttribute('height', String(wrapperRect.height));
+      svg!.setAttribute('viewBox', `0 0 ${wrapperRect.width} ${wrapperRect.height}`);
+      line!.setAttribute('x1', String(startX));
+      line!.setAttribute('y1', String(startY));
+      line!.setAttribute('x2', String(endX));
+      line!.setAttribute('y2', String(endY));
+      startDot!.setAttribute('cx', String(startX));
+      startDot!.setAttribute('cy', String(startY));
+    }
+
+    layout();
+    window.addEventListener('resize', layout);
+
+    if (wrapper.classList.contains('is-traced')) return;
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              layout(); // recompute right before reveal in case layout shifted since page load
+              wrapper.classList.add('is-traced');
+              observer.disconnect();
+            }
+          }
+        },
+        { threshold: 0.4 }
+      );
+      observer.observe(wrapper);
+    } else {
+      wrapper.classList.add('is-traced');
     }
   });
 </script>
@@ -398,6 +515,52 @@ const defaultDays = (defaultMonthlySavings / OVERNIGHT_IMPACT_EUR).toFixed(1);
       background-color: var(--color-success-400);
       box-shadow: 0 0 10px 3px color-mix(in srgb, var(--color-success-400) 60%, transparent);
       transform: scale(1);
+    }
+  }
+
+  /* Tablet → Morning Summary trace line (human-requested, 2026-08-07 —
+     same "Watch Dogs 2, but Apple-sophisticated" reticle family as
+     Hero.astro's target-lock corners: white, self-drawing via
+     pathLength="1" + stroke-dashoffset, no scan-line/glitch effect).
+     x1/y1/x2/y2 are set by the script above from real getBoundingClientRect
+     measurements — this block only owns the drawn-in *look*, not the
+     geometry. overflow: visible on the wrapper isn't needed since the line
+     stays fully inside the wrapper's own box by construction (both
+     endpoints are measured relative to it). */
+  .tablet-trace {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .tablet-trace line {
+    stroke: #fff;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
+    transition: stroke-dashoffset var(--dur-slow) var(--ease-ios);
+  }
+  /* A small dot marks the tablet's own glow point, arriving just after the
+     line finishes drawing rather than at the same instant — "here's where
+     it started" reads as a beat that follows the line, not a simultaneous
+     flash competing with it for attention. */
+  .tablet-trace circle {
+    fill: #fff;
+    opacity: 0;
+    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+    transition: opacity var(--dur-base) var(--ease-ios) var(--dur-slow);
+  }
+  [data-tablet-trace].is-traced .tablet-trace line {
+    stroke-dashoffset: 0;
+  }
+  [data-tablet-trace].is-traced .tablet-trace circle {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tablet-trace line,
+    .tablet-trace circle {
+      transition: none;
     }
   }
 </style>

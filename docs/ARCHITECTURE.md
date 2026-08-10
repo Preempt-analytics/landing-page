@@ -182,9 +182,11 @@ walkthrough where immediate reflection matters, either manually fire this repo's
 
 **Nav** — kept from "corporate" wholesale (explicit instruction: keep corporate's copy/framing):
 - Logo: "Preempt Analytics" wordmark + triangle/A icon (placeholder — see open items).
-- Links, exact order (capitalization fixed 2026-07-28; adapted from corporate's
-  generic SaaS labels to what this project actually has to show): `Product ·
-  How It Works · Solutions · Tech Stack · Project & Team`.
+- Links, exact order (capitalization fixed 2026-07-28; first label changed
+  `Product` → `Dashboard` 2026-08-07, human-requested; adapted from
+  corporate's generic SaaS labels to what this project actually has to
+  show): `Dashboard · How It Works · Solutions · Tech Stack · Project &
+  Team`.
   `Resources`/`Company` (generic B2B-SaaS placeholders) became `Tech Stack` and
   `Project & Team` since this is a capstone project site, not a company with generic
   resources/company pages — `Tech Stack` can point at the real MLflow/DagsHub/XGBoost/
@@ -437,7 +439,7 @@ ChatGPT-generated dashboard image, `ChatGPT Image Jul 20, 2026, 05_08_05 PM.png`
 Same process as the hero: merge into one spec, flag trust/consistency issues the
 same way the hero's fake-logo-strip and stat-tile-coloring issues were caught.
 
-Page order below matches the settled nav order (`Product · How It Works ·
+Page order below matches the settled nav order (`Dashboard · How It Works ·
 Solutions · Tech Stack · Project & Team`) so that anchor-link clicks always jump
 forward down the page.
 

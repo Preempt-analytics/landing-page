@@ -358,32 +358,27 @@ is treated as the share of that cost avoided. That is the *only* multiplier
 in the formula; no second, invented percentage is stacked on top of it.
 
 `OVERNIGHT_IMPACT_EUR` (the €24,300 one-night figure) is defined once here,
-not inline in `UserStory.astro`, so the calculator's "≈ N days like the one
-above, every month" line can divide by the exact same number
-`UserStory.astro` displays — the two can't drift apart into two different
-"one night" figures. It says "days", not "nights": the thing being counted
-is a prevented-failure event, which isn't inherently nocturnal even though
-this particular example is.
+not inline in `UserStory.astro`, so if a future change re-introduces a
+second place that quotes "one night's impact," both read the same number
+instead of drifting apart into two different figures.
 
-**The cross-component wiring, not just the shared constant:**
-`SavingsCalculator.astro`'s client script updates its own slider's output
-elements *and* reaches outside its own section to update
-`UserStory.astro`'s `[data-savings-days]` span, live, on every `input`
-event — the two components only work together because both render on the
-same page (`index.astro`) in the same DOM. `UserStory.astro` also computes
-that span's *initial* value at build time (using `SAVINGS_SLIDER.default`),
-so the line is correct even before the client script runs or if it fails.
-Because the calculator now renders *after* UserStory, UserStory's own line
-reads as a forward invitation ("try your own numbers in the calculator
-below ↓"), not a backward claim about a cost the visitor already set —
-worth preserving if either component moves again.
+**No more cross-component DOM wiring (removed 2026-08-07):** an earlier
+version had `SavingsCalculator.astro`'s client script reach outside its own
+section to live-update a "≈ N days like this, every month" figure inside
+`UserStory.astro`'s Overnight Impact card, via a shared `[data-savings-days]`
+hook. Human-requested removal — the linked stat read as confusing rather
+than illuminating for an average visitor. `UserStory.astro` now just links
+forward to the calculator ("try your own numbers in the calculator below
+↓") with no figure of its own to keep in sync; `SavingsCalculator.astro`
+lost the parallel "≈ N days like the one above" line the same way. If a
+similar cross-component live-updated figure is added back later, restore
+that DOM-hook discipline rather than reinventing it ad hoc.
 
 | Field | Controls | If changed without updating dependents |
 |---|---|---|
-| `OVERNIGHT_IMPACT_EUR` | The calculator's "days like this" math, and (via `formatEur`) the €-figure `UserStory.astro`'s Overnight Impact card displays | The two components' "one night" figures silently diverge |
-| `SAVINGS_SLIDER` (`min`/`max`/`step`/`default`) | The slider's range and `UserStory.astro`'s server-rendered default "days" value | A changed `default` without re-reading it in `UserStory.astro` leaves that card's initial value inconsistent with the calculator's own starting position |
-| `estimateMonthlySavings()` | Both components' savings math | Diverging formulas between the calculator and the card |
-| `[data-savings-days]` (data attribute, not an export) | Which DOM node `SavingsCalculator.astro`'s script reaches into `UserStory.astro` to update | Renaming/removing it in one file without the other silently stops the live update (the build still succeeds — this fails quietly, not loudly) |
+| `OVERNIGHT_IMPACT_EUR` | (via `formatEur`) the €-figure `UserStory.astro`'s Overnight Impact card displays | `UserStory.astro`'s "one night" figure goes stale relative to the constant |
+| `SAVINGS_SLIDER` (`min`/`max`/`step`/`default`) | The slider's range and starting position | N/A — no other file reads this anymore |
+| `estimateMonthlySavings()` | The calculator's own savings math | N/A — no other file reads this anymore |
 
 Like the Overnight Impact card itself, every number this calculator shows is
 illustrative and must keep saying so (Danger Zones) — it estimates, it does
@@ -405,7 +400,7 @@ not quote a price.
 | Touch `.github/workflows/deploy.yml` | Still fails open if `DAGSHUB_TOKEN` is unset? Still only one workflow (§6's "why one, not two")? |
 | Add/flip a `/product` dashboard panel | Registry entry (`dashboard.ts`) **and** a matching branch/asset in `ProductPreview.astro` updated in the same change (Contract 5)? |
 | Re-record `live-machines.json` | Ran `scripts/record-live-machines.py` (never hand-edited)? Frame arity still matches `_meta.fields`? No drift/export flags used (Contract 6)? |
-| Edit `src/lib/savings.ts` or the `[data-savings-days]` hook | `SavingsCalculator.astro` **and** `UserStory.astro` both updated in the same change (Contract 7)? |
+| Edit `src/lib/savings.ts` | `SavingsCalculator.astro` **and** `UserStory.astro` both updated in the same change if the constant they share changes (Contract 7)? |
 
 ---
 

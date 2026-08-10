@@ -744,6 +744,22 @@ const ICONS: Record<string, string> = {
         ftype: F.indexOf('failure_type'),
       };
 
+      // The recording's own failure_type values are the AI4I 2020 dataset's
+      // short codes (human-requested follow-up, 2026-08-07 — "PWF · 77.3%"
+      // read as cryptic next to the plain-English rest of the panel). Spelled
+      // out here rather than in the recorder/fixture: the fixture is real
+      // recorded model output (Contract 6) and shouldn't carry display copy,
+      // and these are the same four real classes/names Hero.astro's own
+      // failure-mode markers already use — RNF has no entry on purpose, same
+      // reasoning as Hero.astro's markers (no predictable sensor signature,
+      // so it never gets a name here either, just the generic fallback below).
+      const FAILURE_TYPE_LABELS: Record<string, string> = {
+        pwf: 'Power Failure',
+        twf: 'Tool Wear Failure',
+        hdf: 'Heat Dissipation Failure',
+        osf: 'Overstrain Failure',
+      };
+
       const steps = rec.machines[0].frames.length;
       const startMs = new Date(rec._meta.started_at).getTime();
       const TEAL = 'var(--color-teal-400)';
@@ -840,8 +856,9 @@ const ICONS: Record<string, string> = {
         }
         if (status) {
           const ftype = cur[COL.ftype];
+          const label = ftype ? FAILURE_TYPE_LABELS[String(ftype)] : undefined;
           status.textContent = flagged
-            ? `Predicted failure${ftype ? ` · ${String(ftype).toUpperCase()}` : ''} · ${pct(Number(cur[COL.prob]))}`
+            ? `${label ?? 'Predicted failure'} · ${pct(Number(cur[COL.prob]))}`
             : `Normal · ${pct(Number(cur[COL.prob]))}`;
           status.style.color = flagged ? ALERT : TEAL;
         }
