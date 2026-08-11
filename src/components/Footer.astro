@@ -18,7 +18,22 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
   transition:name="site-footer"
 >
   <div class="mx-auto max-w-7xl px-5 py-14 md:px-8">
-    <div class="grid gap-10 md:grid-cols-3">
+    <!-- divide-y (mobile-only, human-requested, 2026-08-11 — Krug-style
+         scannability pass): below md the three columns stack as plain
+         siblings with nothing marking where one ends and the next begins,
+         reading as one long undifferentiated block rather than three
+         distinct groups. `divide-y` puts a hairline border-top on every
+         child except the first — exactly "between stacked sections, not
+         above the first one" — reusing the same border-white/5 hairline
+         already used sitewide (this footer's own top border, every
+         section's border-t) rather than a one-off color (Contract 4).
+         `md:divide-y-0` turns it off once the grid becomes three real
+         side-by-side columns, where a top border on column 2/3 would be
+         meaningless. Order (Team → Links → About) is untouched — a
+         CSS-order-based visual reshuffle was considered and turned down
+         specifically because it would leave screen-reader/keyboard tab
+         order silently mismatched from what's visually first. -->
+    <div class="grid gap-10 divide-y divide-white/5 md:grid-cols-3 md:divide-y-0">
       <!-- Team -->
       <div>
         <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">

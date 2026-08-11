@@ -100,7 +100,18 @@ const impact = [
            settles in 480ms later) so the two payoff cards still cascade
            rather than popping in simultaneously. -->
       <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
-        <div class="reveal-story reveal-story--delayed" data-overnight-impact>
+        <!-- mx-auto max-w-xs (human-requested, 2026-08-11): the outer card's
+             justify-center above only ever centered this block VERTICALLY —
+             horizontally it filled the card's full width, and since the
+             bullet list/footnotes are short phrases that don't need that
+             much room, the block read as flush-left with a slab of empty
+             space to its right rather than centered in the card. Text stays
+             left-aligned WITHIN this narrower block (unchanged — the bullet
+             list still "genuinely reads better left-aligned," see the
+             Morning Summary comment below for why that card, unlike this
+             one, also centers its text); only the block itself is now
+             centered as a unit. -->
+        <div class="reveal-story reveal-story--delayed mx-auto w-full max-w-xs" data-overnight-impact>
           <div class="mb-4">
             <h3 class="text-lg font-semibold text-offwhite">Overnight Impact</h3>
             <span class="mt-2 inline-flex rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
@@ -464,8 +475,6 @@ const impact = [
 </script>
 
 <style>
-
-
   /* Morning Summary's own sequenced reveal (human-requested, 2026-08-11,
      replacing a first pass that faded the whole card in as one flat block —
      which itself replaced an earlier infinite gray/black shimmer sweep that
@@ -574,8 +583,11 @@ const impact = [
 
   /* CTA arrives last, and is the one stage that gets --ease-spring — see
      the comment above on why the rest of this sequence deliberately stays
-     off it. */
+     off it. position/overflow here are for the glint pseudo-element below,
+     not the entrance animation. */
   .ms-cta {
+    position: relative;
+    overflow: hidden;
     animation: ms-cta-in 420ms var(--ease-spring) both;
     animation-play-state: paused;
     animation-delay: 1450ms;
@@ -584,9 +596,53 @@ const impact = [
     0% { opacity: 0; transform: translateY(10px) scale(0.92); }
     100% { opacity: 1; transform: translateY(0) scale(1); }
   }
+  /* Gentle shimmer (human-requested, 2026-08-11) — a soft diagonal glint
+     gliding across the glass surface roughly every 5.5s, not a continuous
+     scan: this card's OWN comment above already documents rejecting that
+     once — an earlier infinite gray/black shimmer sweep read as a loading
+     skeleton, not a resolved payoff, and leaned on raw hex instead of
+     Contract 4 tokens. Long holds at each end of the keyframe (0-55% held
+     off-screen left, 85-100% held off-screen right) are what make this
+     read as an occasional gleam rather than a scanner. A `::after` layers
+     the highlight OVER the existing glass fill and teal-300 text rather
+     than repeating the earlier attempt's text-fill-color trick, so neither
+     needs to change. overflow:hidden on .ms-cta above clips the sweep to
+     the button's own rounded corners; pointer-events:none keeps it from
+     ever intercepting the click. Starts at 1870ms — 1450ms entrance delay
+     + 420ms entrance duration — so it only begins once the button has
+     actually finished popping in, gated by the same play-state trigger as
+     the rest of this sequence rather than its own independent timer. */
+  .ms-cta::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 42%,
+      color-mix(in srgb, var(--color-offwhite) 35%, transparent) 50%,
+      transparent 58%
+    );
+    pointer-events: none;
+    /* backwards: without it, the ~1870ms delay before the first sweep has
+       no fill-mode telling the browser what to render meanwhile, so it
+       falls through to the un-animated default — transform: none, i.e. the
+       gradient sitting statically dead-center on the button — which is
+       exactly the "grey smudge that clears up after a moment" bug this
+       fixed (human-reported, 2026-08-11). `backwards` applies the 0%
+       keyframe's translateX(-130%) for the whole delay, so it stays
+       off-screen and invisible until the real sweep actually starts. */
+    animation: ms-cta-shimmer 5.5s var(--ease-ios-in-out) infinite backwards;
+    animation-play-state: paused;
+    animation-delay: 1870ms;
+  }
+  @keyframes ms-cta-shimmer {
+    0%, 55% { transform: translateX(-130%); }
+    85%, 100% { transform: translateX(130%); }
+  }
   [data-timeline].is-story-complete ~ .mt-16 .ms-heading,
   [data-timeline].is-story-complete ~ .mt-16 .ms-badge,
-  [data-timeline].is-story-complete ~ .mt-16 .ms-cta {
+  [data-timeline].is-story-complete ~ .mt-16 .ms-cta,
+  [data-timeline].is-story-complete ~ .mt-16 .ms-cta::after {
     animation-play-state: running;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -594,9 +650,33 @@ const impact = [
     .ms-badge,
     .ms-check-path,
     .subtitle-line,
-    .ms-cta {
+    .ms-cta,
+    .ms-cta::after {
       animation: none;
       transition: none;
+    }
+  }
+
+  /* No staggered cascade below lg (human-requested, 2026-08-11) — the
+     5-stage sequence above (badge/heading, checkmark, "No incidents.",
+     "Model upgraded overnight.", CTA, ~1.9s end to end) reads as considered
+     on a wide desktop card but as sluggish on a phone, where the visitor has
+     already waited through the timeline's own 4.5s animation and just wants
+     the payoff. Zeroing every stage's delay — not disabling the animations
+     outright, unlike the reduced-motion block above — keeps each element's
+     own fade/rise/flicker, they just all play at once instead of in
+     sequence: one simultaneous reveal rather than a multi-second cascade.
+     `lg` matches every other mobile/desktop split in this file (the trace
+     line and its reticle are also lg-only) rather than introducing a new
+     breakpoint. */
+  @media (max-width: 1023px) {
+    .subtitle-line--1,
+    .subtitle-line--2,
+    .ms-cta {
+      animation-delay: 0ms;
+    }
+    .ms-check-path {
+      transition: stroke-dashoffset 420ms var(--ease-ios);
     }
   }
 
@@ -927,6 +1007,14 @@ const impact = [
     .reveal-story {
       transition: opacity var(--dur-fast) linear, visibility 0s linear var(--dur-fast);
     }
+    [data-timeline].is-story-complete ~ .mt-16 .reveal-story--delayed {
+      transition-delay: 0s;
+    }
+  }
+  /* No stagger below lg either (human-requested, 2026-08-11, same reasoning
+     as Morning Summary's own no-cascade override above) — Overnight Impact
+     lands together with Morning Summary instead of ~2s behind it. */
+  @media (max-width: 1023px) {
     [data-timeline].is-story-complete ~ .mt-16 .reveal-story--delayed {
       transition-delay: 0s;
     }

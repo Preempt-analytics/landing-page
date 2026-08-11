@@ -98,23 +98,49 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     // change which side actually has room; `.info-tip-pop` stays in normal
     // flow with `visibility: hidden` rather than `display: none` (see style
     // block), so its real height is measurable even while closed.
-    const FLIP_MARGIN = 16;
+    //
+    // Same pass also corrects horizontal overflow (mobile-audit follow-up,
+    // 2026-08-11): every data-pos variant anchors the popover to the
+    // TRIGGER's own position (its edge, or a %-based center on its tiny
+    // ~18px box) — correct relative to the trigger, but blind to the
+    // viewport. A trigger that sits close to either edge — Benefits.astro's
+    // corner eco-leaf, MlopsSystem's row-end "Built with"/"Powered by" info
+    // icons, both `position="end"` — can still push the ~17rem-wide popover
+    // past that edge; confirmed on a real phone, not just in theory. Rather
+    // than re-deriving which of the five data-pos variants is "safe" at
+    // which breakpoint, this measures the popover's OWN resting rect (valid
+    // even while `visibility: hidden` — same reasoning as `pop.offsetHeight`
+    // above) and nudges it back on-screen by whatever it's actually short,
+    // regardless of which CSS rule produced that resting position.
+    const EDGE_MARGIN = 16;
     document.querySelectorAll<HTMLElement>('.info-tip').forEach((tip) => {
       const pop = tip.querySelector<HTMLElement>('.info-tip-pop');
       if (!pop) return;
-      const updateFlip = () => {
+      const updatePosition = () => {
         const triggerRect = tip.getBoundingClientRect();
         const spaceBelow = window.innerHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
-        const fitsBelow = spaceBelow >= pop.offsetHeight + FLIP_MARGIN;
+        const fitsBelow = spaceBelow >= pop.offsetHeight + EDGE_MARGIN;
         if (!fitsBelow && spaceAbove > spaceBelow) {
           tip.setAttribute('data-flip', 'up');
         } else {
           tip.removeAttribute('data-flip');
         }
+
+        // Reset before measuring — otherwise a shift left over from this
+        // same tip's last open would be baked into the rect this reads.
+        pop.style.setProperty('--tip-shift-x', '0px');
+        const popRect = pop.getBoundingClientRect();
+        let shift = 0;
+        if (popRect.left < EDGE_MARGIN) {
+          shift = EDGE_MARGIN - popRect.left;
+        } else if (popRect.right > window.innerWidth - EDGE_MARGIN) {
+          shift = window.innerWidth - EDGE_MARGIN - popRect.right;
+        }
+        pop.style.setProperty('--tip-shift-x', `${shift}px`);
       };
-      tip.addEventListener('mouseenter', updateFlip);
-      tip.addEventListener('focusin', updateFlip);
+      tip.addEventListener('mouseenter', updatePosition);
+      tip.addEventListener('focusin', updatePosition);
     });
   });
 </script>
@@ -225,6 +251,18 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
        needing a combined [data-flip][data-pos] selector for each pairing. */
     --tip-ty: 2px;
     --tip-oy: top;
+    /* JS-measured horizontal safety net (2026-08-11 mobile-audit follow-up)
+       — see the script's own comment for why every data-pos variant, not
+       just the ones below `sm`, needed this. Deliberately the standalone
+       `translate` property, not folded into the `transform` function list
+       below: every data-pos variant already owns a different `transform`
+       (translateX(-50%) for centered ones, none for start/end), and
+       `translate`/`transform` compose independently per spec, so this one
+       rule reaches all of them without editing 10 separate declarations or
+       risking the transform-composition bug documented in
+       ANIMATION_SCRAPBOOK.md. Defaults to 0 — a no-op until the script sets
+       it. */
+    --tip-shift-x: 0px;
     position: absolute;
     left: 0;
     top: calc(100% + 8px);
@@ -243,9 +281,11 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     opacity: 0;
     visibility: hidden;
+    translate: var(--tip-shift-x) 0;
     transform: translateY(var(--tip-ty)) scale(0.97);
     transform-origin: var(--tip-oy) left;
-    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s linear var(--dur-base);
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios),
+      translate var(--dur-base) var(--ease-ios), visibility 0s linear var(--dur-base);
   }
   .info-tip:hover .info-tip-pop,
   .info-tip:focus-within .info-tip-pop {
@@ -257,7 +297,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
        a slight overshoot reads as delight on entry, but would look like a
        glitch on exit, so the hide direction (base .info-tip-pop rule above)
        stays on the plain --ease-ios curve. */
-    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring),
+      translate var(--dur-base) var(--ease-spring), visibility 0s;
   }
 
   /* The "gently growing" plant, living inside the eco popover itself (a
