@@ -13,20 +13,6 @@ const year = new Date().getFullYear();
 >
   <div class="mx-auto max-w-7xl px-5 py-14 md:px-8">
     <div class="grid gap-10 md:grid-cols-3">
-      <!-- About / capstone framing -->
-      <div>
-        <Logo class="mb-4" />
-        <p class="max-w-sm text-sm leading-relaxed text-muted">
-          Predictive maintenance for industrial equipment — a complete MLOps
-          pipeline: live sensor predictions, automated drift monitoring, and
-          self-triggering retraining.
-        </p>
-        <p class="mt-4 max-w-sm text-xs leading-relaxed text-muted/70">
-          A capstone project showcase built on <strong class="font-medium text-muted">simulated CNC sensor data</strong> —
-          not a live paying-customer deployment, yet.
-        </p>
-      </div>
-
       <!-- Team -->
       <div>
         <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
@@ -81,13 +67,18 @@ const year = new Date().getFullYear();
              Sovereignty & Privacy" standing protocol holds about the
              site's tooling/infra: default to European-hosted/operated
              wherever a real choice exists. Same icon technique as the
-             Kaggle credit above (generic abstracted glyph, stroke/fill via
-             currentColor, no third-party trademarked mark or one-off hex —
-             Contract 4) — twelve dots ringed like the EU flag's stars
-             rather than the flag's actual blue/gold, which would both
-             introduce a one-off color pair and imitate an official mark. -->
+             Kaggle credit above (generic abstracted glyph, fill via
+             currentColor, no third-party trademarked mark — Contract 4) —
+             twelve dots ringed like the EU flag's stars, in `--color-blue-500`
+             (human-requested follow-up, 2026-08-07: closer to the flag's own
+             blue than teal) — an existing site token already used elsewhere
+             (Hero.astro's eyebrow), not a new one-off hex, so this still
+             respects Contract 4 while nodding at the real flag color. Gold
+             stays out: the dataset icon's own reasoning (no one-off color
+             pair, no imitation of an official mark) still applies to that
+             part. -->
         <p class="mt-2 text-xs text-muted/60">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="mr-1.5 inline-block align-text-bottom text-teal-400">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="mr-1.5 inline-block align-text-bottom text-blue-500">
             <circle cx="12" cy="4" r="1.3" />
             <circle cx="16" cy="5.07" r="1.3" />
             <circle cx="18.93" cy="8" r="1.3" />
@@ -113,8 +104,19 @@ const year = new Date().getFullYear();
         </p>
       </div>
 
-      <!-- Links -->
-      <div>
+      <!-- Links — nudged right on desktop (human-requested, 2026-08-07):
+           a plain md:gap-x increase on the parent grid was tried first and
+           rejected — widening the gap also narrows every column's own
+           track to compensate, so it barely moved this column's actual
+           start position (the two effects mostly cancel out). A direct
+           margin on just this column and About's, below, moves them by
+           the exact pixel amount asked for, independent of track/gap math,
+           without touching Team's position at all. `lg:` not `md:` — the
+           3-col grid already starts at md (768px), where a column is only
+           ~200px wide before any margin; adding 4rem there would leave the
+           Links list cramped. lg (1024px+) has more room to spare and is
+           closer to what "desktop mode" means anyway. -->
+      <div class="lg:ml-16">
         <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
           Links
         </h2>
@@ -138,6 +140,23 @@ const year = new Date().getFullYear();
             <a href="#top" class="footer-link text-muted hover:text-offwhite">Back to top ↑</a>
           </li>
         </ul>
+      </div>
+
+      <!-- About / capstone framing — rightmost column (human-requested,
+           2026-08-07): was the leftmost column originally; Team and Links
+           each moved up one slot to fill in. Same lg:ml-16 rightward nudge
+           as the Links column above (see its comment). -->
+      <div class="lg:ml-16">
+        <Logo class="mb-4" />
+        <p class="max-w-sm text-sm leading-relaxed text-muted">
+          Predictive maintenance for industrial equipment — a complete MLOps
+          pipeline: live sensor predictions, automated drift monitoring, and
+          self-triggering retraining.
+        </p>
+        <p class="mt-4 max-w-sm text-xs leading-relaxed text-muted/70">
+          A capstone project showcase built on <strong class="font-medium text-muted">simulated CNC sensor data</strong> —
+          not a live paying-customer deployment, yet.
+        </p>
       </div>
     </div>
 
@@ -197,11 +216,24 @@ const year = new Date().getFullYear();
      taken here — it's what reads as "lit segment" rather than "printed
      text pretending to be an LED," but stays subtle enough for a footer
      credit line, not a hero moment. */
+  /* Gradient fill (human-requested follow-up, 2026-08-07: "a more modern
+     gradient color" than the flat teal-300) — three EXISTING tokens
+     (teal-300 → teal-400 → blue-500), not a new one-off pair, so this stays
+     inside Contract 4. `color: transparent` + `background-clip: text` is
+     what lets the gradient show through the glyph shapes instead of behind
+     them; `-webkit-` prefixes are still required for this in Safari. The
+     glow (`text-shadow`) is independent of fill color — it's drawn from the
+     glyph outlines regardless — so it keeps working unchanged on top of the
+     gradient instead of needing a separate glow-per-stop trick. */
   .led-readout {
     font-family: var(--font-led);
     font-size: 0.85em;
     letter-spacing: 0.08em;
-    color: var(--color-teal-300);
+    background: linear-gradient(90deg, var(--color-teal-300), var(--color-teal-400) 50%, var(--color-blue-500));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
     text-shadow: 0 0 6px color-mix(in srgb, var(--color-teal-400) 45%, transparent);
   }
 

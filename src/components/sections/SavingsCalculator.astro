@@ -179,13 +179,30 @@ function stageScale(opacity: number, baseScale: number) {
          script — this stays a self-contained inline script like every other
          one in this codebase. -->
     <div
-      class="mx-auto mt-12 max-w-4xl rounded-xl border border-white/10 bg-navy-800/40 p-6 sm:p-8"
+      class="relative z-0 mx-auto mt-12 max-w-4xl rounded-xl border border-white/10 bg-navy-800/40 p-6 sm:p-8"
       data-reveal
       data-savings-calc
       data-sc-recall={recall}
       data-sc-eur-per-tree={EUR_PER_TREE_EQUIVALENT}
       data-sc-max-trees={maxTrees}
     >
+      <!-- Ambient glow behind the whole card (human-requested, 2026-08-11 —
+           a calm, gently animated glow, same idea as a reference screenshot's
+           card-top glow but restyled to this site's own palette). Reuses the
+           shared `.hero-glow` breathing animation (global.css, already used
+           by Hero.astro/LiveFactory.astro and this file's own tree-clearing
+           glow below) rather than a new one-off animation — this is the 4th
+           usage of the same mechanism, not a new pattern. `relative z-0` on
+           the card above (not just `relative`) is what keeps this `-z-10`
+           layer contained behind the card instead of escaping to paint
+           behind unrelated page content further down — same fix as
+           LiveFactory's own `z-0` comment. -->
+      <div
+        class="hero-glow pointer-events-none absolute -inset-10 -z-10"
+        style="background: radial-gradient(50% 50% at 50% 0%, color-mix(in srgb, var(--color-teal-400) 20%, transparent), transparent 70%); animation-duration: 16s; filter: blur(24px);"
+        aria-hidden="true"
+      >
+      </div>
       <!-- Label + pill share a flex row (top-left / top-right) so the badge
            has its own slot in normal flow, same pattern as UserStory's
            Overnight Impact card header — nothing absolutely positioned, so

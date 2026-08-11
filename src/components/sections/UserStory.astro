@@ -19,7 +19,7 @@ const beats = [
   { time: '02:17 AM', title: 'Pipeline Triggered', body: 'The GitHub Actions pipeline kicks off automatically.' },
   { time: '02:28 AM', title: 'Model Retrained', body: 'A fresh model trains on the latest factory data.' },
   { time: '02:45 AM', title: 'Model Promoted', body: 'The new version beats the old one and goes live automatically.' },
-  { time: '08:47 AM', title: 'System Healthy', body: 'The maintenance lead opens the dashboard. No calls. No incidents.' },
+  { time: '06:47 AM', title: 'System Healthy', body: 'The maintenance lead opens the dashboard. No calls. No incidents.' },
 ];
 
 const impact = [
@@ -87,32 +87,45 @@ const impact = [
       <!-- Overnight Impact. justify-center: the center card's height is now driven
            by the maintenance-lead photo (taller than this card's own content), so
            this content is vertically centered in the stretched grid cell instead
-           of pinning to the top and leaving dead space below. -->
+           of pinning to the top and leaving dead space below.
+
+           Card shell always visible, content gated (human-requested,
+           2026-08-07 — same reasoning and same `.reveal-story` mechanism as
+           Morning Summary just below: this tally of what the night cost IS
+           the story's payoff too, not something that should be legible
+           while the timeline is still mid-incident). Staggered slightly
+           AFTER Morning Summary's own reveal (`.reveal-story--delayed`
+           here, plain `.reveal-story` there — reversed 2026-08-11,
+           human-requested: Morning Summary now lands first, this tally
+           settles in 480ms later) so the two payoff cards still cascade
+           rather than popping in simultaneously. -->
       <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
-        <div class="mb-4 flex items-center justify-between">
-          <h3 class="text-lg font-semibold text-offwhite">Overnight Impact</h3>
-          <span class="rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
-            Illustrative example
-          </span>
+        <div class="reveal-story reveal-story--delayed" data-overnight-impact>
+          <div class="mb-4">
+            <h3 class="text-lg font-semibold text-offwhite">Overnight Impact</h3>
+            <span class="mt-2 inline-flex rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
+              Illustrative example
+            </span>
+          </div>
+          <ul class="space-y-2.5">
+            {
+              impact.map((item) => (
+                <li class="flex items-start gap-2 text-sm text-muted">
+                  <svg class="mt-0.5 shrink-0 text-teal-400" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  {item}
+                </li>
+              ))
+            }
+          </ul>
+          <p class="mt-4 text-xs italic text-muted/60">
+            A walkthrough of one night — not aggregated customer data.
+          </p>
+          <p class="mt-3 border-t border-white/5 pt-3 text-xs text-muted">
+            Try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
+          </p>
         </div>
-        <ul class="space-y-2.5">
-          {
-            impact.map((item) => (
-              <li class="flex items-start gap-2 text-sm text-muted">
-                <svg class="mt-0.5 shrink-0 text-teal-400" width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                {item}
-              </li>
-            ))
-          }
-        </ul>
-        <p class="mt-4 text-xs italic text-muted/60">
-          A walkthrough of one night — not aggregated customer data.
-        </p>
-        <p class="mt-3 border-t border-white/5 pt-3 text-xs text-muted">
-          Try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
-        </p>
       </div>
 
       <!-- Illustration + Morning Summary share this wrapper (added 2026-08-07,
@@ -160,27 +173,80 @@ const impact = [
              CTA label, not a new third verb introduced sitewide. justify-center
              for the same reason as the Overnight Impact card: keeps content
              centered in the taller, photo-driven row instead of top-pinned. -->
+        <!-- Card shell (border/background/padding) stays visible at all
+             times, unlike the CONTENT inside it — human-requested follow-up,
+             2026-08-07: hiding the whole card left this grid cell empty
+             before the story resolves, breaking the always-3-panels
+             composition the Overnight Impact card and illustration keep up
+             their end of. Only `.reveal-story` (the inner wrapper just
+             below) answers to `[data-timeline].is-story-complete`; this
+             outer div is permanently part of the layout, exactly like its
+             two siblings. -->
         <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
-          <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
-          <div class="mt-4 flex items-center gap-3">
-            <!-- data-trace-end: the line's arrival point. This badge is what
-                 the trace visually "delivers" the tablet's data into. -->
-            <span
-              class="inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400"
-              data-trace-end
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
-              </svg>
-            </span>
-            <p class="text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
+          <!-- Held back until the timeline story actually resolves (human-
+               requested, 2026-08-07: "have it only appear after the last
+               light has passed into system healthy... hide the whole
+               morning summary and see the dashboard button until then") —
+               this content, and the tablet trace line, are the STORY'S
+               PAYOFF (the night's work resolving into "here's what
+               happened"), so showing them before System Healthy has even
+               flashed green undercuts the beat. `.reveal-story` starts
+               hidden (opacity/scale, not display:none — see <style> below)
+               and only answers to `[data-timeline].is-story-complete`, set
+               by the script below exactly when the timeline's own 4.5s
+               animation finishes (not on its own scroll-into-view — this
+               reveal isn't a separate story beat, it's the resolution of
+               the one above). -->
+          <!-- items-center text-center (human-requested, 2026-08-07: this
+               card "sits completely to the left instead of being centered or
+               making use of the card") — flex-col's own justify-center on
+               the outer card only ever centered these children VERTICALLY;
+               with no align-items set, they stretched full-width and their
+               text/inline content packed to the left edge by default,
+               reading as left-hugged rather than a balanced confirmation
+               card. Unlike Overnight Impact's bullet list (genuinely reads
+               better left-aligned), this content — a title, one short status
+               line, one CTA — is short and self-contained enough that
+               centering it uses the card's width instead of just occupying
+               its left edge. -->
+          <div class="reveal-story flex flex-col items-center text-center" data-morning-summary>
+            <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
+            <div class="mt-4 flex items-center gap-3">
+              <!-- data-trace-end: the line's arrival point. This badge is
+                   what the trace visually "delivers" the tablet's data into.
+                   relative z-10 (human-requested, 2026-08-07): the trace SVG
+                   is a later DOM sibling of the outer card (see
+                   data-trace-svg below), so without an explicit z-index here
+                   it painted OVER this badge's own ring regardless of how
+                   precisely the line's endpoint math stopped at the circle's
+                   edge — DOM order, not geometry, was deciding paint order.
+                   A positioned element with an explicit z-index always
+                   outranks a sibling left at the default z-index:auto,
+                   independent of DOM order, so this alone is enough to put
+                   the badge back on top without touching the SVG's own
+                   stacking at all. -->
+              <span
+                class="relative z-10 inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400"
+                data-trace-end
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+              <p class="text-left text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
+            </div>
+            <!-- Glassmorphic, not the site's usual solid-teal CTA
+                 (human-requested, 2026-08-07: "more modern button style" —
+                 picked from a set of concrete options). Deliberately a
+                 one-off .btn-glass rather than a new Button.astro variant:
+                 this button is already a one-off exception to the site's
+                 two-verb CTA system (see the markup comment on this card
+                 above), so a matching one-off visual treatment doesn't
+                 introduce a third pattern other CTAs might reach for. */ -->
+            <a href={withBase('/product')} class="btn-glass mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold">
+              See the dashboard →
+            </a>
           </div>
-          <a
-            href={withBase('/product')}
-            class="mt-6 inline-flex items-center justify-center gap-2 rounded-lg bg-teal-400 px-5 py-2.5 text-sm font-semibold text-navy-950 transition-colors hover:bg-teal-300"
-          >
-            See the dashboard →
-          </a>
         </div>
 
         <!-- Watch Dogs 2-style data trace (human-requested, 2026-08-07: "that
@@ -195,10 +261,29 @@ const impact = [
              hardcoded percentages — a hardcoded guess can't account for the
              two panels' own heights differing (the image is a fixed square,
              the card's height is content-driven) or for the wrapper resizing
-             between lg and 2xl. */ -->
+             between lg and 2xl.
+
+             Pushed further "Watch Dogs 2" (human-requested follow-up,
+             2026-08-07) with the two things that actually read as a live data
+             trace rather than a plain connector line: a corner-bracket lock
+             at the tablet end (data-trace-reticle — identical technique to
+             Hero.astro's own target-lock corners, reused rather than
+             reinvented, now that it's a documented pattern in
+             ANIMATION_SCRAPBOOK.md) and a small dot that continuously travels
+             the line once it's drawn (data-trace-pulse), the same "data/
+             energy flowing" cue as the scrapbook's traveling-dot entry. The
+             badge end doesn't get its own bracket — its existing circular
+             border already reads as a lock-on target, a second bracket there
+             would be redundant. -->
         <svg class="tablet-trace hidden lg:block" data-trace-svg aria-hidden="true">
           <line data-trace-line pathLength="1" x1="0" y1="0" x2="0" y2="0" />
-          <circle data-trace-start-dot r="3" cx="0" cy="0" />
+          <g class="tablet-trace-reticle" data-trace-reticle>
+            <path pathLength="1" d="M-10 -3V-10H-3" />
+            <path pathLength="1" d="M3 -10H10V-3" />
+            <path pathLength="1" d="M10 3V10H3" />
+            <path pathLength="1" d="M-3 10H-10V3" />
+          </g>
+          <circle class="tablet-trace-pulse" data-trace-pulse r="2.5" />
         </svg>
       </div>
     </div>
@@ -222,12 +307,29 @@ const impact = [
     const timeline = document.querySelector<HTMLElement>('[data-timeline]');
     if (!timeline || timeline.classList.contains('is-playing')) return;
 
+    // The Morning Summary card + tablet trace line are the story's PAYOFF,
+    // not an independent beat — they shouldn't appear until System Healthy
+    // has actually resolved (human-requested, 2026-08-07). `story-complete`
+    // (a plain DOM CustomEvent, not a shared module import — this file's
+    // two <script> blocks are two independent inline scripts, no bundler
+    // graph connects them) is what the trace-line script below listens for
+    // instead of triggering on its own separate scroll-into-view. 4500ms
+    // matches the timeline's own documented total run (see .timeline-glow's
+    // comment) — if that schedule ever changes, this needs to move with it.
+    function play() {
+      timeline!.classList.add('is-playing');
+      window.setTimeout(() => {
+        timeline!.classList.add('is-story-complete');
+        timeline!.dispatchEvent(new CustomEvent('story-complete', { bubbles: true }));
+      }, 4500);
+    }
+
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
             if (entry.isIntersecting) {
-              timeline.classList.add('is-playing');
+              play();
               observer.disconnect();
             }
           }
@@ -236,28 +338,34 @@ const impact = [
       );
       observer.observe(timeline);
     } else {
-      // No IntersectionObserver support — skip straight to the settled end state.
-      timeline.classList.add('is-playing');
+      // No IntersectionObserver support — skip the travel/dot-flash
+      // animation, but still fire story-complete on the same schedule so
+      // the Morning Summary reveal and trace line stay consistent rather
+      // than either never appearing or appearing with no story at all.
+      play();
     }
   });
 
   // Tablet-to-Morning-Summary trace line — a separate listener, not folded
-  // into the one above, since it targets a different element and has no
-  // dependency on the timeline's own reveal. Computed via
-  // getBoundingClientRect rather than hardcoded percentages: the two panels
-  // it connects have different heights (the illustration is a fixed square,
-  // the Morning Summary card's height is content-driven), so a straight
-  // percentage-of-wrapper guess can't land on both the tablet's actual glow
-  // point and the badge's actual center at once, and would drift further
-  // wrong at 2xl where the wrapper itself is wider.
+  // into the one above (different elements, different concerns), but
+  // sequenced by it: reveals only once the timeline's own 'story-complete'
+  // event fires (see that script's comment above), not on its own
+  // independent scroll trigger. Layout math is computed via
+  // getBoundingClientRect rather than hardcoded percentages — the two
+  // panels it connects have different heights (the illustration is a fixed
+  // square, the Morning Summary card's height is content-driven), so a
+  // straight percentage-of-wrapper guess can't land on both the tablet's
+  // actual glow point and the badge's actual center at once, and would
+  // drift further wrong at 2xl where the wrapper itself is wider.
   document.addEventListener('astro:page-load', () => {
     const wrapper = document.querySelector<HTMLElement>('[data-tablet-trace]');
     const svg = wrapper?.querySelector<SVGSVGElement>('[data-trace-svg]');
     const line = wrapper?.querySelector<SVGLineElement>('[data-trace-line]');
-    const startDot = wrapper?.querySelector<SVGCircleElement>('[data-trace-start-dot]');
+    const reticle = wrapper?.querySelector<SVGGElement>('[data-trace-reticle]');
+    const pulse = wrapper?.querySelector<SVGCircleElement>('[data-trace-pulse]');
     const startEl = wrapper?.querySelector<HTMLElement>('[data-trace-start]');
     const endEl = wrapper?.querySelector<HTMLElement>('[data-trace-end]');
-    if (!wrapper || !svg || !line || !startDot || !startEl || !endEl) return;
+    if (!wrapper || !svg || !line || !reticle || !pulse || !startEl || !endEl) return;
 
     function layout() {
       const wrapperRect = wrapper!.getBoundingClientRect();
@@ -299,31 +407,35 @@ const impact = [
       line!.setAttribute('y1', String(startY));
       line!.setAttribute('x2', String(endX));
       line!.setAttribute('y2', String(endY));
-      startDot!.setAttribute('cx', String(startX));
-      startDot!.setAttribute('cy', String(startY));
+      // Reticle is a <g> of fixed-shape corner paths — repositioning it is
+      // one `transform`, not four path-d recalculations.
+      reticle!.setAttribute('transform', `translate(${startX}, ${startY})`);
+      // offset-path takes the pulse dot along the SAME two points the visible
+      // line connects, kept in sync on every layout() call rather than drawn
+      // once — the line's own geometry can change (window resize, content
+      // reflow before the two panels' heights settle), and a stale offset-
+      // path would send the "data" dot gliding along a line that no longer
+      // matches what's actually drawn.
+      pulse!.style.offsetPath = `path("M ${startX} ${startY} L ${endX} ${endY}")`;
     }
 
     layout();
     window.addEventListener('resize', layout);
 
     if (wrapper.classList.contains('is-traced')) return;
-    if ('IntersectionObserver' in window) {
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (entry.isIntersecting) {
-              layout(); // recompute right before reveal in case layout shifted since page load
-              wrapper.classList.add('is-traced');
-              observer.disconnect();
-            }
-          }
-        },
-        { threshold: 0.4 }
-      );
-      observer.observe(wrapper);
-    } else {
-      wrapper.classList.add('is-traced');
-    }
+    // Reveals on the timeline's own 'story-complete' signal, not a separate
+    // IntersectionObserver — by the time that fires, the timeline has
+    // already been 40%-visible for 4.5s, so the panels below it are
+    // reliably in view too; this doesn't need its own visibility check on
+    // top of that, just the "wait for the story to finish" gate.
+    document.addEventListener(
+      'story-complete',
+      () => {
+        layout(); // recompute right before reveal in case layout shifted meanwhile
+        wrapper.classList.add('is-traced');
+      },
+      { once: true }
+    );
   });
 </script>
 
@@ -541,26 +653,154 @@ const impact = [
     filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.6));
     transition: stroke-dashoffset var(--dur-slow) var(--ease-ios);
   }
-  /* A small dot marks the tablet's own glow point, arriving just after the
-     line finishes drawing rather than at the same instant — "here's where
-     it started" reads as a beat that follows the line, not a simultaneous
-     flash competing with it for attention. */
-  .tablet-trace circle {
+  /* Corner-bracket "lock" on the tablet's own glow point — identical
+     technique to Hero.astro's target-lock reticle (four short paths,
+     pathLength="1" self-draw), reused rather than reinvented now that it's
+     documented in ANIMATION_SCRAPBOOK.md. Arrives just after the line
+     finishes drawing, not at the same instant — "here's where it started"
+     reads as a beat that follows the line, not a simultaneous flash
+     competing with it for attention. Positioned via the `<g>`'s own
+     `transform` (set in the script above), so these four paths keep fixed,
+     never-recalculated local coordinates regardless of where the tablet
+     point actually lands on screen. */
+  .tablet-trace-reticle path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    opacity: 0;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.7));
+    transition: stroke-dashoffset var(--dur-base) var(--ease-ios) var(--dur-slow),
+      opacity var(--dur-fast) var(--ease-ios) var(--dur-slow);
+  }
+  .tablet-trace-reticle path:nth-child(2) { transition-delay: calc(var(--dur-slow) + 40ms); }
+  .tablet-trace-reticle path:nth-child(3) { transition-delay: calc(var(--dur-slow) + 80ms); }
+  .tablet-trace-reticle path:nth-child(4) { transition-delay: calc(var(--dur-slow) + 120ms); }
+
+  /* The traveling pulse (human-requested follow-up, 2026-08-07 — "more
+     Watch Dogs 2 like"): a small dot gliding the line's own path on a slow
+     loop, the same "data/energy flowing" cue as this scrapbook's own
+     traveling-dot pattern (docs/ANIMATION_SCRAPBOOK.md, Path-based motion).
+     This — not just a static connector line — is the actual detail that
+     reads as "live data trace" rather than "a line was drawn between two
+     things." offset-path is set by the script above to match the line's
+     real x1/y1/x2/y2 exactly, so the dot never drifts off the visible
+     stroke. Starts only once the line/reticle have finished their own
+     draw-in (animation-delay stacks on top of --dur-slow the same way the
+     reticle's transition-delay does), and loops gently rather than racing
+     back and forth — an ambient "still syncing" read, not an alert. */
+  .tablet-trace-pulse {
     fill: #fff;
     opacity: 0;
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
-    transition: opacity var(--dur-base) var(--ease-ios) var(--dur-slow);
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.9));
   }
   [data-tablet-trace].is-traced .tablet-trace line {
     stroke-dashoffset: 0;
   }
-  [data-tablet-trace].is-traced .tablet-trace circle {
+  [data-tablet-trace].is-traced .tablet-trace-reticle path {
+    stroke-dashoffset: 0;
     opacity: 1;
+  }
+  [data-tablet-trace].is-traced .tablet-trace-pulse {
+    animation: tablet-trace-pulse-travel 2.6s var(--ease-ios-in-out) calc(var(--dur-slow) + 300ms) infinite;
+  }
+  @keyframes tablet-trace-pulse-travel {
+    0% { offset-distance: 0%; opacity: 0; }
+    8% { opacity: 1; }
+    92% { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 0; }
   }
   @media (prefers-reduced-motion: reduce) {
     .tablet-trace line,
-    .tablet-trace circle {
+    .tablet-trace-reticle path,
+    .tablet-trace-pulse {
       transition: none;
+      animation: none;
     }
+  }
+
+  /* Overnight Impact + Morning Summary content, both held back as the
+     story's payoff (see the markup comments on data-overnight-impact/
+     data-morning-summary above) — hidden via opacity+visibility, not
+     display:none, so each keeps occupying its own layout position
+     throughout (the trace line's own endpoint math depends on measuring
+     Morning Summary's real position even before it's visually revealed,
+     and hiding via display:none would also collapse Overnight Impact's
+     card down to just its own padding) and so Morning Summary's "See the
+     dashboard" link is genuinely unreachable — not just invisible — to
+     keyboard/screen-reader users until it actually appears: visibility,
+     unlike opacity alone, removes an element from both hit-testing and the
+     tab order. Fade + a gentle scale-up (--ease-spring, this project's own
+     "discovery moment" easing, reserved for exactly this kind of one-off
+     reveal rather than routine hovers) reads as the sleek/Apple-like arrival
+     asked for, not a static cut from invisible to visible. */
+  .reveal-story {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.96);
+    transition: opacity var(--dur-slow) var(--ease-ios), transform var(--dur-slow) var(--ease-spring),
+      visibility 0s linear var(--dur-slow);
+  }
+  [data-timeline].is-story-complete ~ .mt-16 .reveal-story {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    transition: opacity var(--dur-slow) var(--ease-ios), transform var(--dur-slow) var(--ease-spring), visibility 0s;
+  }
+  /* Overnight Impact staggers in after Morning Summary (human-requested
+     "stagger", order reversed 2026-08-11 — Morning Summary now lands
+     first, Overnight Impact settles in after) — both cards are the
+     story's payoff, but revealing them at the exact same instant read as
+     one flat event rather than two; an offset reads as a cascade instead.
+     480ms (an earlier pass tried 150ms, then 300ms, then 400ms — all in
+     the original Overnight-Impact-first order or before settling on the
+     final value; 150ms in particular read as simultaneous against the
+     650ms `--dur-slow` reveal, too small a fraction of the transition to
+     register as two beats). Same specificity as the rule above (one
+     attribute + three classes each), so this — coming later in source
+     order — only overrides the one longhand (transition-delay) it names,
+     inheriting duration/easing from the shorthand above rather than
+     needing to repeat the whole transition declaration. */
+  [data-timeline].is-story-complete ~ .mt-16 .reveal-story--delayed {
+    transition-delay: 480ms;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal-story {
+      transition: opacity var(--dur-fast) linear, visibility 0s linear var(--dur-fast);
+    }
+    [data-timeline].is-story-complete ~ .mt-16 .reveal-story--delayed {
+      transition-delay: 0s;
+    }
+  }
+
+  /* Glassmorphic CTA (human-requested, 2026-08-07 — "more modern button
+     style," picked from a set of concrete options). Translucent teal tint +
+     backdrop-blur instead of the site's usual solid-teal fill; text stays
+     light (teal-300) since the background is no longer opaque enough for
+     dark navy-950 text to read against it. Hover deepens the tint and adds
+     the site's own shared glow-shadow token (--shadow-glow-teal, same one
+     Button.astro's solid variant already uses) plus a small lift — kept
+     consistent with the rest of the site's hover language rather than
+     inventing a new one just for this button. */
+  .btn-glass {
+    background: color-mix(in srgb, var(--color-teal-400) 16%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid color-mix(in srgb, var(--color-teal-400) 40%, transparent);
+    color: var(--color-teal-300);
+    transition: background-color var(--dur-base) var(--ease-ios), border-color var(--dur-base) var(--ease-ios),
+      box-shadow var(--dur-base) var(--ease-ios), transform var(--dur-base) var(--ease-ios);
+  }
+  .btn-glass:hover {
+    background: color-mix(in srgb, var(--color-teal-400) 26%, transparent);
+    border-color: color-mix(in srgb, var(--color-teal-400) 65%, transparent);
+    box-shadow: var(--shadow-glow-teal);
+    transform: translateY(-2px);
+  }
+  .btn-glass:active {
+    transform: translateY(0) scale(0.97);
+    transition-duration: var(--dur-fast);
   }
 </style>
