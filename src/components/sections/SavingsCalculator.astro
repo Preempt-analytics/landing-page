@@ -164,7 +164,7 @@ function stageScale(opacity: number, baseScale: number) {
 <section id="savings-calculator" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
-      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">See what it's worth</p>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">Scenario: You are in charge of a factory</p>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
         What could this save you?
       </h2>
@@ -213,10 +213,18 @@ function stageScale(opacity: number, baseScale: number) {
           <!-- Plain-language aside (Redish-style: short, concrete, contrasts
                what it IS vs. what it ISN'T) for a label that's really asking
                visitors to do a bit of mental math before they can even use
-               the slider — what should they actually be adding up? -->
+               the slider — what should they actually be adding up? Extended
+               2026-08-11 with a rough €/month anchor (two illustrative
+               bands — a single line, a busier multi-shift line) for a
+               visitor who has no idea what number to pick; the top end reads
+               `max` rather than a hardcoded figure so it can't drift out of
+               sync with SAVINGS_SLIDER.max (savings.ts) if that ever
+               changes. -->
           <InfoTip label="What does this include?" position="start">
             Lost production, rushed repairs, idle staff — the real cost each time a machine breaks down without
-            warning. Not the routine maintenance you already budget for.
+            warning. Not the routine maintenance you already budget for. Not sure what to pick? A single line with
+            occasional stoppages usually costs €2,000–€10,000/month; a busier multi-shift line typically runs
+            €15,000–{formatEur(max)}/month. Start with whichever's closer, then adjust.
           </InfoTip>
         </label>
         <span class="inline-flex shrink-0 rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
@@ -238,6 +246,72 @@ function stageScale(opacity: number, baseScale: number) {
       <div class="mt-1.5 flex justify-between text-xs text-muted/60">
         <span>{formatEur(min)}</span>
         <span>{formatEur(max)}</span>
+      </div>
+
+      <!-- Downtime-cost context chips (human research, 2026-08-11) — defuses
+           big downtime-cost headlines a visitor may already have seen
+           elsewhere by showing where three widely-cited figures actually
+           sit, since most describe a different scale of operation than this
+           calculator's own {formatEur(min)}–{formatEur(max)}/month range.
+           Figures stay in their ORIGINAL published currency ($/£), never
+           converted to EUR: inventing a USD/GBP→EUR exchange rate would bake
+           a fabricated, staling number into permanent site copy (CLAUDE.md's
+           "illustrative numbers must stay labeled illustrative" rule) — any
+           scale comparison below is made in words, not cross-currency
+           arithmetic. Reuses the "Illustrative example" pill's own rounded-
+           pill visual language (above) rather than inventing a new one. -->
+      <p class="mt-4 text-xs text-muted/60">
+        You may have seen bigger downtime numbers elsewhere — here's where three widely-cited figures actually sit.
+      </p>
+      <div class="mt-2 flex flex-wrap gap-2">
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
+          <span class="font-semibold text-offwhite">$2.3M<span class="font-normal text-muted/60">/hr</span></span>
+          <span class="text-muted/60">Automotive plants</span>
+          <InfoTip label="About the Siemens figure" position="center">
+            Siemens' 2024 downtime report: automotive plants can lose up to this much per hour of idle production —
+            a different scale of operation than a single production line like the one above. Source:{' '}
+            <a
+              href="https://assets.new.siemens.com/siemens/assets/api/uuid:1b43afb5-2d07-47f7-9eb7-893fe7d0bc59/TCOD-2024_original.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
+            >
+              Siemens, True Cost of Downtime 2024
+            </a>.
+          </InfoTip>
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
+          <span class="font-semibold text-offwhite">$125k<span class="font-normal text-muted/60">/hr</span></span>
+          <span class="text-muted/60">Global average</span>
+          <InfoTip label="About the ABB figure" position="center">
+            ABB's 2023 survey of 3,215 plant-maintenance leaders worldwide found this to be the global average cost
+            per hour of unplanned downtime — many individual businesses report well below it. Source:{' '}
+            <a
+              href="https://new.abb.com/news/detail/107660/abb-survey-reveals-unplanned-downtime-costs-125-000-per-hour"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
+            >
+              ABB, Value of Reliability survey
+            </a>.
+          </InfoTip>
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
+          <span class="font-semibold text-offwhite">{'<'}£500<span class="font-normal text-muted/60">/hr</span></span>
+          <span class="text-muted/60">Smallest UK firms</span>
+          <InfoTip label="About the RS Industria figure" position="center">
+            The smallest UK manufacturers — the scale closest to a single production line — are the ones RS
+            Industria's survey found reporting under £500/hour. Source:{' '}
+            <a
+              href="https://www.rs-industria.com/knowledge-hub/how-much-is-manufacturing-downtime-costing-you"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
+            >
+              RS Industria, UK manufacturing survey
+            </a>.
+          </InfoTip>
+        </span>
       </div>
 
       <!-- Cost-of-inaction framing: status quo stays visible beside the

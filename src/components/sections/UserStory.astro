@@ -178,10 +178,10 @@ const impact = [
              2026-08-07: hiding the whole card left this grid cell empty
              before the story resolves, breaking the always-3-panels
              composition the Overnight Impact card and illustration keep up
-             their end of. Only `.reveal-story` (the inner wrapper just
-             below) answers to `[data-timeline].is-story-complete`; this
-             outer div is permanently part of the layout, exactly like its
-             two siblings. -->
+             their end of. Only `.ms-reveal` (the inner wrapper just below)
+             answers to `[data-timeline].is-story-complete`; this outer div
+             is permanently part of the layout, exactly like its two
+             siblings. -->
         <div class="flex h-full flex-col justify-center rounded-xl border border-white/10 bg-navy-800/40 p-6">
           <!-- Held back until the timeline story actually resolves (human-
                requested, 2026-08-07: "have it only appear after the last
@@ -190,13 +190,23 @@ const impact = [
                this content, and the tablet trace line, are the STORY'S
                PAYOFF (the night's work resolving into "here's what
                happened"), so showing them before System Healthy has even
-               flashed green undercuts the beat. `.reveal-story` starts
-               hidden (opacity/scale, not display:none — see <style> below)
-               and only answers to `[data-timeline].is-story-complete`, set
-               by the script below exactly when the timeline's own 4.5s
-               animation finishes (not on its own scroll-into-view — this
-               reveal isn't a separate story beat, it's the resolution of
-               the one above). -->
+               flashed green undercuts the beat.
+
+               `.ms-reveal` (this card's own wrapper, not the shared
+               `.reveal-story` Overnight Impact still uses) starts
+               `visibility: hidden` and flips to visible the instant
+               `[data-timeline].is-story-complete` is set — no opacity/scale
+               transition of its own. Human-requested, 2026-08-11: rather
+               than the whole card fading in as one flat block, each piece
+               inside now plays its own staggered entrance (heading + badge
+               first, then "No incidents.", then "Model upgraded
+               overnight.", then the CTA — see the <style> block below for
+               the full sequence), so `.ms-reveal` only needs to hand off
+               "reachable now" to its children; the actual visual reveal is
+               entirely theirs. Overnight Impact didn't ask for this
+               treatment, so it keeps the original shared `.reveal-story`
+               single-fade mechanism unchanged — a fork of just this card's
+               wrapper class, not a change to the shared one. -->
           <!-- items-center text-center (human-requested, 2026-08-07: this
                card "sits completely to the left instead of being centered or
                making use of the card") — flex-col's own justify-center on
@@ -209,8 +219,8 @@ const impact = [
                line, one CTA — is short and self-contained enough that
                centering it uses the card's width instead of just occupying
                its left edge. -->
-          <div class="reveal-story flex flex-col items-center text-center" data-morning-summary>
-            <h3 class="text-lg font-semibold text-offwhite">Morning Summary</h3>
+          <div class="ms-reveal flex flex-col items-center text-center" data-morning-summary>
+            <h3 class="ms-heading text-lg font-semibold text-offwhite">Morning Summary</h3>
             <div class="mt-4 flex items-center gap-3">
               <!-- data-trace-end: the line's arrival point. This badge is
                    what the trace visually "delivers" the tablet's data into.
@@ -224,16 +234,30 @@ const impact = [
                    outranks a sibling left at the default z-index:auto,
                    independent of DOM order, so this alone is enough to put
                    the badge back on top without touching the SVG's own
-                   stacking at all. -->
+                   stacking at all.
+
+                   ms-badge fades in opacity-only, deliberately no
+                   scale/translate (human-requested sequenced reveal,
+                   2026-08-11) — the trace-line script below measures this
+                   exact element's getBoundingClientRect() the instant the
+                   story completes, in the same synchronous tick this badge's
+                   entrance animation starts; a transform here would be
+                   measured mid-animation and hand the trace line a stale
+                   size/position. Opacity doesn't affect layout geometry at
+                   all, so it's the one safe axis to animate on this
+                   specific element. -->
               <span
-                class="relative z-10 inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400"
+                class="ms-badge relative z-10 inline-flex h-12 w-12 items-center justify-center rounded-full border-2 border-teal-400 text-teal-400"
                 data-trace-end
               >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <path d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                  <path class="ms-check-path" pathLength="1" d="M20 6 9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </span>
-              <p class="text-left text-sm text-muted">No incidents.<br />Model upgraded overnight.</p>
+              <p class="text-left text-sm text-muted">
+                <span class="subtitle-line subtitle-line--1">No incidents.</span>
+                <span class="subtitle-line subtitle-line--2">Model upgraded overnight.</span>
+              </p>
             </div>
             <!-- Glassmorphic, not the site's usual solid-teal CTA
                  (human-requested, 2026-08-07: "more modern button style" —
@@ -243,7 +267,7 @@ const impact = [
                  two-verb CTA system (see the markup comment on this card
                  above), so a matching one-off visual treatment doesn't
                  introduce a third pattern other CTAs might reach for. */ -->
-            <a href={withBase('/product')} class="btn-glass mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold">
+            <a href={withBase('/product')} class="ms-cta btn-glass mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold">
               See the dashboard →
             </a>
           </div>
@@ -440,6 +464,142 @@ const impact = [
 </script>
 
 <style>
+
+
+  /* Morning Summary's own sequenced reveal (human-requested, 2026-08-11,
+     replacing a first pass that faded the whole card in as one flat block —
+     which itself replaced an earlier infinite gray/black shimmer sweep that
+     read as a loading skeleton, not a resolved payoff, and leaned on raw
+     one-off hex instead of Contract 4 tokens).
+
+     `.ms-reveal` (the card's outer wrapper) does none of the animating
+     itself — it's a plain visibility gate (see the markup comment on
+     data-morning-summary above for why it's a fork of `.reveal-story`
+     rather than a change to it). Everything below plays off the SAME
+     trigger selector, `[data-timeline].is-story-complete ~ .mt-16 <thing>`,
+     each with its own `animation-delay` — one shared moment, five staggered
+     entrances, reading as a HUD panel booting up in sequence rather than a
+     single fade:
+
+       0ms    badge ring + "Morning Summary" heading (heading rises into
+              its natural position from a few px lower — the "moves up to
+              make room" motion — while the badge fades in alongside it)
+       180ms  checkmark draws itself inside the ring (SVG stroke-dashoffset,
+              same technique as this file's own trace-line reticle)
+       650ms  "No incidents." settles in, a beat after the heading finishes
+              rising (460ms) rather than landing the instant it does —
+              human-requested slowdown, 2026-08-11: the original 460ms had
+              this arriving in the same breath as the heading, reading as
+              one event instead of two
+       1050ms "Model upgraded overnight." follows (400ms after the line
+              above, also widened from the original 240ms gap)
+       1450ms the CTA arrives last, 400ms after that (widened from 300ms) —
+              the one moment that gets `--ease-spring` (the site's
+              "discovery" easing) — every earlier stage stays on the calmer
+              `--ease-ios`/`--ease-ios-in-out` decelerate curves, since
+              using spring on every stage would read as bouncy rather than
+              considered.
+
+     `animation-play-state` (paused → running via the shared trigger), not a
+     plain delayed `animation`, so nothing starts its own clock while still
+     hidden behind the timeline story — same reasoning `.reveal-story`
+     itself already relies on. */
+  .ms-reveal {
+    visibility: hidden;
+  }
+  [data-timeline].is-story-complete ~ .mt-16 .ms-reveal {
+    visibility: visible;
+  }
+
+  /* Heading rises from a few px below its resting spot rather than fading
+     in flat — 32px is an eyeballed "it was sitting closer to the badge"
+     offset, not a measured value (this sandbox can't render a browser to
+     check the real rendered gap — flag it for a visual nudge if it reads as
+     too much or too little). */
+  .ms-heading {
+    animation: ms-heading-in 460ms var(--ease-ios) both;
+    animation-play-state: paused;
+  }
+  @keyframes ms-heading-in {
+    from { opacity: 0; transform: translateY(32px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Opacity-only, deliberately no scale/translate — see the markup comment
+     on data-trace-end above for why a transform here would corrupt the
+     trace-line script's getBoundingClientRect() measurement. */
+  .ms-badge {
+    animation: ms-badge-in 340ms var(--ease-ios) both;
+    animation-play-state: paused;
+  }
+  @keyframes ms-badge-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Checkmark draws itself in, same pathLength="1" + stroke-dashoffset
+     technique as this file's own trace-line reticle and Hero.astro's
+     target-lock corners — a `transition`, not a keyframe `animation`,
+     since it's a simple one-shot property flip driven by the class change,
+     no intermediate stops needed. */
+  .ms-check-path {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    transition: stroke-dashoffset 420ms var(--ease-ios) 180ms;
+  }
+  [data-timeline].is-story-complete ~ .mt-16 .ms-check-path {
+    stroke-dashoffset: 0;
+  }
+
+  .subtitle-line {
+    display: block;
+    animation: subtitle-line-in 550ms var(--ease-ios-in-out) both;
+    animation-play-state: paused;
+  }
+  .subtitle-line--1 {
+    animation-delay: 650ms;
+  }
+  .subtitle-line--2 {
+    animation-delay: 1050ms;
+  }
+  [data-timeline].is-story-complete ~ .mt-16 .subtitle-line {
+    animation-play-state: running;
+  }
+  @keyframes subtitle-line-in {
+    0% { transform: translateY(8px); filter: brightness(1); }
+    45% { transform: translateY(0); filter: brightness(1); }
+    58% { filter: brightness(2.4); }
+    100% { transform: translateY(0); filter: brightness(1); }
+  }
+
+  /* CTA arrives last, and is the one stage that gets --ease-spring — see
+     the comment above on why the rest of this sequence deliberately stays
+     off it. */
+  .ms-cta {
+    animation: ms-cta-in 420ms var(--ease-spring) both;
+    animation-play-state: paused;
+    animation-delay: 1450ms;
+  }
+  @keyframes ms-cta-in {
+    0% { opacity: 0; transform: translateY(10px) scale(0.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  [data-timeline].is-story-complete ~ .mt-16 .ms-heading,
+  [data-timeline].is-story-complete ~ .mt-16 .ms-badge,
+  [data-timeline].is-story-complete ~ .mt-16 .ms-cta {
+    animation-play-state: running;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ms-heading,
+    .ms-badge,
+    .ms-check-path,
+    .subtitle-line,
+    .ms-cta {
+      animation: none;
+      transition: none;
+    }
+  }
+
   /* Traveling light: dwells at each node for exactly that node's own flash
      duration, then moves at a constant (linear) speed to the next — so the
      orb never sits glowing on a dot that's already cooled back to teal, and
@@ -721,21 +881,24 @@ const impact = [
     }
   }
 
-  /* Overnight Impact + Morning Summary content, both held back as the
-     story's payoff (see the markup comments on data-overnight-impact/
-     data-morning-summary above) — hidden via opacity+visibility, not
-     display:none, so each keeps occupying its own layout position
-     throughout (the trace line's own endpoint math depends on measuring
-     Morning Summary's real position even before it's visually revealed,
-     and hiding via display:none would also collapse Overnight Impact's
-     card down to just its own padding) and so Morning Summary's "See the
-     dashboard" link is genuinely unreachable — not just invisible — to
-     keyboard/screen-reader users until it actually appears: visibility,
-     unlike opacity alone, removes an element from both hit-testing and the
-     tab order. Fade + a gentle scale-up (--ease-spring, this project's own
-     "discovery moment" easing, reserved for exactly this kind of one-off
-     reveal rather than routine hovers) reads as the sleek/Apple-like arrival
-     asked for, not a static cut from invisible to visible. */
+  /* Overnight Impact content, held back as the story's payoff (see the
+     markup comment on data-overnight-impact above) — hidden via
+     opacity+visibility, not display:none, so it keeps occupying its own
+     layout position throughout (hiding via display:none would collapse the
+     card down to just its own padding), and stays genuinely unreachable —
+     not just invisible — to keyboard/screen-reader users until it actually
+     appears: visibility, unlike opacity alone, removes an element from both
+     hit-testing and the tab order. Fade + a gentle scale-up (--ease-spring,
+     this project's own "discovery moment" easing) reads as the sleek/
+     Apple-like arrival asked for, not a static cut from invisible to
+     visible.
+
+     Morning Summary used to share this exact class too, but now runs its
+     own multi-stage sequence instead (`.ms-reveal` + `.ms-heading`/
+     `.ms-badge`/`.subtitle-line`/`.ms-cta`, human-requested, 2026-08-11 —
+     see that block above) — `.reveal-story`/`--delayed` is Overnight
+     Impact-only from here on, not a shared contract between the two cards
+     anymore. */
   .reveal-story {
     opacity: 0;
     visibility: hidden;
@@ -749,22 +912,16 @@ const impact = [
     transform: scale(1);
     transition: opacity var(--dur-slow) var(--ease-ios), transform var(--dur-slow) var(--ease-spring), visibility 0s;
   }
-  /* Overnight Impact staggers in after Morning Summary (human-requested
-     "stagger", order reversed 2026-08-11 — Morning Summary now lands
-     first, Overnight Impact settles in after) — both cards are the
-     story's payoff, but revealing them at the exact same instant read as
-     one flat event rather than two; an offset reads as a cascade instead.
-     480ms (an earlier pass tried 150ms, then 300ms, then 400ms — all in
-     the original Overnight-Impact-first order or before settling on the
-     final value; 150ms in particular read as simultaneous against the
-     650ms `--dur-slow` reveal, too small a fraction of the transition to
-     register as two beats). Same specificity as the rule above (one
-     attribute + three classes each), so this — coming later in source
-     order — only overrides the one longhand (transition-delay) it names,
-     inheriting duration/easing from the shorthand above rather than
-     needing to repeat the whole transition declaration. */
+  /* Overnight Impact staggers in after Morning Summary's own sequence has
+     actually finished (human-requested "stagger" — recalibrated 2026-08-11
+     when Morning Summary switched to the multi-stage sequence above, then
+     again the same day when that sequence's own gaps were widened: its last
+     stage, the CTA, now lands at 1450ms + 420ms ≈ 1870ms). 1950ms picks up
+     shortly after the CTA settles — both cards still read as one cascade,
+     just a longer one now that Morning Summary has more to say before
+     Overnight Impact's turn. */
   [data-timeline].is-story-complete ~ .mt-16 .reveal-story--delayed {
-    transition-delay: 480ms;
+    transition-delay: 1950ms;
   }
   @media (prefers-reduced-motion: reduce) {
     .reveal-story {

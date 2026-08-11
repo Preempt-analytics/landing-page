@@ -89,6 +89,33 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     document.addEventListener('click', () => {
       (document.activeElement as HTMLElement | null)?.blur?.();
     });
+
+    // Flip the popover above the trigger when there isn't room below it (a
+    // tip near the bottom of a tall card, or near the page's own bottom
+    // edge) — the CSS-only reveal above can't see the viewport, so this is
+    // the one case that genuinely needs JS rather than a pure :hover rule.
+    // Measured fresh on every open (not once at load) since scrolling can
+    // change which side actually has room; `.info-tip-pop` stays in normal
+    // flow with `visibility: hidden` rather than `display: none` (see style
+    // block), so its real height is measurable even while closed.
+    const FLIP_MARGIN = 16;
+    document.querySelectorAll<HTMLElement>('.info-tip').forEach((tip) => {
+      const pop = tip.querySelector<HTMLElement>('.info-tip-pop');
+      if (!pop) return;
+      const updateFlip = () => {
+        const triggerRect = tip.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        const fitsBelow = spaceBelow >= pop.offsetHeight + FLIP_MARGIN;
+        if (!fitsBelow && spaceAbove > spaceBelow) {
+          tip.setAttribute('data-flip', 'up');
+        } else {
+          tip.removeAttribute('data-flip');
+        }
+      };
+      tip.addEventListener('mouseenter', updateFlip);
+      tip.addEventListener('focusin', updateFlip);
+    });
   });
 </script>
 
@@ -191,6 +218,13 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     stroke-dashoffset: 0;
   }
   .info-tip-pop {
+    /* Vertical rest-offset/origin, factored into custom properties (rather
+       than repeated per data-pos variant below) so the data-flip='up' rule
+       further down can retarget "which side this opens from" once and have
+       every horizontal-anchor variant pick it up automatically, instead of
+       needing a combined [data-flip][data-pos] selector for each pairing. */
+    --tip-ty: 2px;
+    --tip-oy: top;
     position: absolute;
     left: 0;
     top: calc(100% + 8px);
@@ -209,8 +243,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
     opacity: 0;
     visibility: hidden;
-    transform: translateY(2px) scale(0.97);
-    transform-origin: top left;
+    transform: translateY(var(--tip-ty)) scale(0.97);
+    transform-origin: var(--tip-oy) left;
     transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s linear var(--dur-base);
   }
   .info-tip:hover .info-tip-pop,
@@ -218,7 +252,12 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
-    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios), visibility 0s;
+    /* --ease-spring only on the way in — same "discovery pop" pattern as
+       LiveFactory.astro's .machine-card reveal (see that file's comment):
+       a slight overshoot reads as delight on entry, but would look like a
+       glitch on exit, so the hide direction (base .info-tip-pop rule above)
+       stays on the plain --ease-ios curve. */
+    transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
   }
 
   /* The "gently growing" plant, living inside the eco popover itself (a
@@ -269,8 +308,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
   .info-tip[data-pos='start-lg'] .info-tip-pop,
   .info-tip[data-pos='end-lg'] .info-tip-pop {
     left: 50%;
-    transform: translateX(-50%) translateY(2px) scale(0.97);
-    transform-origin: top center;
+    transform: translateX(-50%) translateY(var(--tip-ty)) scale(0.97);
+    transform-origin: var(--tip-oy) center;
   }
   .info-tip[data-pos='center']:hover .info-tip-pop,
   .info-tip[data-pos='center']:focus-within .info-tip-pop,
@@ -283,7 +322,22 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
   .info-tip[data-pos='end'] .info-tip-pop {
     left: auto;
     right: 0;
-    transform-origin: top right;
+    transform-origin: var(--tip-oy) right;
+  }
+
+  /* Flip to opening upward when JS (see script above) finds more room above
+     the trigger than below — `top`/`bottom` are independent of every
+     horizontal-anchor rule above, so this alone is enough; the --tip-ty/
+     --tip-oy vars flow through into whichever data-pos variant is also
+     active without needing a combined selector per pairing. -2px (not 2px)
+     keeps the same "settles toward the trigger" motion as the default,
+     just mirrored: the popover starts slightly further from the trigger
+     (here, below its own resting spot) and eases up into place. */
+  .info-tip[data-flip='up'] .info-tip-pop {
+    --tip-ty: -2px;
+    --tip-oy: bottom;
+    top: auto;
+    bottom: calc(100% + 8px);
   }
 
   /* Mobile-audit fix (2026-08-07): the default ('start') anchor above pins
@@ -310,8 +364,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     .info-tip-pop {
       left: 50%;
       right: auto;
-      transform: translateX(-50%) translateY(2px) scale(0.97);
-      transform-origin: top center;
+      transform: translateX(-50%) translateY(var(--tip-ty)) scale(0.97);
+      transform-origin: var(--tip-oy) center;
     }
     .info-tip:hover .info-tip-pop,
     .info-tip:focus-within .info-tip-pop {
@@ -326,8 +380,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
   @media (min-width: 1024px) {
     .info-tip[data-pos='start-lg'] .info-tip-pop {
       left: 0;
-      transform: translateY(2px) scale(0.97);
-      transform-origin: top left;
+      transform: translateY(var(--tip-ty)) scale(0.97);
+      transform-origin: var(--tip-oy) left;
     }
     .info-tip[data-pos='start-lg']:hover .info-tip-pop,
     .info-tip[data-pos='start-lg']:focus-within .info-tip-pop {
@@ -336,8 +390,8 @@ const { label = 'What is this?', position = 'start', icon = 'info' } = Astro.pro
     .info-tip[data-pos='end-lg'] .info-tip-pop {
       left: auto;
       right: 0;
-      transform: translateY(2px) scale(0.97);
-      transform-origin: top right;
+      transform: translateY(var(--tip-ty)) scale(0.97);
+      transform-origin: var(--tip-oy) right;
     }
     .info-tip[data-pos='end-lg']:hover .info-tip-pop,
     .info-tip[data-pos='end-lg']:focus-within .info-tip-pop {

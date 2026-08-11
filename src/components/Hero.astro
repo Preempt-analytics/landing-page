@@ -238,7 +238,7 @@ import { withBase } from '../lib/site';
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <rect x="2" y="8" width="17" height="8" rx="1.5" stroke="var(--color-teal-400)" stroke-width="1.6" />
         <path d="M21 10.5v3" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
-        <rect x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
+        <rect class="hero-gauge-battery-fill" x="4" y="10" width="3" height="4" rx="0.5" fill="var(--color-teal-400)" />
       </svg>
       <svg class="hero-marker-reticle" width="54" height="54" viewBox="0 0 40 40" aria-hidden="true">
         <path pathLength="1" d="M1 11V1h10" />
@@ -269,9 +269,9 @@ import { withBase } from '../lib/site';
       <svg width="26" height="21" viewBox="0 0 30 24" fill="none" aria-hidden="true">
         <path d="M11.5 5.6a4.5 4.5 0 0 0-6 5.8L1 16v3h3l4.6-4.5a4.5 4.5 0 0 0 5.8-6l-2.7 2.7-2-2 2.7-2.7Z" stroke="var(--color-teal-400)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" />
         <rect x="21" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
+        <rect class="hero-gauge-twf-fill-1" x="21" y="16" width="3" height="6" rx="1" fill="var(--color-teal-400)" />
         <rect x="26" y="4" width="3" height="18" rx="1" fill="var(--color-teal-400)" opacity="0.2" />
-        <rect x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
+        <rect class="hero-gauge-twf-fill-2" x="26" y="18" width="3" height="4" rx="1" fill="var(--color-teal-400)" />
       </svg>
       <svg class="hero-marker-reticle" width="50" height="50" viewBox="0 0 40 40" aria-hidden="true">
         <path pathLength="1" d="M1 11V1h10" />
@@ -299,12 +299,12 @@ import { withBase } from '../lib/site';
       style="left: 57%; top: 57%; animation-duration: 10s; animation-delay: -6s; background: radial-gradient(circle, rgba(45,212,191,0.25), transparent 60%), radial-gradient(circle, rgba(13,27,46,0.4), transparent 80%); box-shadow: 0 0 7px 1.8px rgba(45,212,191,0.16);"
       aria-label="Heat Dissipation Failure: watches the temperature gap and speed together, before heat has nowhere to go."
     >
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M14 14.76V4.5a2 2 0 0 0-4 0v10.26a3.5 3.5 0 1 0 4 0Z" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linejoin="round" />
-        <path d="M12 7v7.5" stroke="var(--color-teal-400)" stroke-width="1.6" stroke-linecap="round" />
-        <circle cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
+        <rect class="hero-gauge-thermo-fill" x="10.6" y="11.5" width="2.8" height="3.2" rx="1.3" fill="var(--color-teal-400)" />
+        <circle class="hero-gauge-thermo-bulb" cx="12" cy="17" r="1.8" fill="var(--color-teal-400)" />
       </svg>
-      <svg class="hero-marker-reticle hero-marker-reticle--small" width="34" height="34" viewBox="0 0 40 40" aria-hidden="true">
+      <svg class="hero-marker-reticle hero-marker-reticle--small" width="39" height="39" viewBox="0 0 40 40" aria-hidden="true">
         <path pathLength="1" d="M1 11V1h10" />
         <path pathLength="1" d="M29 1h10v10" />
         <path pathLength="1" d="M39 29v10H29" />
@@ -707,6 +707,97 @@ import { withBase } from '../lib/site';
     12.5% { opacity: 1; }
   }
 
+  /* Live sensor-reading cycle for the thermometer/battery glyphs themselves
+     (human-requested, 2026-08-11) — separate from .hero-icon-marker's own
+     pulse above, which only breathes the marker's opacity/scale and never
+     touched what's drawn inside the SVG. These two run continuously
+     (including on hover) since they're meant to read as an ambient live
+     reading, not an interaction state. Different duration/delay per gauge,
+     same reasoning as the marker pulse's own offsets: two gauges cycling in
+     lockstep would read as one fake blink instead of two independent
+     sensors. `y`+`height` are animated together, in lockstep, at every
+     keyframe so the fill's bottom edge stays pinned to the tube/bar's own
+     base instead of drifting — there's no single-property way to say "grow
+     from the bottom" for an SVG rect, whose origin is top-left. */
+  .hero-gauge-thermo-fill {
+    animation: hero-gauge-thermo-level 13s var(--ease-ios-in-out) infinite;
+  }
+  .hero-gauge-thermo-bulb {
+    animation: hero-gauge-thermo-bulb-color 13s var(--ease-ios-in-out) infinite;
+  }
+  @keyframes hero-gauge-thermo-level {
+    0%   { y: 11.6px; height: 3.1px; fill: var(--color-teal-400); }
+    22%  { y: 9px;    height: 5.7px; fill: var(--color-teal-400); }
+    38%  { y: 11.2px; height: 3.5px; fill: var(--color-teal-400); }
+    55%  { y: 6.3px;  height: 8.4px; fill: var(--color-teal-400); }
+    /* Full/hot plateau — the gauge reads as pegged, not just passing through,
+       before it comes back down. */
+    64%  { y: 4.5px;  height: 10.2px; fill: var(--color-alert-400); }
+    76%  { y: 4.5px;  height: 10.2px; fill: var(--color-alert-400); }
+    90%  { y: 8.2px;  height: 6.5px; fill: var(--color-teal-400); }
+    100% { y: 11.6px; height: 3.1px; fill: var(--color-teal-400); }
+  }
+  /* Bulb has no y/height to animate, just rides the same red-at-full window
+     as the fill above so the whole column reads as one instrument, not a
+     red stem over a teal bulb. */
+  @keyframes hero-gauge-thermo-bulb-color {
+    0%, 60% { fill: var(--color-teal-400); }
+    64%, 76% { fill: var(--color-alert-400); }
+    82%, 100% { fill: var(--color-teal-400); }
+  }
+  .hero-gauge-battery-fill {
+    animation: hero-gauge-battery-level 16s var(--ease-ios-in-out) infinite;
+    animation-delay: -4s;
+  }
+  @keyframes hero-gauge-battery-level {
+    0%   { width: 8px; fill: var(--color-teal-400); }
+    20%  { width: 12.5px; fill: var(--color-teal-400); }
+    38%  { width: 12.5px; fill: var(--color-teal-400); }
+    52%  { width: 6px; fill: var(--color-teal-400); }
+    /* Low-battery dip — shrinks to a sliver and goes red before recharging. */
+    66%  { width: 1.6px; fill: var(--color-alert-400); }
+    76%  { width: 1.6px; fill: var(--color-alert-400); }
+    100% { width: 8px; fill: var(--color-teal-400); }
+  }
+
+  /* Tool-wear measurement bars (Tool Wear Failure marker) — two independent
+     channels, same "climb toward the replacement window, then reset" story
+     as the marker's own copy, not just decoration. Bottom edge pinned at
+     22px (the track rects' own y=4 + height=18) at every keyframe stop, same
+     reason as the thermometer's fill above: rect growth has no built-in
+     "grow from the bottom" mode, so y and height are moved together by hand.
+     Two bars, two durations/delays/peak timings (not mirrored) so they read
+     as two real independent sensors climbing at their own rate rather than
+     one bar duplicated — same reasoning as every other multi-element
+     ambient loop in this file (marker pulse, indicator flicker). */
+  .hero-gauge-twf-fill-1 {
+    animation: hero-gauge-twf-level-1 15s var(--ease-ios-in-out) infinite;
+  }
+  @keyframes hero-gauge-twf-level-1 {
+    0%   { y: 17.5px; height: 4.5px; fill: var(--color-teal-400); }
+    25%  { y: 14px;   height: 8px;   fill: var(--color-teal-400); }
+    45%  { y: 10px;   height: 12px;  fill: var(--color-teal-400); }
+    /* Replacement-window plateau — pegged at the top of the track, red,
+       before the tool is reset/replaced and wear starts climbing again. */
+    60%  { y: 5px;    height: 17px;  fill: var(--color-alert-400); }
+    72%  { y: 5px;    height: 17px;  fill: var(--color-alert-400); }
+    85%  { y: 12px;   height: 10px;  fill: var(--color-teal-400); }
+    100% { y: 17.5px; height: 4.5px; fill: var(--color-teal-400); }
+  }
+  .hero-gauge-twf-fill-2 {
+    animation: hero-gauge-twf-level-2 19s var(--ease-ios-in-out) infinite;
+    animation-delay: -7s;
+  }
+  @keyframes hero-gauge-twf-level-2 {
+    0%   { y: 18.5px; height: 3.5px; fill: var(--color-teal-400); }
+    30%  { y: 15px;   height: 7px;   fill: var(--color-teal-400); }
+    50%  { y: 11px;   height: 11px;  fill: var(--color-teal-400); }
+    66%  { y: 5px;    height: 17px;  fill: var(--color-alert-400); }
+    78%  { y: 5px;    height: 17px;  fill: var(--color-alert-400); }
+    90%  { y: 13px;   height: 9px;   fill: var(--color-teal-400); }
+    100% { y: 18.5px; height: 3.5px; fill: var(--color-teal-400); }
+  }
+
   /* Widescreen nudge (human-requested, 2026-08-07, confirmed against an
      actual ultra-wide monitor — the markup comment above already flagged
      this as unverified past lg). The wrapper's `lg:max-h-[58vw]` cap means
@@ -752,6 +843,16 @@ import { withBase } from '../lib/site';
     .hero-icon-marker:hover .hero-marker-card-title,
     .hero-icon-marker:focus-visible .hero-marker-card-title,
     .hero-icon-marker.is-tapped .hero-marker-card-title {
+      animation: none;
+    }
+    /* Freeze the gauges on a calm mid-reading rather than looping — same
+       "no good reduced-motion middle ground, so just stop" call as the hint
+       bubble above. */
+    .hero-gauge-thermo-fill,
+    .hero-gauge-thermo-bulb,
+    .hero-gauge-battery-fill,
+    .hero-gauge-twf-fill-1,
+    .hero-gauge-twf-fill-2 {
       animation: none;
     }
   }

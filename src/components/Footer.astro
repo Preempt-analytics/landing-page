@@ -3,6 +3,12 @@ import Logo from './Logo.astro';
 import InfoTip from './InfoTip.astro';
 import { REPO_URL, TEAM, PROGRAM, KAGGLE_DATASET_URL, KAGGLE_DATASET_NAME, withBase } from '../lib/site';
 const year = new Date().getFullYear();
+// Only "AI4I 2020" is short enough to read as a link label without the
+// underline swallowing the whole dataset name — the rest stays plain text,
+// still derived from the shared constant (Contract 1) rather than re-typed.
+const kaggleDatasetWords = KAGGLE_DATASET_NAME.split(' ');
+const kaggleDatasetId = kaggleDatasetWords.slice(0, 2).join(' ');
+const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
 ---
 
 <footer
@@ -58,8 +64,9 @@ const year = new Date().getFullYear();
             rel="noopener noreferrer"
             class="footer-link text-teal-400 hover:text-teal-300"
           >
-            Kaggle — {KAGGLE_DATASET_NAME}
-          </a>.
+            Kaggle — {kaggleDatasetId}
+          </a>{' '}
+          {kaggleDatasetRest}.
         </p>
 
         <!-- Digital-sovereignty credit (human-requested, 2026-08-07) — the
@@ -77,7 +84,7 @@ const year = new Date().getFullYear();
              stays out: the dataset icon's own reasoning (no one-off color
              pair, no imitation of an official mark) still applies to that
              part. -->
-        <p class="mt-2 text-xs text-muted/60">
+        <p class="mt-4 text-xs text-muted/80">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="mr-1.5 inline-block align-text-bottom text-blue-500">
             <circle cx="12" cy="4" r="1.3" />
             <circle cx="16" cy="5.07" r="1.3" />
@@ -97,7 +104,7 @@ const year = new Date().getFullYear();
             href="https://digital-strategy.ec.europa.eu/en/policies/eu-tech-sovereignty"
             target="_blank"
             rel="noopener noreferrer"
-            class="footer-link text-teal-400 hover:text-teal-300"
+            class="border-b border-teal-400 transition-colors hover:text-offwhite hover:border-teal-300"
           >
             Europe
           </a>.
@@ -185,7 +192,7 @@ const year = new Date().getFullYear();
            something to scroll) would permanently show only PART of "NO
            ANALYTICS · NO TRACKING", cut off — worse than not animating it,
            not just less delightful. -->
-      <p class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+      <p class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
         <span class="led-ticker" aria-hidden="true">
           <span class="led-ticker-track">
             <span class="led-readout">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
@@ -250,6 +257,14 @@ const year = new Date().getFullYear();
     vertical-align: bottom;
     width: 11rem;
     white-space: nowrap;
+  }
+  /* Slightly wider porthole on super-widescreen (2xl: 1536px+, matching the
+     site's existing convention — see ProductPreview.astro's 2xl:max-w-[1100px]
+     — for where "super widescreen" treatments kick in). */
+  @media (min-width: 1536px) {
+    .led-ticker {
+      width: 13rem;
+    }
   }
   /* Two identical .led-readout copies laid out in a row (`display: flex`
      so there's no stray inline-whitespace gap between them from the
