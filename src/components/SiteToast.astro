@@ -1,0 +1,163 @@
+---
+// One-time "we don't track you" toast, sitewide. Reinforces Footer.astro's
+// own no-cookies stance (same claims, same voice) rather than asking for
+// consent — there's nothing to consent to, so this deliberately isn't a GDPR
+// cookie-banner pattern with accept/reject choices, just an FYI that dismisses
+// itself. The one piece of client state it keeps (a localStorage flag so it
+// only shows once per browser) never leaves the device, so remembering the
+// dismissal doesn't contradict the claim it's making.
+//
+// Deliberately named/id'd away from "privacy"/"cookie"/"consent"/"notice"/
+// "banner" (component file included — Vite's dev server exposes it verbatim
+// in the script's request URL) despite the on-page copy being exactly about
+// privacy: confirmed in testing that ad-block/privacy browser extensions ship
+// built-in cosmetic filters that force `display: none` on elements whose
+// id/class look like a cookie-consent banner, which silently ate the first
+// version of this component (id="privacy-notice") even though nothing in our
+// own CSS ever sets display:none. Generic "toast" naming sidesteps that
+// pattern-matching without changing what it says or does.
+---
+
+<div
+  id="pa-toast"
+  class="pa-toast fixed bottom-5 left-1/2 z-50 w-[min(90%,24rem)] rounded-3xl border border-white/10 bg-navy-900/90 p-5 shadow-2xl backdrop-blur-md sm:bottom-6 lg:left-auto lg:right-6"
+  role="status"
+  aria-live="polite"
+  transition:persist
+  transition:name="pa-toast"
+>
+  <p class="text-sm font-medium tracking-wide text-teal-300">We reject surveillance capitalism</p>
+  <p class="mt-1.5 text-sm leading-relaxed text-muted">
+    No cookies, no analytics, no trackers — nothing about this visit is collected, so there's
+    nothing to ask your consent for. This is just here to say so, once.
+  </p>
+  <div class="mt-3 flex items-center justify-between gap-3">
+    <span class="text-xs text-muted/60" aria-hidden="true">
+      Closing in <span id="pa-toast-timer">7</span>s
+    </span>
+    <button
+      type="button"
+      id="pa-toast-dismiss"
+      class="pa-toast-dismiss shrink-0 rounded-full border border-teal-400/50 px-4 py-1.5 text-xs font-semibold text-teal-300 transition-colors duration-[var(--dur-fast)] ease-[var(--ease-ios-in-out)] hover:bg-teal-400/10 hover:text-teal-200"
+    >
+      Got it
+    </button>
+  </div>
+</div>
+
+<script>
+  // Runs once: this component is transition:persist-ed in BaseLayout (same
+  // reasoning as Nav.astro's own top-level script), so a fresh
+  // astro:page-load rebind isn't needed here.
+  const AUTO_DISMISS_MS = 6500;
+  const STORAGE_KEY = 'pa-toast-seen';
+
+  const toast = document.getElementById('pa-toast');
+  const dismissBtn = document.getElementById('pa-toast-dismiss');
+  const timerEl = document.getElementById('pa-toast-timer');
+
+  if (toast && dismissBtn && timerEl && !localStorage.getItem(STORAGE_KEY)) {
+    let remainingMs = AUTO_DISMISS_MS;
+    let tickId: ReturnType<typeof setInterval> | undefined;
+
+    const render = () => {
+      timerEl.textContent = String(Math.max(0, Math.ceil(remainingMs / 1000)));
+      timerEl.classList.remove('pa-toast-tick');
+      // Reflow between remove/add so the pulse keyframe restarts every tick
+      // instead of only playing once (same retrigger trick as toggling any
+      // CSS animation class from JS).
+      void timerEl.offsetWidth;
+      timerEl.classList.add('pa-toast-tick');
+    };
+
+    const close = () => {
+      clearInterval(tickId);
+      tickId = undefined;
+      toast.classList.remove('is-visible');
+      localStorage.setItem(STORAGE_KEY, 'true');
+    };
+
+    const tick = () => {
+      remainingMs -= 1000;
+      render();
+      if (remainingMs <= 0) close();
+    };
+
+    // Pausing on hover/focus (not in the original snippet this was adapted
+    // from) so a keyboard/screen-reader user mid-read doesn't have the toast
+    // vanish under them — cheap to add and matches the site's general "don't
+    // rush the visitor" motion philosophy (global.css's slowed-down durations).
+    const start = () => {
+      if (tickId) return;
+      tickId = setInterval(tick, 1000);
+    };
+    const pause = () => {
+      clearInterval(tickId);
+      tickId = undefined;
+    };
+
+    toast.classList.add('is-visible');
+    start();
+    toast.addEventListener('mouseenter', pause);
+    toast.addEventListener('focusin', pause);
+    toast.addEventListener('mouseleave', start);
+    toast.addEventListener('focusout', start);
+    dismissBtn.addEventListener('click', close);
+  }
+</script>
+
+<style>
+  /* Default state is fully hidden (not "visible then JS hides it") so a
+     localStorage-dismissed returning visitor never sees even a one-frame
+     flash of it — same visibility+opacity technique as InfoTip.astro's
+     popover, which solves the identical "invisible but still
+     focusable/clickable" problem for the Got-it button underneath.
+     --toast-tx centers via translateX on mobile; the lg: media query below
+     zeroes it out once the toast switches to a right-anchored corner, so
+     one transform declaration covers both layouts without a combined
+     [data-x] selector per breakpoint. Spring easing on BOTH directions
+     (human-requested, 2026-08-11) — a deliberate departure from InfoTip's
+     "spring only on entry" rule: here the whole point is an iOS-notification-
+     style bounce on the way in AND a soft settle on the way out, not just a
+     delight-on-arrival moment. Opacity stays on the plain ease-ios curve
+     throughout — a "springy" fade would overshoot past 1/below 0, which
+     doesn't mean anything and just looks broken. */
+  .pa-toast {
+    --toast-tx: -50%;
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(var(--toast-tx), 1.25rem) scale(0.94);
+    transition:
+      opacity var(--dur-base) var(--ease-ios),
+      transform var(--dur-slow) var(--ease-spring),
+      visibility 0s linear var(--dur-slow);
+  }
+  .pa-toast.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(var(--toast-tx), 0) scale(1);
+    transition:
+      opacity var(--dur-base) var(--ease-ios),
+      transform var(--dur-slow) var(--ease-spring),
+      visibility 0s;
+  }
+  @media (min-width: 1024px) {
+    .pa-toast {
+      --toast-tx: 0;
+    }
+  }
+
+  #pa-toast-timer {
+    display: inline-block;
+    min-width: 1ch;
+    font-weight: 600;
+    color: var(--color-teal-300);
+  }
+  @keyframes pa-toast-tick-pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  .pa-toast-tick {
+    animation: pa-toast-tick-pulse 0.9s var(--ease-ios-in-out);
+  }
+</style>
