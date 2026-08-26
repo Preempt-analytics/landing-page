@@ -68,8 +68,8 @@ export const de: Dictionary = {
     madeWithLoveIn: 'Mit Liebe entwickelt in',
     europe: 'Europa',
     copyright: (year: number) => `© ${year} Preempt Analytics — Abschlussprojekt. Erstellt mit Astro & Tailwind.`,
-    ledTicker: 'KEINE ANALYSE · KEIN TRACKING · KEIN ÜBERWACHUNGSKAPITALISMUS',
-    ledTickerSrOnly: 'Keine Analyse. Kein Tracking. Kein Überwachungskapitalismus.',
+    ledTicker: 'KEIN TRACKING · KEINE PIXEL · KEINE ZOMBIE-COOKIES',
+    ledTickerSrOnly: 'Kein Tracking. Keine Pixel. Keine Zombie-Cookies.',
     noLoggingSuffix: '— nichts, was Sie hier tun, wird aufgezeichnet.',
     privacyTipLabel: 'Unser Datenschutzansatz',
     privacyTipBody:
@@ -81,9 +81,8 @@ export const de: Dictionary = {
   },
 
   siteToast: {
-    illustrationAlt: 'Illustration eines teerartigen Monsters mit den Logos von Google, Apple, Facebook, Amazon und Microsoft auf seinen Köpfen',
-    headline: 'Wir lehnen Überwachungskapitalismus ab',
-    body: 'Keine Cookies, keine Analyse, keine Tracker — nichts an diesem Besuch wird erfasst, daher gibt es nichts, wofür wir um Ihre Einwilligung bitten müssten. Das hier sagen wir einfach einmal deutlich. Das untermauern wir auch technisch: selbst gehostete Schriftarten, keine Skripte von Drittanbietern — nichts ruft im Hintergrund bei Google oder sonst wem zu Hause an.',
+    headline: 'Wir tracken Sie nicht',
+    body: 'Wir glauben nicht daran, Menschen ohne ihre Zustimmung zu tracken — deshalb gibt es auf dieser Seite kein Tracking, keine Pixel und keine Zombie-Cookies. Es wird nichts über Ihren Besuch erfasst, daher gibt es nichts, wofür wir um Ihre Einwilligung bitten müssten. Das untermauern wir auch technisch: selbst gehostete Schriftarten, keine Skripte von Drittanbietern — nichts ruft im Hintergrund bei irgendjemandem zu Hause an.',
     closingInPrefix: 'Schließt in',
     closingInSuffix: 's',
     paused: 'Pausiert',
