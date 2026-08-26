@@ -95,8 +95,9 @@ export const de: Dictionary = {
     headingPrevent: 'Stillstand',
     headingLine2: 'vermeiden.',
     subtitle:
-      'Ein System für vorausschauende Wartung, das Maschinenausfälle erkennt, bevor sie eintreten — entwickelt, um zu zeigen, wie Fertigungsteams Betriebszeit und Effizienz maximieren könnten.',
-    capstoneNote: 'Ein Abschlussprojekt auf Basis simulierter CNC-Sensordaten.',
+      'In unserem Abschlussprojekt haben wir ein System für vorausschauende Wartung entwickelt, das Maschinenausfälle erkennt, bevor sie eintreten.',
+    subtitleSecondary:
+      'Es läuft auf Basis simulierter CNC-Sensordaten und zeigt, wie Fertigungsteams Betriebszeit und Effizienz maximieren könnten.',
     hoverForDetails: 'Für Details hierhin bewegen',
     checkingFor: 'Prüft auf …',
     markers: {

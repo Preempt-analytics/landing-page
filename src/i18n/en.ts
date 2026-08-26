@@ -100,8 +100,9 @@ export const en = {
     headingPrevent: 'Prevent',
     headingLine2: 'downtime.',
     subtitle:
-      'A predictive-maintenance system that catches machine failures before they happen — built to show how manufacturing teams could maximize uptime and efficiency.',
-    capstoneNote: 'A capstone project showcase, running on simulated CNC sensor data.',
+      'In our capstone project, we built a predictive-maintenance system that catches machine failures before they happen.',
+    subtitleSecondary:
+      'Running on simulated CNC sensor data, it shows how manufacturing teams could maximize uptime and efficiency.',
     hoverForDetails: 'Hover for details',
     checkingFor: 'Checking for…',
     markers: {
