@@ -545,7 +545,7 @@ export const de: Dictionary = {
       title: 'Noch nie so etwas gemacht? Hier ist der komplette Weg.',
       body1: 'Sie müssen nicht programmieren können. Der gesamte Weg besteht aus drei Schritten:',
       step1: '1. Docker Desktop und Git installieren (unten) — zwei kostenlose Programme, installiert wie jedes andere auch.',
-      step2: '2. Den Code auf den eigenen Rechner holen — einen Befehl in ein Terminal einfügen (unten erklärt).',
+      step2: '2. Den Code auf den eigenen Rechner holen — einen Befehl in Terminal einfügen (unten erklärt).',
       step3: '3. Das Menüskript starten und eine Zahl drücken — zuerst 6 drücken, um alles zu aktivieren, danach eine beliebige andere Zahl zum Ausprobieren.',
       closing: 'Das ist schon alles — keine Docker-Befehle zum Auswendiglernen, nur ein paar Zeilen zum Einfügen und danach eine Zahl zum Drücken.',
     },
