@@ -445,6 +445,9 @@ export const en = {
     soonBadge: 'Soon',
     inDevelopmentSuffix: ' (in development)',
     dashboardPreviewBadge: 'Dashboard preview',
+    dashboardPreviewInfoLabel: 'What does "Dashboard preview" mean?',
+    dashboardPreviewInfoBody:
+      'Please note: this preview includes a wider range of data points than what our model currently uses.',
     panelAlt: {
       overview:
         'Preempt Analytics maintenance dashboard overview: an Overall Fleet Health tile at 94%, a Priority Maintenance Queue ranking machines such as Press-07 (97% failure probability, critical) and CNC-03 (89%, high), a failure-probability trend chart, and live sensor tiles for temperature, vibration, rotational speed, torque and tool wear.',

@@ -11,6 +11,7 @@ import dashboardOverview from '../../assets/dashboard-overview.png';
 import dashboardAlerts from '../../assets/dashboard-alerts.png';
 import dashboardPredictions from '../../assets/dashboard-predictions.png';
 import StatCard from '../StatCard.astro';
+import InfoTip from '../InfoTip.astro';
 import { DASHBOARD_PANELS } from '../../lib/dashboard';
 import {
   liveMachines,
@@ -265,8 +266,19 @@ const ICONS: Record<string, string> = {
                           in normal flow above the image means it can never collide
                           with whatever a future screenshot draws in that corner. */}
                       <div class="mb-2 flex justify-end">
-                        <span class="dashboard-badge rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300">
+                        <span class="dashboard-badge inline-flex items-center gap-1 rounded-full border border-teal-400/40 bg-navy-950/80 px-3 py-1 text-[0.7rem] font-medium text-teal-300">
                           {t.dashboardPreviewBadge}
+                          {/* Human-requested (2026-08-26): the badge alone doesn't say WHY a
+                              mockup counts as "preview" — this spells out that these screenshots'
+                              data points go beyond the real model (see CLAUDE.md's Danger Zones
+                              note on 'image'-mode panels: fabricated machine names, alert counts,
+                              an un-backed "time to likely failure"). Nested inside the pill itself
+                              (human-requested, 2026-08-26) rather than floated beside it. 'end'
+                              anchors the popover leftward, matching the pill's own right-aligned
+                              position. */}
+                          <InfoTip label={t.dashboardPreviewInfoLabel} position="end">
+                            {t.dashboardPreviewInfoBody}
+                          </InfoTip>
                         </span>
                       </div>
                       <Image

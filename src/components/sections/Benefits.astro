@@ -29,10 +29,10 @@ const benefits = t.tiles.map((b, i) => ({ ...b, icon: TILE_ICONS[i] }));
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
       <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">
-        What the system can help with
+        {t.eyebrow}
       </p>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
-        Fewer surprises. Lower costs. Longer-lasting machines.
+        {t.heading}
       </h2>
     </div>
 
@@ -74,7 +74,7 @@ const benefits = t.tiles.map((b, i) => ({ ...b, icon: TILE_ICONS[i] }));
                 breakpoint, so a plain 'end' anchor (opens leftward, into the
                 card's own — always wide-enough — width) is safe everywhere. */}
             <span class="absolute right-4 top-4">
-              <InfoTip icon="eco" label={`Environmental benefit of ${b.title}`} position="end">
+              <InfoTip icon="eco" label={t.ecoTipLabel(b.title)} position="end">
                 {b.eco}
               </InfoTip>
             </span>

@@ -61,7 +61,7 @@ export const de: Dictionary = {
     backToTop: 'Nach oben ↑',
     aboutBody:
       'Vorausschauende Wartung für Industrieanlagen — eine vollständige MLOps-Pipeline: Live-Sensorvorhersagen, automatisierte Drift-Überwachung und selbstauslösendes Retraining.',
-    aboutCapstonePrefix: 'Eine Abschlussprojekt-Präsentation auf Basis',
+    aboutCapstonePrefix: 'Ein Abschlussprojekt auf Basis',
     aboutCapstoneBold: 'simulierter CNC-Sensordaten',
     aboutCapstoneSuffix: '— noch kein produktiver Einsatz bei zahlenden Kunden.',
     builtUsingOpenData: 'Erstellt mit offenen Daten von',
@@ -95,9 +95,9 @@ export const de: Dictionary = {
     headingPrevent: 'Stillstand',
     headingLine2: 'vermeiden.',
     subtitle:
-      'Ein System für vorausschauende Wartung, das Maschinenausfälle erkennt, bevor sie eintreten — entwickelt, um zu zeigen, wie Fertigungsteams Verfügbarkeit und Effizienz maximieren könnten.',
-    capstoneNote: 'Eine Abschlussprojekt-Präsentation auf Basis simulierter CNC-Sensordaten.',
-    hoverForDetails: 'Für Details bewegen',
+      'Ein System für vorausschauende Wartung, das Maschinenausfälle erkennt, bevor sie eintreten — entwickelt, um zu zeigen, wie Fertigungsteams Betriebszeit und Effizienz maximieren könnten.',
+    capstoneNote: 'Ein Abschlussprojekt auf Basis simulierter CNC-Sensordaten.',
+    hoverForDetails: 'Für Details hierhin bewegen',
     checkingFor: 'Prüft auf …',
     markers: {
       powerFailure: {
@@ -111,9 +111,9 @@ export const de: Dictionary = {
         ariaLabel: 'Werkzeugverschleiß-Ausfall: beobachtet, wie die Verschleißzeit sich dem Austauschfenster nähert, bevor ein abgenutztes Werkzeug zufällig ausfällt.',
       },
       heatDissipationFailure: {
-        title: 'Wärmeableitungs-Ausfall',
+        title: 'Wärmeabgabe-Ausfall',
         detail: 'Beobachtet Temperaturdifferenz und Drehzahl gemeinsam, bevor die Wärme keinen Weg mehr hat, zu entweichen.',
-        ariaLabel: 'Wärmeableitungs-Ausfall: beobachtet Temperaturdifferenz und Drehzahl gemeinsam, bevor die Wärme keinen Weg mehr hat, zu entweichen.',
+        ariaLabel: 'Wärmeabgabe-Ausfall: beobachtet Temperaturdifferenz und Drehzahl gemeinsam, bevor die Wärme keinen Weg mehr hat, zu entweichen.',
       },
     },
   },
@@ -121,10 +121,10 @@ export const de: Dictionary = {
   howItWorks: {
     heading: 'Der KI- und MLOps-Kreislauf hinter kontinuierlicher Zuverlässigkeit',
     subtitle: 'Ein System. Ein Kreislauf. Lernt ständig dazu.',
-    mobileLoopBack: 'fließt zurück in Erfassen — lernt ständig dazu',
+    mobileLoopBack: 'fließt zurück in Datenerfassung — lernt ständig dazu',
     steps: [
       {
-        title: 'Erfassen',
+        title: 'Datenerfassung',
         body: 'Sensordaten der Maschinen in Echtzeit streamen.',
         info: 'Sensoren an den Maschinen senden alle paar Sekunden Echtzeit-Messwerte — Temperatur, Vibration, Druck. Ohne diesen Schritt funktioniert nichts anderes im Kreislauf: Er liefert das Rohmaterial, auf dem jede Vorhersage aufbaut. Man kann es sich als die Augen und Ohren des Systems auf dem Fabrikboden vorstellen.',
       },
@@ -146,13 +146,13 @@ export const de: Dictionary = {
       {
         title: 'Verbessern',
         body: 'Vorhersagen werden mit der Zeit besser — das senkt Stillstand und Kosten.',
-        info: 'Mit einem aktuellen Modell werden Vorhersagen schärfer, statt mit der Zeit schlechter zu werden. Das bedeutet weniger überraschende Ausfälle und weniger Zeit und Geld für unnötige Wartung. Hier zahlt sich der Kreislauf aus — jeder Durchlauf von Erfassen → Vorhersagen → Erkennen → Neu trainieren hinterlässt ein etwas besseres System als zuvor.',
+        info: 'Mit einem aktuellen Modell werden Vorhersagen schärfer, statt mit der Zeit schlechter zu werden. Das bedeutet weniger überraschende Ausfälle und weniger Zeit und Geld für unnötige Wartung. Hier zahlt sich der Kreislauf aus — jeder Durchlauf von Datenerfassung → Vorhersagen → Erkennen → Neu trainieren hinterlässt ein etwas besseres System als zuvor.',
       },
     ],
     outcome: {
       title: 'Geschäftlicher Nutzen',
       body: 'Mehr Verfügbarkeit. Geringere Kosten. Längere Lebensdauer der Anlagen.',
-      info: 'All das summiert sich zu weniger ungeplanten Stillständen, geringeren Wartungskosten und Anlagen, die länger halten, bevor sie ersetzt werden müssen. Das ist der Grund, warum es den gesamten Kreislauf überhaupt gibt — jeder technische Schritt rechtfertigt sich durch dieses Ergebnis. Die Resultate fließen dann zurück in Erfassen, sodass die Verbesserung nie endet.',
+      info: 'All das summiert sich zu weniger ungeplanten Stillständen, geringeren Wartungskosten und Anlagen, die länger halten, bevor sie ersetzt werden müssen. Das ist der Grund, warum es den gesamten Kreislauf überhaupt gibt — jeder technische Schritt rechtfertigt sich durch dieses Ergebnis. Die Resultate fließen dann zurück in Datenerfassung, sodass die Verbesserung nie endet.',
     },
   },
 
@@ -196,7 +196,7 @@ export const de: Dictionary = {
       {
         title: 'Sensordaten',
         body: 'Live-/simulierte Messwerte der Maschinen',
-        info: 'Das ist derselbe Schritt „Erfassen“ aus So funktioniert’s, hier gezeigt als die tatsächliche Systemkomponente, die ihn empfängt: ein Erfassungspunkt, der Live-Sensordaten (oder simulierte, für die Demo) aufnimmt und an das Vorhersagemodell weitergibt.',
+        info: 'Das ist derselbe Schritt „Datenerfassung“ aus So funktioniert’s, hier gezeigt als die tatsächliche Systemkomponente, die ihn empfängt: ein Erfassungspunkt, der Live-Sensordaten (oder simulierte, für die Demo) aufnimmt und an das Vorhersagemodell weitergibt.',
       },
       {
         title: 'Predict-API',
@@ -286,10 +286,10 @@ export const de: Dictionary = {
     failureModes: {
       toolWear: 'Werkzeugverschleiß-Ausfall',
       power: 'Leistungsausfall',
-      heatDissipation: 'Wärmeableitungs-Ausfall',
+      heatDissipation: 'Wärmeabgabe-Ausfall',
       overstrain: 'Überlastungs-Ausfall',
     },
-    hoverForDetails: 'Für Details bewegen',
+    hoverForDetails: 'Für Details hierhin bewegen',
     noDriftDetected: 'Keine Drift erkannt',
     machineDetails: {
       cnc02: 'Normal — keine Auffälligkeiten',
@@ -312,7 +312,7 @@ export const de: Dictionary = {
     beats: [
       { time: '02:16 Uhr', title: 'Drift erkannt', body: 'Werkzeugverschleiß-Verschiebung an CNC-01 von Evidently AI erkannt.' },
       { time: '02:17 Uhr', title: 'Pipeline ausgelöst', body: 'Die GitHub-Actions-Pipeline startet automatisch.' },
-      { time: '02:28 Uhr', title: 'Modell neu trainiert', body: 'Ein neues Modell trainiert mit den aktuellsten Fabrikdaten.' },
+      { time: '02:28 Uhr', title: 'Modell neu trainiert', body: 'Ein neues Modell trainiert mit den aktuellsten Sensordaten.' },
       { time: '02:45 Uhr', title: 'Modell befördert', body: 'Die neue Version übertrifft die alte und geht automatisch live.' },
       { time: '06:47 Uhr', title: 'System einwandfrei', body: 'Die Wartungsleitung öffnet das Dashboard. Keine Anrufe. Keine Vorfälle.' },
     ],
@@ -334,7 +334,7 @@ export const de: Dictionary = {
     seeTheDashboard: 'Dashboard ansehen →',
     closingLine1: 'Ein System.',
     closingLine2: 'Lernt ständig dazu.',
-    closingLine3: 'Schützt beständig.',
+    closingLine3: 'Schützt langfristig.',
   },
 
   savingsCalculator: {
@@ -430,9 +430,9 @@ export const de: Dictionary = {
   productPreview: {
     eyebrow: 'Das Produkt',
     heading: 'So könnte das Dashboard aussehen.',
-    bodyPrefix: 'in einer echten Fabrikumgebung: eine Wartungszentrale mit Flottenzustand, nach Ausfallwahrscheinlichkeit sortierten Maschinen und Live-Sensordaten. Die Seitenleiste ist',
+    bodyPrefix: 'In einer echten Fabrikumgebung: eine Wartungszentrale mit Zustand der Maschinenflotte, nach Ausfallwahrscheinlichkeit sortierten Maschinen und Live-Sensordaten. Die Seitenleiste ist',
     bodyInteractive: 'interaktiv',
-    bodySuffix: ', und zeigt je nach Bereich Mockups oder echte Daten — klicken Sie sich selbst durch die Abschnitte.',
+    bodySuffix: ', und zeigt je nach Bereich eine Vorschau oder echte Daten — klicken Sie sich selbst durch die Abschnitte.',
     legendLiveData: 'Live, interaktive Daten',
     legendDashboardPreview: 'Dashboard-Vorschau',
     browserChromeUrl: 'preempt-analytics · Wartungszentrale',
@@ -440,6 +440,9 @@ export const de: Dictionary = {
     soonBadge: 'Bald',
     inDevelopmentSuffix: ' (in Entwicklung)',
     dashboardPreviewBadge: 'Dashboard-Vorschau',
+    dashboardPreviewInfoLabel: 'Was bedeutet „Dashboard-Vorschau“?',
+    dashboardPreviewInfoBody:
+      'Bitte beachten Sie: Diese Vorschau enthält eine größere Bandbreite an Datenpunkten, als unser Modell derzeit nutzt.',
     panelAlt: {
       overview:
         'Übersicht des Preempt Analytics Wartungsdashboards: eine Kachel „Gesamter Flottenzustand“ bei 94 %, eine Prioritäts-Wartungswarteschlange mit eingestuften Maschinen wie Press-07 (97 % Ausfallwahrscheinlichkeit, kritisch) und CNC-03 (89 %, hoch), ein Trenddiagramm der Ausfallwahrscheinlichkeit sowie Live-Sensorkacheln für Temperatur, Vibration, Drehzahl, Drehmoment und Werkzeugverschleiß.',
@@ -451,7 +454,7 @@ export const de: Dictionary = {
     soonPlaceholder: 'Dieser Teil des Dashboards befindet sich noch in Entwicklung.',
     liveMachines: {
       heading: 'Live-Maschinen',
-      body: 'Ein echter Durchlauf der Demo, aufgezeichnet und abgespielt. Jeder Sensorwert und jede Wahrscheinlichkeit unten stammt aus den Produktionsmodellen — nichts davon ist simuliert.',
+      body: 'Ein echter Durchlauf der Demo, aufgezeichnet und abgespielt. Jeder Sensorwert und jede Wahrscheinlichkeit unten stammt aus den produktiven Modellen — nichts davon ist simuliert.',
       badge: 'Aufzeichnung · nicht live',
       play: 'Abspielen',
       pause: 'Pause',
@@ -469,14 +472,14 @@ export const de: Dictionary = {
         toolWear: 'Werkzeugverschleiß',
       },
       caption: (recordedOn: string, recordedSpan: string, recordedVersions: string) =>
-        `Aufgezeichnet am ${recordedOn} · ${recordedSpan} Minuten Fabrikzeit · Modelle ${recordedVersions}. Die Messwerte stammen aus dem eigenen Sensorgenerator der Demo, abgetastet aus dem AI4I-2020-Datensatz; die Wahrscheinlichkeiten sind die von den Produktionsmodellen dafür zurückgegebenen Werte. Die Maschinen-IDs sind die echten aus dem Durchlauf.`,
+        `Aufgezeichnet am ${recordedOn} · ${recordedSpan} Minuten Fabrikzeit · Modelle ${recordedVersions}. Die Messwerte stammen aus dem eigenen Sensorgenerator der Demo, abgetastet aus dem AI4I-2020-Datensatz; die Wahrscheinlichkeiten sind die von den produktiven Modellen dafür zurückgegebenen Werte. Die Maschinen-IDs sind die echten aus dem Durchlauf.`,
       qualityGrade: 'Qualitätsstufe',
       predictedFailure: 'Vorhergesagter Ausfall',
       normal: 'Normal',
       failureTypes: {
         power: 'Leistungsausfall',
         toolWear: 'Werkzeugverschleiß-Ausfall',
-        heatDissipation: 'Wärmeableitungs-Ausfall',
+        heatDissipation: 'Wärmeabgabe-Ausfall',
         overstrain: 'Überlastungs-Ausfall',
       },
     },
@@ -508,7 +511,7 @@ export const de: Dictionary = {
     settings: {
       heading: 'Über diese Demo',
       body: 'Vorausschauende Wartung für Industrieanlagen — eine vollständige MLOps-Pipeline: Live-Sensorvorhersagen, automatisierte Drift-Überwachung und selbstauslösendes Retraining.',
-      capstoneNote: 'Eine Abschlussprojekt-Präsentation auf Basis simulierter CNC-Sensordaten — kein produktiver Einsatz bei zahlenden Kunden.',
+      capstoneNote: 'Ein Abschlussprojekt auf Basis simulierter CNC-Sensordaten — kein produktiver Einsatz bei zahlenden Kunden.',
       team: 'Team',
       program: 'Programm',
       source: 'Quelle',
@@ -517,7 +520,7 @@ export const de: Dictionary = {
       privacyValue: 'Keine Analyse, kein Tracking',
     },
     closingCaption:
-      'Modellzustand und Einstellungen zeigen echte Live-Daten aus dem Produktionsmodell. Übersicht, Warnungen und Vorhersagen sind Dashboard-Vorschauen davon, wie ein vollständiger Einsatz aussehen könnte.',
+      'Modellzustand und Einstellungen zeigen echte Live-Daten aus dem produktiven Modell. Übersicht, Warnungen und Vorhersagen sind Dashboard-Vorschauen davon, wie ein vollständiger Einsatz aussehen könnte.',
   },
 
   productPage: {
