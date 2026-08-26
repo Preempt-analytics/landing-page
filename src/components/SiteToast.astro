@@ -17,25 +17,13 @@
 // own CSS ever sets display:none. Generic "toast" naming sidesteps that
 // pattern-matching without changing what it says or does.
 //
-// Leading illustration (human-requested, 2026-08-11): a "big tech as a tar
-// monster" piece, each head wearing a real Google/Apple/Facebook/Amazon/
-// Microsoft logo. Knowingly a one-off departure from Contract 4's "no
-// third-party trademarked marks" rule that every other logo-shaped spot on
-// this site (the footer's dataset/EU credits, Contract 1) follows instead —
-// raised explicitly and confirmed human-requested rather than applied
-// silently. Imported via astro:assets (not dropped in public/ as a raw
-// asset) so the build still generates a right-sized file rather than
-// shipping the full 428KB source verbatim — width below is requested at 2x
-// the largest CSS display size for retina sharpness, same headroom pattern
-// as UserStory.astro's maintenance-lead photo. Shown large and directly on
-// the card's own dark background (human-requested follow-up, 2026-08-11 —
-// a first pass framed it small in a white backing chip, since the source's
-// transparency hadn't been confirmed; it turned out to genuinely have an
-// alpha-transparent background, so the chip was extra visual noise hiding
-// the art rather than protecting against a solid-white background that was
-// never actually there).
-import { Image } from 'astro:assets';
-import gafamDatavore from '../assets/gafam-datavore.png';
+// Plain text only (human-requested, 2026-08-26): an earlier version led with
+// a "big tech as a tar monster" illustration wearing real Google/Apple/
+// Facebook/Amazon/Microsoft logos, framed around "we reject surveillance
+// capitalism." Replaced with a plainer no-tracking statement and the
+// illustration dropped — keeps this consistent with Contract 4's "no
+// third-party trademarked marks" rule instead of carrying a one-off
+// exception for it.
 import { useTranslations, DEFAULT_LOCALE } from '../i18n';
 
 const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
@@ -51,18 +39,8 @@ const t = useTranslations(locale).siteToast;
   transition:persist
   transition:name={`pa-toast-${locale}`}
 >
-  <!-- Large + centered (human-requested, 2026-08-11: "4-6x larger so you
-       can actually see it clearly") rather than a small side-by-side icon —
-       at this size the art is the opening beat, with the heading/body
-       following underneath as the explanation, not the other way around. -->
-  <div class="flex flex-col items-center text-center">
-    <Image
-      src={gafamDatavore}
-      alt={t.illustrationAlt}
-      width={480}
-      class="pa-toast-art h-auto w-56"
-    />
-    <p class="mt-2 text-sm font-medium tracking-wide text-teal-300">{t.headline}</p>
+  <div class="flex flex-col">
+    <p class="text-sm font-medium tracking-wide text-teal-300">{t.headline}</p>
     <p class="mt-1.5 text-sm leading-relaxed text-muted">
       {t.body}
     </p>
@@ -208,15 +186,6 @@ const t = useTranslations(locale).siteToast;
     .pa-toast {
       --toast-tx: 0;
     }
-  }
-
-  /* Grounds the art against the card's flat navy background now that it has
-     no white backing chip behind it — same "a shadow reads as sitting on
-     something, not floating" instinct as SavingsCalculator.astro's tree
-     icons, just a single softer shadow here since this is one large piece,
-     not a cluster of small ones needing a tight contact shadow too. */
-  .pa-toast-art {
-    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
   }
 
   #pa-toast-timer {

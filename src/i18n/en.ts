@@ -73,8 +73,8 @@ export const en = {
     madeWithLoveIn: 'Made with love in',
     europe: 'Europe',
     copyright: (year: number) => `© ${year} Preempt Analytics — capstone project. Built with Astro & Tailwind.`,
-    ledTicker: 'NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM',
-    ledTickerSrOnly: 'No analytics. No tracking. No surveillance capitalism.',
+    ledTicker: 'NO TRACKING · NO PIXELS · NO ZOMBIE COOKIES',
+    ledTickerSrOnly: 'No tracking. No pixels. No zombie cookies.',
     noLoggingSuffix: '— nothing you do here is logged.',
     privacyTipLabel: 'Our privacy approach',
     privacyTipBody:
@@ -86,9 +86,8 @@ export const en = {
   },
 
   siteToast: {
-    illustrationAlt: 'Illustration of a tar-like monster with the Google, Apple, Facebook, Amazon, and Microsoft logos on its heads',
-    headline: 'We reject surveillance capitalism',
-    body: 'No cookies, no analytics, no trackers — nothing about this visit is collected, so there’s nothing to ask your consent for. This is just here to say so, once. We back that up with real choices too: self-hosted fonts, no third-party scripts, nothing quietly calling home to Google or anyone else.',
+    headline: "We don't track you",
+    body: "We don't believe in tracking people without their permission — so this site has no tracking, no pixels, and no zombie cookies. Nothing about your visit is collected, so there's nothing to ask your consent for. We back that up with real choices too: self-hosted fonts, no third-party scripts, nothing quietly calling home to anyone else.",
     closingInPrefix: 'Closing in',
     closingInSuffix: 's',
     paused: 'Paused',
