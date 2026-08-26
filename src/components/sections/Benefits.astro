@@ -3,40 +3,26 @@
 // some dark); restyled here into one consistent dark-card/teal-icon system, the
 // same fix applied to the hero stat tiles. Maps to #solutions (part 1).
 import InfoTip from '../InfoTip.astro';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).benefits;
 
 // `eco` is a plain-language aside on the environmental angle of each benefit,
 // surfaced via a leaf-icon InfoTip (human-requested, 2026-07-31) — deliberately
 // qualitative ("typically", "often"), not invented numbers, matching the site's
 // existing honesty stance on illustrative content (see CLAUDE.md's Danger
-// Zones on illustrative figures).
-const benefits = [
-  {
-    title: 'Reduce Downtime',
-    body: 'Prevent unexpected failures and unplanned stops.',
-    icon: 'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
-    eco: "Emergency repairs are wasteful, not just costly — a failure caught too late often means an urgent replacement part rushed in on next-day freight instead of standard shipping. Preventing the failure means normal, planned shipping instead of a carbon-heavy scramble.",
-  },
-  {
-    title: 'Extend Asset Life',
-    body: 'Catch issues early and reduce wear and tear.',
-    icon: 'M3 17l6-6 4 4 8-8M21 7v5M21 7h-5',
-    eco: "Every machine carries an environmental cost baked in before it's even switched on — the energy and raw materials used to build it. Keeping equipment running longer instead of replacing it early spreads that upfront footprint over more years of useful life.",
-  },
-  {
-    title: 'Lower Maintenance Costs',
-    body: 'Replace parts based on actual condition, not guesswork.',
-    // Dollar-sign S-curve was mirror-inverted (human review, 2026-07-28) — verified
-    // against a real "$" before fixing; the circle itself was already symmetric.
-    icon: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM14.5 9.5a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1 1.6 2.5 2 2.5 1 2.5 2-1.1 2-2.5 2a2.5 2.5 0 0 1-2.5-1.5M12 6.5v11',
-    eco: "Calendar-based maintenance often replaces parts on a fixed schedule whether they need it or not — swapping out something that still has useful life left. Replacing only what's actually worn means less scrap metal, oil, and packaging.",
-  },
-  {
-    title: 'Increase Operational Efficiency',
-    body: 'More uptime. Smoother operations. Happier teams.',
-    icon: 'M4 20V12M10 20V6M16 20v-9M22 20H2',
-    eco: 'A machine running with an undetected fault — vibration, misalignment, friction — typically draws more energy than one running smoothly, wasting it as heat and wear. Catching problems early keeps machines running at their efficient best, not just their functional minimum.',
-  },
+// Zones on illustrative figures). Icon paths are locale-invariant, so they
+// stay here; the text comes from the i18n dictionary, index-matched.
+const TILE_ICONS = [
+  'M12 7v5l3 2M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z',
+  'M3 17l6-6 4 4 8-8M21 7v5M21 7h-5',
+  // Dollar-sign S-curve was mirror-inverted (human review, 2026-07-28) — verified
+  // against a real "$" before fixing; the circle itself was already symmetric.
+  'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM14.5 9.5a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.9-2.5 2s1 1.6 2.5 2 2.5 1 2.5 2-1.1 2-2.5 2a2.5 2.5 0 0 1-2.5-1.5M12 6.5v11',
+  'M4 20V12M10 20V6M16 20v-9M22 20H2',
 ];
+const benefits = t.tiles.map((b, i) => ({ ...b, icon: TILE_ICONS[i] }));
 ---
 
 <section id="solutions" class="scroll-mt-20 border-t border-white/5 bg-navy-900 py-20">

@@ -1,6 +1,7 @@
 // Build-time helpers for the hero stat tiles. Reads the committed metrics.json
 // (overwritten by CI). Nothing here runs in the browser.
 import metrics from '../data/metrics.json';
+import { DEFAULT_LOCALE, type Locale } from '../i18n';
 
 type Meta = { source?: string; fetched_at?: string | null };
 
@@ -70,15 +71,21 @@ export function lastPromotedAt(): string | null {
   return dates.sort().at(-1) ?? null;
 }
 
-/** Human relative time ("2 days ago") from an ISO string, frozen at build time. */
-export function relativeTime(iso: string | null): string {
-  if (!iso) return 'recently';
+/** Human relative time ("2 days ago" / "vor 2 Tagen") from an ISO string,
+    frozen at build time. Intl.RelativeTimeFormat (Second Law), not a
+    hand-rolled template: English's "X ago" suffix and German's "vor X"
+    prefix are different word orders, and German's plural forms don't follow
+    English's simple singular/plural split — the platform already gets both
+    right, including the phrase order flip, for free. */
+export function relativeTime(iso: string | null, locale: Locale = DEFAULT_LOCALE): string {
+  if (!iso) return locale === 'de' ? 'kürzlich' : 'recently';
   const then = new Date(iso).getTime();
   const diffMs = Date.now() - then;
   const mins = Math.round(diffMs / 60000);
-  if (mins < 60) return `${Math.max(mins, 1)} min ago`;
+  const rtf = new Intl.RelativeTimeFormat(locale === 'de' ? 'de' : 'en', { numeric: 'always' });
+  if (mins < 60) return rtf.format(-Math.max(mins, 1), 'minute');
   const hours = Math.round(mins / 60);
-  if (hours < 24) return `${hours} h ago`;
+  if (hours < 24) return rtf.format(-hours, 'hour');
   const days = Math.round(hours / 24);
-  return `${days} day${days === 1 ? '' : 's'} ago`;
+  return rtf.format(-days, 'day');
 }

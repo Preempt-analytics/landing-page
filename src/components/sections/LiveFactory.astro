@@ -7,6 +7,10 @@
 // rather than sitting in a boxed card.
 import { withBase } from '../../lib/site';
 import { liveMachines } from '../../lib/live-machines';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).liveFactory;
 
 // Mini sparkline for each machine's hover card — the same recorded run
 // /product's Live Machines panel replays (src/data/live-machines.json), drawn
@@ -61,11 +65,11 @@ function sparkPoints(name: string): string {
 // nudging them to notice the OTHER dots are interactive too without needing
 // a bubble on every one of them.
 const machines = [
-  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false, detail: 'Nominal — no anomalies' },
+  { name: 'CNC-02', left: 27.7, top: 30.8, delay: '-0.6s', bootDelay: '0ms', alert: false, detail: t.machineDetails.cnc02 },
   { name: 'CNC-01', left: 61.5, top: 24.4, delay: '0s', bootDelay: '150ms', alert: true },
-  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false, detail: 'All parameters normal' },
-  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false, detail: 'Within safe operating band' },
-  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false, detail: 'Everything looks fine here', hint: true, hintDelay: '2.2s' },
+  { name: 'CNC-03', left: 80.1, top: 26.9, delay: '-1.7s', bootDelay: '300ms', alert: false, detail: t.machineDetails.cnc03 },
+  { name: 'CNC-04', left: 39.1, top: 56.2, delay: '-0.9s', bootDelay: '450ms', alert: false, detail: t.machineDetails.cnc04 },
+  { name: 'CNC-05', left: 67.1, top: 56.6, delay: '-2.1s', bootDelay: '600ms', alert: false, detail: t.machineDetails.cnc05, hint: true, hintDelay: '2.2s' },
 ];
 // The always-visible drift-card below reads its position off this SAME
 // machine's own left/top rather than a separate hand-picked coordinate
@@ -104,13 +108,11 @@ const structureLights = [
     <!-- Copy -->
     <div data-reveal>
       <h2 class="text-4xl font-bold leading-tight tracking-tight sm:text-5xl 2xl:text-6xl">
-        <span class="text-offwhite">Live Factory.</span><br />
-        <span class="text-teal-400">Real Predictions.</span>
+        <span class="text-offwhite">{t.headingLine1}</span><br />
+        <span class="text-teal-400">{t.headingLine2}</span>
       </h2>
       <p class="mt-6 max-w-lg text-lg leading-relaxed text-muted 2xl:max-w-xl 2xl:text-xl">
-        The system can watch CNC milling machines around the clock. The moment
-        tool wear, or process temperature starts to shift, it catches the change — often
-        hours before that could cause a failure.
+        {t.subtitle}
       </p>
 
       <!-- Ambient "system's actively working" status line — moved here from
@@ -155,15 +157,15 @@ const structureLights = [
         class="factory-status-line mt-5 flex items-center gap-2 text-base text-muted/80"
         aria-hidden="true"
       >
-        <span>Checking for</span>
+        <span>{t.checkingFor}</span>
         <span class="factory-status-spinner">
           <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
         </span>
         <span class="factory-status-cycle">
-          <span>Tool Wear Failure</span>
-          <span>Power Failure</span>
-          <span>Heat Dissipation Failure</span>
-          <span>Overstrain Failure</span>
+          <span>{t.failureModes.toolWear}</span>
+          <span>{t.failureModes.power}</span>
+          <span>{t.failureModes.heatDissipation}</span>
+          <span>{t.failureModes.overstrain}</span>
         </span>
       </p>
     </div>
@@ -189,7 +191,7 @@ const structureLights = [
       >
         <img
           src={withBase('/images/live-factory/cnc-factory-floor.png')}
-          alt="Isometric view of a CNC milling factory floor with five machines, glowing teal sensor lights, and a catwalk structure."
+          alt={t.imageAlt}
           class="factory-photo-parallax h-full w-full object-cover"
         />
       </div>
@@ -251,11 +253,7 @@ const structureLights = [
             type="button"
             class={`machine-hotspot ${m.alert ? 'machine-hotspot--alert' : ''}`}
             style={`left: ${m.left}%; top: ${m.top}%;`}
-            aria-label={
-              m.alert
-                ? `${m.name}: drift detected, tool wear shift, 2.3 hours to failure`
-                : `${m.name}: no drift detected, Safe `
-            }
+            aria-label={m.alert ? t.driftAriaLabel(m.name) : t.healthyAriaLabel(m.name)}
           >
             <span
               class={`sensor-pin ${m.alert ? 'sensor-pin--alert' : ''}`}
@@ -264,7 +262,7 @@ const structureLights = [
             />
             {m.hint && (
               <span class="machine-hover-hint" aria-hidden="true" style={`animation-delay: ${m.hintDelay};`}>
-                Hover for details
+                {t.hoverForDetails}
               </span>
             )}
             {!m.alert && (
@@ -272,7 +270,7 @@ const structureLights = [
                 <span class="machine-card-header">
                   <span class="machine-card-status">
                     <span class="machine-card-dot" aria-hidden="true" />
-                    No drift detected
+                    {t.noDriftDetected}
                   </span>
                   <span class="machine-card-name">{m.name}</span>
                 </span>
@@ -313,24 +311,24 @@ const structureLights = [
            visitor who never hovers anything still sees the section's
            point. -->
       <a
-        href={withBase('/product/#live-machines')}
+        href={withBase('/product/#live-machines', locale)}
         class="drift-card tile-hover"
         style={`left: ${alertMachine.left}%; bottom: calc(${100 - alertMachine.top}% + 14px);`}
       >
         <span class="machine-card-header">
           <span class="machine-card-status">
             <span class="machine-card-dot" aria-hidden="true"></span>
-            Drift detected
+            {t.driftDetected}
           </span>
           <span class="machine-card-name">CNC-01</span>
         </span>
-        <span class="machine-card-title">Tool Wear Shift</span>
-        <span class="machine-card-detail">2.3 hrs to failure</span>
+        <span class="machine-card-title">{t.toolWearShift}</span>
+        <span class="machine-card-detail">{t.hoursToFailure}</span>
         <span class="machine-spark machine-spark--reveal">
           <svg viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
             <polyline points={sparkPoints('CNC-01')} />
           </svg>
-          <span class="machine-spark-cta">See it in action →</span>
+          <span class="machine-spark-cta">{t.seeItInAction}</span>
         </span>
       </a>
     </div>

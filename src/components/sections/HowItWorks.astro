@@ -10,55 +10,21 @@
 import Button from '../Button.astro';
 import InfoTip from '../InfoTip.astro';
 import { withBase } from '../../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).howItWorks;
+const tCommon = useTranslations(locale).common;
 
 // Longer, plain-language explanation per card (Krug/Redish: what happens, why
 // it matters, how it connects to the rest of the loop) — surfaced via an
 // InfoTip so the cards themselves stay scannable at a glance, per the
 // existing card body copy, while a curious/non-technical reader can dig one
-// level deeper without leaving the page.
-const steps = [
-  {
-    n: '1',
-    title: 'Collect',
-    body: 'Stream sensor data from the machines in real time.',
-    icon: 'pulse',
-    info: "Sensors on the machines send real-time readings — temperature, vibration, pressure — every few seconds. Nothing else in this loop works without this: it's the raw material every prediction is built on. Think of it as the system's eyes and ears on the factory floor.",
-  },
-  {
-    n: '2',
-    title: 'Predict',
-    body: 'AI models assess failure probability continuously.',
-    icon: 'brain',
-    info: 'AI models look at those incoming readings and continuously estimate how likely each machine is to fail soon. Instead of waiting for a scheduled inspection, you get an early, ongoing read on machine health. This is what turns raw sensor data into a warning you can actually act on.',
-  },
-  {
-    n: '3',
-    title: 'Detect',
-    body: 'Anomalies and drift are caught early and automatically.',
-    icon: 'search',
-    info: 'The system watches for two kinds of change: early warning signs of failure, and a shift in the incoming data itself (called "drift") that could make predictions less reliable. Catching drift automatically means problems get flagged before predictions quietly get worse. This step is what keeps the whole loop trustworthy.',
-  },
-  {
-    n: '4',
-    title: 'Retrain',
-    body: 'Models retrain on fresh data through the pipeline.',
-    icon: 'refresh',
-    info: "When drift or new patterns are detected, the model is automatically retrained on the freshest data — no engineer has to notice a problem and kick it off by hand. This keeps predictions accurate as machines age or conditions change. It's what makes this a living system instead of a one-time model that slowly goes stale.",
-  },
-  {
-    n: '5',
-    title: 'Improve',
-    body: 'Predictions get better over time — cutting downtime and cost.',
-    icon: 'check',
-    info: 'With an up-to-date model back in place, predictions get sharper instead of drifting downward over time. That means fewer surprise breakdowns and less time and money spent on unnecessary maintenance. This is where the loop pays off — every trip around Collect → Predict → Detect → Retrain leaves the system a little better than before.',
-  },
-];
-const outcome = {
-  title: 'Business Impact',
-  body: 'Increase uptime. Lower costs. Extend asset life.',
-  icon: 'chart',
-  info: 'All of the above adds up to fewer unplanned stoppages, lower maintenance costs, and equipment that lasts longer before it needs replacing. This is the reason the whole loop exists — every technical step earns its place by producing this outcome. The results then feed back into Collect, so the improvement never stops.',
-};
+// level deeper without leaving the page. Text comes from the i18n
+// dictionary; only the icon-per-step mapping (locale-invariant) stays here.
+const STEP_ICONS = ['pulse', 'brain', 'search', 'refresh', 'check'];
+const steps = t.steps.map((s, i) => ({ n: String(i + 1), icon: STEP_ICONS[i], ...s }));
+const outcome = { ...t.outcome, icon: 'chart' };
 
 const icons: Record<string, string> = {
   pulse: 'M3 12h3l2-6 4 12 2-6h4',
@@ -85,9 +51,9 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
-        The AI + MLOps loop behind continuous reliability
+        {t.heading}
       </h2>
-      <p class="mt-4 text-lg text-muted 2xl:text-xl">One system. One loop. Always learning.</p>
+      <p class="mt-4 text-lg text-muted 2xl:text-xl">{t.subtitle}</p>
     </div>
 
     <!-- Loop: 6 cards, horizontal row at lg, single column below that (human review,
@@ -128,7 +94,7 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
                 <h3 class="text-center text-base font-semibold text-offwhite">
                   {'n' in s ? `${s.n}. ${s.title}` : s.title}
                   <InfoTip
-                    label={`More about ${s.title}`}
+                    label={tCommon.moreAbout(s.title)}
                     position={i === 0 ? 'start-lg' : isOutcome ? 'end-lg' : 'center'}
                   >
                     {s.info}
@@ -304,13 +270,13 @@ const outcomeGradient = 'linear-gradient(135deg, var(--color-teal-300), var(--co
       <!-- Text confirmation of what the side arrow above already shows visually —
            kept short since the arrow (not this caption) now carries the meaning. -->
       <p class="mt-3 text-center text-xs font-medium text-teal-400/70 lg:hidden">
-        feeds back into Collect — always learning
+        {t.mobileLoopBack}
       </p>
     </div>
 
     <div class="mt-4 flex flex-wrap justify-center gap-4">
-      <Button href={withBase('/product')} variant="solid">See it in action →</Button>
-      <Button href={withBase('/try-it-yourself')} variant="outline">Test it on your device</Button>
+      <Button href={withBase('/product', locale)} variant="solid">{tCommon.seeItInAction}</Button>
+      <Button href={withBase('/try-it-yourself', locale)} variant="outline">{tCommon.testItOnYourDevice}</Button>
     </div>
   </div>
 </section>

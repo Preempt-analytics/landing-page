@@ -7,19 +7,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import ProductPreview from '../components/sections/ProductPreview.astro';
 import Button from '../components/Button.astro';
 import { withBase } from '../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).productPage;
+const tCommon = useTranslations(locale).common;
 ---
 
-<BaseLayout
-  title="See it in action — Preempt Analytics"
-  description="A look at the Preempt Analytics maintenance control center: fleet health, machines ranked by failure probability, and live sensor readings, all in one place."
->
+<BaseLayout title={t.title} description={t.description}>
   <div class="mx-auto max-w-6xl px-5 pt-10 md:px-8">
-    <a href={withBase('/')} class="text-sm text-teal-400 hover:text-teal-300">← Back to home</a>
+    <a href={withBase('/', locale)} class="text-sm text-teal-400 hover:text-teal-300">{tCommon.backToHome}</a>
   </div>
   <ProductPreview />
   <div class="mx-auto max-w-6xl px-5 pb-20 md:px-8">
     <div class="flex justify-center">
-      <Button href={withBase('/try-it-yourself')} variant="solid">Test it on your device →</Button>
+      <Button href={withBase('/try-it-yourself', locale)} variant="solid">{tCommon.testItOnYourDeviceArrow}</Button>
     </div>
   </div>
 </BaseLayout>

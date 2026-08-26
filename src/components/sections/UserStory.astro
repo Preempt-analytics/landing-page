@@ -5,28 +5,28 @@
 import { withBase } from '../../lib/site';
 import { Image } from 'astro:assets';
 import { OVERNIGHT_IMPACT_EUR, formatEur } from '../../lib/savings';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
 // Faceless illustration, not a stock photo of a real employee (see the
 // no-fabricated-people rule in docs/IMAGE_ASSETS.md item 4 and ARCHITECTURE §9.5).
 import maintenanceLead from '../../assets/maintenance-lead.png';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).userStory;
+const tCommon = useTranslations(locale).common;
 
 // Timeline copy + timestamps (human review, 2026-07-23): short, scannable status
 // labels carry the contrast color (Krug — the label is what a scanning eye needs,
 // not the clock); the body sentence underneath stays active-voice / present-tense
 // (§9.5's original tense fix). Retrain/promote timestamps shift +8 min after the
-// trigger to reflect a realistic GitHub Actions queue/startup delay.
-const beats = [
-  { time: '02:16 AM', title: 'Drift Detected', body: 'Tool-wear shift spotted on CNC-01 by Evidently AI.' },
-  { time: '02:17 AM', title: 'Pipeline Triggered', body: 'The GitHub Actions pipeline kicks off automatically.' },
-  { time: '02:28 AM', title: 'Model Retrained', body: 'A fresh model trains on the latest factory data.' },
-  { time: '02:45 AM', title: 'Model Promoted', body: 'The new version beats the old one and goes live automatically.' },
-  { time: '06:47 AM', title: 'System Healthy', body: 'The maintenance lead opens the dashboard. No calls. No incidents.' },
-];
+// trigger to reflect a realistic GitHub Actions queue/startup delay. Times/titles/
+// body come from the i18n dictionary (German uses 24-hour "Uhr" times).
+const beats = t.beats;
 
 const impact = [
-  '1 potential failure prevented',
-  '~8 hours of downtime avoided',
-  `${formatEur(OVERNIGHT_IMPACT_EUR)} saved`,
-  'Production stayed on track',
+  t.impact.failurePrevented,
+  t.impact.downtimeAvoided,
+  `${formatEur(OVERNIGHT_IMPACT_EUR, locale)} ${t.impact.savedSuffix}`,
+  t.impact.productionOnTrack,
 ];
 
 ---
@@ -35,12 +35,12 @@ const impact = [
   <div class="mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center">
       <h2 class="text-4xl font-bold tracking-tight sm:text-5xl 2xl:text-6xl">
-        <span class="text-offwhite">While the dayshift</span>
-        <span class="text-teal-400">sleep…</span>
+        <span class="text-offwhite">{t.headingLine1}</span>
+        <span class="text-teal-400">{t.headingLine2}</span>
       </h2>
-      <p class="mt-4 text-lg text-muted">The system is able to monitor the machines all night.</p>
+      <p class="mt-4 text-lg text-muted">{t.subtitle}</p>
       <span class="mt-4 inline-flex rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
-        Illustrative example
+        {tCommon.illustrativeExample}
       </span>
     </div>
 
@@ -113,9 +113,9 @@ const impact = [
              centered as a unit. -->
         <div class="reveal-story reveal-story--delayed mx-auto w-full max-w-xs" data-overnight-impact>
           <div class="mb-4">
-            <h3 class="text-lg font-semibold text-offwhite">Overnight Impact</h3>
+            <h3 class="text-lg font-semibold text-offwhite">{t.overnightImpactHeading}</h3>
             <span class="mt-2 inline-flex rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
-              Illustrative example
+              {tCommon.illustrativeExample}
             </span>
           </div>
           <ul class="space-y-2.5">
@@ -131,10 +131,10 @@ const impact = [
             }
           </ul>
           <p class="mt-4 text-xs italic text-muted/60">
-            A walkthrough of one night — not aggregated customer data.
+            {t.impactDisclaimer}
           </p>
           <p class="mt-3 border-t border-white/5 pt-3 text-xs text-muted">
-            Try your own numbers in <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">the calculator below ↓</a>.
+            {t.impactFootnotePrefix} <a href="#savings-calculator" class="underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200">{t.impactFootnoteLink}</a>.
           </p>
         </div>
       </div>
@@ -170,7 +170,7 @@ const impact = [
         >
           <Image
             src={maintenanceLead}
-            alt="A maintenance lead, seen from behind with no identifiable face, checking an abstract glowing dashboard on a tablet on a factory floor at night."
+            alt={t.maintenanceLeadAlt}
             widths={[320, 480]}
             sizes="(min-width: 1024px) 33vw, 90vw"
             class="aspect-square w-full object-cover"
@@ -231,7 +231,7 @@ const impact = [
                centering it uses the card's width instead of just occupying
                its left edge. -->
           <div class="ms-reveal flex flex-col items-center text-center" data-morning-summary>
-            <h3 class="ms-heading text-lg font-semibold text-offwhite">Morning Summary</h3>
+            <h3 class="ms-heading text-lg font-semibold text-offwhite">{t.morningSummaryHeading}</h3>
             <div class="mt-4 flex items-center gap-3">
               <!-- data-trace-end: the line's arrival point. This badge is
                    what the trace visually "delivers" the tablet's data into.
@@ -266,8 +266,8 @@ const impact = [
                 </svg>
               </span>
               <p class="text-left text-sm text-muted">
-                <span class="subtitle-line subtitle-line--1">No incidents.</span>
-                <span class="subtitle-line subtitle-line--2">Model upgraded overnight.</span>
+                <span class="subtitle-line subtitle-line--1">{t.morningSummaryLine1}</span>
+                <span class="subtitle-line subtitle-line--2">{t.morningSummaryLine2}</span>
               </p>
             </div>
             <!-- Glassmorphic, not the site's usual solid-teal CTA
@@ -278,8 +278,8 @@ const impact = [
                  two-verb CTA system (see the markup comment on this card
                  above), so a matching one-off visual treatment doesn't
                  introduce a third pattern other CTAs might reach for. */ -->
-            <a href={withBase('/product')} class="ms-cta btn-glass mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold">
-              See the dashboard →
+            <a href={withBase('/product', locale)} class="ms-cta btn-glass mt-6 inline-flex items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold">
+              {t.seeTheDashboard}
             </a>
           </div>
         </div>
@@ -324,9 +324,9 @@ const impact = [
     </div>
 
     <p class="mt-14 text-center text-2xl font-semibold sm:text-3xl">
-      <span class="text-offwhite">One system.</span>
-      <span class="text-teal-400">Always learning.</span>
-      <span class="text-offwhite">Always protecting.</span>
+      <span class="text-offwhite">{t.closingLine1}</span>
+      <span class="text-teal-400">{t.closingLine2}</span>
+      <span class="text-offwhite">{t.closingLine3}</span>
     </p>
   </div>
 </section>

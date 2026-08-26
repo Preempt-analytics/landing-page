@@ -1,19 +1,35 @@
 ---
 import Logo from './Logo.astro';
-import { NAV_LINKS, withBase } from '../lib/site';
+import AccessibilityMenu from './AccessibilityMenu.astro';
+import LanguageSwitcher from './LanguageSwitcher.astro';
+import { getNavLinks, withBase } from '../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale);
+const navLinks = getNavLinks(locale);
 ---
 
+<!-- transition:name is keyed by locale, not a fixed string, so this only
+     persists across same-locale navigations. Astro matches persisted
+     elements by transition:name between the old and new page; a fixed name
+     would match the German page's <header> against the already-rendered
+     English one and keep the OLD (English) DOM in place after clicking the
+     language switcher, silently leaving the nav in English under German
+     page content until a hard refresh. A name mismatch on that one
+     cross-locale hop just falls back to Astro's normal (re-rendered)
+     transition, which is what's actually wanted there. -->
 <header
   class="nav-header sticky top-0 z-50 border-b border-white/5 bg-navy-950/80 backdrop-blur-md"
   data-nav
   transition:persist
-  transition:name="site-nav"
+  transition:name={`site-nav-${locale}`}
 >
   <nav class="mx-auto flex max-w-7xl items-center justify-between gap-6 px-5 py-3.5 md:px-8">
     <a
-      href={withBase('/')}
+      href={withBase('/', locale)}
       class="inline-block shrink-0 transition-transform duration-[var(--dur-base)] ease-[var(--ease-ios)] hover:scale-105 active:scale-95"
-      aria-label="Preempt Analytics — home"
+      aria-label={t.nav.homeAriaLabel}
     >
       <Logo />
     </a>
@@ -21,7 +37,7 @@ import { NAV_LINKS, withBase } from '../lib/site';
     <!-- Desktop links -->
     <ul class="hidden items-center gap-7 lg:flex">
       {
-        NAV_LINKS.map((link) => (
+        navLinks.map((link) => (
           <li>
             <a href={link.href} class="nav-link text-sm font-medium text-muted hover:text-offwhite">
               {link.label}
@@ -31,15 +47,26 @@ import { NAV_LINKS, withBase } from '../lib/site';
       }
     </ul>
 
-    <!-- Mobile toggle -->
-    <button
-      type="button"
-      id="nav-toggle"
-      class="inline-flex items-center justify-center rounded-md p-2 text-muted transition-[color,transform] duration-[var(--dur-fast)] ease-[var(--ease-ios)] hover:text-offwhite active:scale-90 lg:hidden"
-      aria-label="Toggle menu"
-      aria-expanded="false"
-      aria-controls="mobile-menu"
-    >
+    <!-- Accessibility + language controls: two separate, self-evident
+         controls rather than one combined menu (Krug review, 2026-08-12 —
+         customization and content-language are different mental models, and
+         folding both under one icon adds a click of ambiguity neither
+         needs). Sits between the nav links and the mobile toggle so it's
+         reachable at every breakpoint, unlike the links themselves which
+         collapse into the mobile menu below lg. -->
+    <div class="flex items-center gap-2">
+      <LanguageSwitcher locale={locale} />
+      <AccessibilityMenu locale={locale} />
+
+      <!-- Mobile toggle -->
+      <button
+        type="button"
+        id="nav-toggle"
+        class="inline-flex items-center justify-center rounded-md p-2 text-muted transition-[color,transform] duration-[var(--dur-fast)] ease-[var(--ease-ios)] hover:text-offwhite active:scale-90 lg:hidden"
+        aria-label={t.nav.toggleMenu}
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
       <!-- Mobile-audit fix (2026-08-07): three independently-transformable
            lines instead of one combined path, so the icon can morph into an
            X when open (below) — the button already toggled `aria-expanded`
@@ -52,14 +79,15 @@ import { NAV_LINKS, withBase } from '../lib/site';
         <path class="nav-toggle-line nav-toggle-line--mid" d="M4 12h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
         <path class="nav-toggle-line nav-toggle-line--bottom" d="M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
       </svg>
-    </button>
+      </button>
+    </div>
   </nav>
 
   <!-- Mobile menu -->
   <div id="mobile-menu" class="border-t border-white/5 lg:hidden">
     <ul class="mx-auto flex max-w-7xl flex-col gap-1 px-5 py-3">
       {
-        NAV_LINKS.map((link) => (
+        navLinks.map((link) => (
           <li>
             <a
               href={link.href}
@@ -101,6 +129,70 @@ import { NAV_LINKS, withBase } from '../lib/site';
   syncScrolled();
   window.addEventListener('scroll', syncScrolled, { passive: true });
   document.addEventListener('astro:page-load', syncScrolled);
+
+  // Watch Dogs 2-style "lock-on" reticule for the Project & Team link
+  // (human-requested, 2026-08-12) — a one-shot visual cue that frames
+  // Footer.astro's #team-panel as the page scrolls to it, so the jump reads
+  // as landing somewhere specific rather than an anonymous scroll. Scoped to
+  // only this one link, not generalized to the other three homepage-anchor
+  // links — a deliberate, specific ask, not a new sitewide pattern.
+  //
+  // Positioned with position:absolute at the target's own document
+  // coordinates (rect + scrollY/scrollX), not position:fixed re-measured on
+  // a scroll listener — an absolutely-positioned box scrolls with the page
+  // like any other document content, so it stays glued to the target for
+  // free with no rAF tracking loop needed, and can be spawned immediately on
+  // click (before smooth-scroll even starts) since a target's document
+  // position doesn't change as the page scrolls, only what's visible does.
+  function fireTargetingReticule(target: HTMLElement) {
+    document.querySelector('.targeting-reticule')?.remove();
+    const rect = target.getBoundingClientRect();
+    const box = document.createElement('div');
+    box.className = 'targeting-reticule';
+    box.style.top = `${rect.top + window.scrollY}px`;
+    box.style.left = `${rect.left + window.scrollX}px`;
+    box.style.width = `${rect.width}px`;
+    box.style.height = `${rect.height}px`;
+    box.innerHTML =
+      '<span class="reticule-corner reticule-corner--tl"></span>' +
+      '<span class="reticule-corner reticule-corner--tr"></span>' +
+      '<span class="reticule-corner reticule-corner--bl"></span>' +
+      '<span class="reticule-corner reticule-corner--br"></span>';
+    document.body.appendChild(box);
+    // Matches the CSS animation's own total run time (global.css's
+    // reticule-life keyframes) — removed from the DOM rather than left
+    // display:none so a lingering pointer-events:none box can't outlive its
+    // own visible animation.
+    window.setTimeout(() => box.remove(), 1500);
+  }
+
+  // True only between a click on a cross-page copy of this link and the
+  // resulting astro:page-load — never set (and so never consulted) by a
+  // same-page click, which fires immediately below instead. This is what
+  // stops a same-page click from ever double-firing the reticule regardless
+  // of whether Astro's ClientRouter also happens to raise astro:page-load
+  // for a same-pathname, hash-only navigation.
+  let reticuleArmed = false;
+  document.querySelectorAll<HTMLAnchorElement>('a[href*="#project-team"]').forEach((link) => {
+    link.addEventListener('click', () => {
+      if (link.pathname !== location.pathname) {
+        reticuleArmed = true;
+        return;
+      }
+      const target = document.getElementById('team-panel');
+      if (target) fireTargetingReticule(target);
+    });
+  });
+  document.addEventListener('astro:page-load', () => {
+    if (!reticuleArmed) return;
+    reticuleArmed = false;
+    // Lets the browser's own fragment-scroll settle before framing it —
+    // firing on the same tick would measure the pre-scroll layout.
+    window.setTimeout(() => {
+      const target = document.getElementById('team-panel');
+      if (target) fireTargetingReticule(target);
+    }, 350);
+  });
 </script>
 
 <style>

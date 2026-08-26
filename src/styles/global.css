@@ -195,6 +195,53 @@ body {
   animation: ambient-breathe 12s ease-in-out infinite;
 }
 
+/* ---------------------------------------------------------------------------
+   Shared nav dropdown-panel chrome — AccessibilityMenu.astro and
+   LanguageSwitcher.astro both open a small hover/click panel anchored under
+   a nav-row button. Lives here, not in either component's own scoped
+   <style>, for the same reason .hero-glow does (see that rule's own
+   comment): Astro scopes component styles per-file, and this exact visual
+   shell (position, translucent panel, open/close transition) is reused
+   across more than one component. Each component still keeps its own
+   width/content-specific rules locally. -->
+--------------------------------------------------------------------------- */
+.nav-dropdown-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 20;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: color-mix(in srgb, var(--color-navy-900) 96%, transparent);
+  backdrop-filter: blur(8px);
+  padding: 1rem;
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px) scale(0.98);
+  transform-origin: top right;
+  /* Same delayed-visibility technique as Nav.astro's #mobile-menu and
+     InfoTip.astro's popover — visibility only flips to hidden after the
+     fade/scale-out finishes, so it stays out of the tab order once closed
+     without an abrupt display:none cut. */
+  transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-ios),
+    visibility 0s linear var(--dur-base);
+}
+.nav-dropdown-panel.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+  transition: opacity var(--dur-fast) var(--ease-ios), transform var(--dur-base) var(--ease-spring), visibility 0s;
+}
+.nav-dropdown-heading {
+  margin-bottom: 0.75rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+}
+
 /* Generic scroll-reveal primitive: any element marked data-reveal starts
    faded/offset and settles once JS (BaseLayout's shared IntersectionObserver)
    adds .is-visible. The <noscript> block there forces visibility for
@@ -258,6 +305,43 @@ body {
   transition-timing-function: var(--ease-ios), var(--ease-ios), var(--ease-ios), var(--ease-ios);
 }
 
+/* Watch Dogs 2-style "lock-on" reticule — spawned at runtime by Nav.astro's
+   script when the Project & Team link is clicked, framing Footer.astro's
+   #team-panel as the page scrolls to it. Lives here rather than in Nav.astro's
+   own scoped <style>: Astro only stamps its data-astro-cid scoping attribute
+   onto elements present in a component's compiled template, so a scoped style
+   block would silently match nothing created via document.createElement at
+   runtime the way this box is. */
+.targeting-reticule {
+  position: absolute;
+  z-index: 40; /* above section content, below the sticky nav's z-50 */
+  pointer-events: none;
+  margin: -14px; /* frame sits just outside the target's own box, not flush */
+  animation: reticule-life 1.4s var(--ease-ios) forwards;
+}
+.reticule-corner {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--color-teal-400);
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-teal-400) 65%, transparent));
+}
+.reticule-corner--tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+.reticule-corner--tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+.reticule-corner--bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+.reticule-corner--br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+/* Converge-in from slightly oversized, hold, then fade — the "lock-on"
+   read. Collapses to a near-instant flash under the reduced-motion rule
+   below (same as every other keyframe on this page), which is enough to
+   still land the cue without the motion. */
+@keyframes reticule-life {
+  0% { opacity: 0; transform: scale(1.35); }
+  18% { opacity: 1; transform: scale(1); }
+  75% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.96); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after {
@@ -274,4 +358,66 @@ body {
   ::view-transition-new(*) {
     animation: none !important;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   Accessibility overrides — driven by AccessibilityMenu.astro's three
+   controls via data-* attributes on <html> (applied pre-paint by
+   BaseLayout.astro's inline head script, then kept in sync by
+   AccessibilityMenu's own script). Each block is additive to the base
+   styles above, not a theme swap — the site stays dark-only (§12).
+--------------------------------------------------------------------------- */
+
+/* Text size: a single root font-size lever. Every Tailwind size utility
+   sitewide is rem-based, so this scales the whole page proportionally
+   without touching component markup — the same reasoning as the wide-screen
+   max-w-7xl override above (one central rule beats a per-component pass). */
+:root[data-text-size='lg'] {
+  font-size: 112.5%;
+}
+:root[data-text-size='xl'] {
+  font-size: 125%;
+}
+
+/* High contrast: brightens the two text tokens most of the site's copy
+   already uses (both are @theme tokens, so every text-muted/text-offwhite
+   utility picks this up automatically) and strengthens the focus ring and
+   the two hairline-border utilities used for nearly every card/section
+   edge sitewide. Still the same dark palette, just with more separation
+   between foreground and background — not a light theme (§12). */
+:root[data-contrast='high'] {
+  --color-muted: #f8fafc;
+  --color-offwhite: #ffffff;
+}
+:root[data-contrast='high'] :focus-visible {
+  outline-width: 3px;
+}
+:root[data-contrast='high'] .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+:root[data-contrast='high'] .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Reduced motion, manually toggled: a visitor may not be able to change
+   their OS-level prefers-reduced-motion setting (shared/work machine) but
+   still wants animation off on this site. Duplicates the
+   prefers-reduced-motion block above rather than trying to combine a media
+   feature and an attribute selector in one rule (CSS can't OR the two) —
+   same values, so having both active at once is harmless. */
+:root[data-motion='reduced'] {
+  scroll-behavior: auto;
+}
+:root[data-motion='reduced'] *,
+:root[data-motion='reduced'] *::before,
+:root[data-motion='reduced'] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+:root[data-motion='reduced'] ::view-transition-group(*),
+:root[data-motion='reduced'] ::view-transition-old(*),
+:root[data-motion='reduced'] ::view-transition-new(*) {
+  animation: none !important;
 }

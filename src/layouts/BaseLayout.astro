@@ -5,14 +5,19 @@ import Nav from '../components/Nav.astro';
 import Footer from '../components/Footer.astro';
 import SiteToast from '../components/SiteToast.astro';
 import { withBase } from '../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
 
 interface Props {
   title?: string;
   description?: string;
 }
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale);
 const {
-  title = 'Preempt Analytics — Predictive Maintenance',
-  description = 'Predict machine failures before they happen. A predictive-maintenance MLOps capstone: live sensor predictions, automated drift monitoring, and self-triggering retraining.',
+  title = locale === 'de' ? 'Preempt Analytics — Vorausschauende Wartung' : 'Preempt Analytics — Predictive Maintenance',
+  description = locale === 'de'
+    ? 'Maschinenausfälle vorhersagen, bevor sie eintreten. Ein MLOps-Abschlussprojekt für vorausschauende Wartung: Live-Sensorvorhersagen, automatisierte Drift-Überwachung und selbstauslösendes Retraining.'
+    : 'Predict machine failures before they happen. A predictive-maintenance MLOps capstone: live sensor predictions, automated drift monitoring, and self-triggering retraining.',
 } = Astro.props;
 
 // Project-scoped social preview (§10) — no personal identity, points at the project.
@@ -20,7 +25,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -39,13 +44,38 @@ const canonical = new URL(Astro.url.pathname, Astro.site).href;
     <meta name="theme-color" content="#0a0f1a" />
     <meta name="color-scheme" content="dark" />
     <ClientRouter />
+
+    <script is:inline>
+      // Applies a returning visitor's saved accessibility preferences BEFORE
+      // first paint — AccessibilityMenu.astro's own script only wires up the
+      // interactive controls and assumes these attributes are already
+      // correct by the time it runs. Deliberately synchronous/inline
+      // (not deferred, not a module) and tiny: the alternative is a visible
+      // flash of default text-size/contrast/motion on every load for anyone
+      // who's customized them, which is worse than the small amount of
+      // blocking JS this costs. `<html>`'s data-* attributes survive
+      // client-side view transitions like any other DOM state, so this only
+      // needs to run once per hard page load, not per navigation.
+      (function () {
+        try {
+          var root = document.documentElement;
+          var size = localStorage.getItem('pa-text-size');
+          if (size === 'lg' || size === 'xl') root.dataset.textSize = size;
+          if (localStorage.getItem('pa-contrast') === 'high') root.dataset.contrast = 'high';
+          if (localStorage.getItem('pa-motion') === 'reduced') root.dataset.motion = 'reduced';
+        } catch (e) {
+          // localStorage can throw in locked-down/private-browsing contexts —
+          // fail open to the default appearance rather than break the page.
+        }
+      })();
+    </script>
   </head>
   <body id="top">
     <a
       href="#main-content"
       class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-teal-400 focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-navy-950"
     >
-      Skip to content
+      {t.nav.skipToContent}
     </a>
     <Nav />
     <main id="main-content">

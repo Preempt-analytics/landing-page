@@ -1,0 +1,110 @@
+---
+// Language toggle — a Wikipedia-style autonym link ("Deutsch" while on the
+// English site, "English" while on the German site), not a flag icon: a
+// flag maps to a country, not a language, and German-speaking Austria/
+// Switzerland is the obvious foot-gun (Krug-style usability review,
+// 2026-08-12). Back to a single directly-clickable link (human-requested,
+// 2026-08-12) — this briefly became a dropdown panel matching
+// AccessibilityMenu.astro's interaction, but with only two locales there's
+// nothing a menu reveals that the link's own visible text doesn't already
+// say: "Deutsch" IS the destination, one click away, so a menu just adds a
+// step. AccessibilityMenu keeps its panel — three toggles genuinely benefit
+// from disclosure; a single link doesn't.
+import { withBase } from '../lib/site';
+import { useTranslations, DEFAULT_LOCALE, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const t = useTranslations(locale).languageSwitcher;
+const otherLocale: Locale = locale === 'de' ? 'en' : 'de';
+
+// Autonym is locale-invariant — the link always reads "Deutsch"/"English"
+// regardless of which locale is currently active. LOCALE_NAMES_IN is only
+// for the aria-label: "Switch to German" (target named in THIS page's
+// language) reads better to a screen reader than "Switch to Deutsch" would.
+const LOCALE_AUTONYMS: Record<Locale, string> = { en: 'English', de: 'Deutsch' };
+const LOCALE_NAMES_IN: Record<Locale, Record<Locale, string>> = {
+  en: { en: 'English', de: 'German' },
+  de: { en: 'Englisch', de: 'Deutsch' },
+};
+
+// Strip this site's base and the current locale's own URL segment from the
+// current path, leaving a bare route ('', 'product', 'try-it-yourself', …)
+// that withBase() can re-prefix with the OTHER locale — so the link lands on
+// the same page translated, not just that locale's homepage. Mirrored in
+// this file's own <script> below for the client-side-navigation case (see
+// that comment for why both copies exist).
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+let route = Astro.url.pathname;
+if (base && route.startsWith(base)) route = route.slice(base.length);
+route = route.replace(/^\//, '');
+if (locale !== DEFAULT_LOCALE) {
+  if (route === locale) route = '';
+  else if (route.startsWith(`${locale}/`)) route = route.slice(locale.length + 1);
+}
+const href = withBase(route || '/', otherLocale);
+---
+
+<a
+  id="lang-switch-link"
+  href={href}
+  lang={otherLocale}
+  data-other-locale={otherLocale}
+  class="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-muted transition-colors duration-[var(--dur-fast)] ease-[var(--ease-ios-in-out)] hover:text-offwhite"
+  aria-label={t.switchTo(LOCALE_NAMES_IN[locale][otherLocale])}
+>
+  <!-- Globe pictogram, kept from the earlier dropdown version (human-
+       requested, 2026-08-12) — stroke="currentColor" so it inherits this
+       link's own text-muted -> hover:text-offwhite colors, sized to match
+       AccessibilityMenu's 18x18 toggle icon so the two nav controls still
+       read as a uniform pair. Text stays always-visible (not hidden below
+       sm like AccessibilityMenu's label) — "Deutsch" being directly
+       readable/clickable is the whole point of this being a plain link
+       again, not just an icon. -->
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M2 12c0 5.523 4.477 10 10 10s10-4.477 10-10S17.523 2 12 2S2 6.477 2 12Z" />
+    <path d="M13 2.05S16 6 16 12c0 6-3 9.95-3 9.95m-2 0S8 18 8 12c0-6 3-9.95 3-9.95M2.63 15.5h18.74m-18.74-7h18.74" />
+  </svg>
+  {LOCALE_AUTONYMS[otherLocale]}
+</a>
+
+<script>
+  // Nav.astro's <header> (this component's parent) is transition:persist-ed
+  // per-locale (see that file's own comment), so it survives same-locale
+  // client-side navigations unchanged — meaning this link's `href`, computed
+  // server-side from the page that FIRST rendered it, would otherwise go
+  // stale the moment a visitor clicks any in-locale nav link: it'd keep
+  // pointing at the German translation of whichever page loaded first, not
+  // the page currently on screen. Recomputing from the live URL on every
+  // astro:page-load (same pattern Nav.astro's own syncScrolled uses for the
+  // same underlying reason) keeps it pointed at "this page, other language."
+  const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+  function syncLangSwitchHref() {
+    const link = document.getElementById('lang-switch-link');
+    if (!(link instanceof HTMLAnchorElement)) return;
+    const otherLocale = link.dataset.otherLocale;
+    if (!otherLocale) return;
+
+    let route = window.location.pathname;
+    if (BASE && route.startsWith(BASE)) route = route.slice(BASE.length);
+    route = route.replace(/^\//, '');
+
+    // Current locale is whichever one this link does NOT point to.
+    const currentLocale = otherLocale === 'de' ? 'en' : 'de';
+    if (currentLocale !== 'en') {
+      if (route === currentLocale) route = '';
+      else if (route.startsWith(`${currentLocale}/`)) route = route.slice(currentLocale.length + 1);
+    }
+
+    const segments = [BASE];
+    if (otherLocale !== 'en') segments.push(otherLocale);
+    if (route) segments.push(route);
+    link.href = segments.join('/') + '/';
+  }
+
+  syncLangSwitchHref();
+  document.addEventListener('astro:page-load', syncLangSwitchHref);
+</script>

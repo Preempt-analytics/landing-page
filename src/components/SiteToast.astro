@@ -16,31 +16,85 @@
 // version of this component (id="privacy-notice") even though nothing in our
 // own CSS ever sets display:none. Generic "toast" naming sidesteps that
 // pattern-matching without changing what it says or does.
+//
+// Leading illustration (human-requested, 2026-08-11): a "big tech as a tar
+// monster" piece, each head wearing a real Google/Apple/Facebook/Amazon/
+// Microsoft logo. Knowingly a one-off departure from Contract 4's "no
+// third-party trademarked marks" rule that every other logo-shaped spot on
+// this site (the footer's dataset/EU credits, Contract 1) follows instead —
+// raised explicitly and confirmed human-requested rather than applied
+// silently. Imported via astro:assets (not dropped in public/ as a raw
+// asset) so the build still generates a right-sized file rather than
+// shipping the full 428KB source verbatim — width below is requested at 2x
+// the largest CSS display size for retina sharpness, same headroom pattern
+// as UserStory.astro's maintenance-lead photo. Shown large and directly on
+// the card's own dark background (human-requested follow-up, 2026-08-11 —
+// a first pass framed it small in a white backing chip, since the source's
+// transparency hadn't been confirmed; it turned out to genuinely have an
+// alpha-transparent background, so the chip was extra visual noise hiding
+// the art rather than protecting against a solid-white background that was
+// never actually there).
+import { Image } from 'astro:assets';
+import gafamDatavore from '../assets/gafam-datavore.png';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).siteToast;
 ---
 
+<!-- transition:name is locale-keyed — see Nav.astro's identical comment. -->
 <div
   id="pa-toast"
   class="pa-toast fixed bottom-5 left-1/2 z-50 w-[min(90%,24rem)] rounded-3xl border border-white/10 bg-navy-900/90 p-5 shadow-2xl backdrop-blur-md sm:bottom-6 lg:left-auto lg:right-6"
   role="status"
   aria-live="polite"
   transition:persist
-  transition:name="pa-toast"
+  transition:name={`pa-toast-${locale}`}
 >
-  <p class="text-sm font-medium tracking-wide text-teal-300">We reject surveillance capitalism</p>
-  <p class="mt-1.5 text-sm leading-relaxed text-muted">
-    No cookies, no analytics, no trackers — nothing about this visit is collected, so there's
-    nothing to ask your consent for. This is just here to say so, once.
-  </p>
+  <!-- Large + centered (human-requested, 2026-08-11: "4-6x larger so you
+       can actually see it clearly") rather than a small side-by-side icon —
+       at this size the art is the opening beat, with the heading/body
+       following underneath as the explanation, not the other way around. -->
+  <div class="flex flex-col items-center text-center">
+    <Image
+      src={gafamDatavore}
+      alt={t.illustrationAlt}
+      width={480}
+      class="pa-toast-art h-auto w-56"
+    />
+    <p class="mt-2 text-sm font-medium tracking-wide text-teal-300">{t.headline}</p>
+    <p class="mt-1.5 text-sm leading-relaxed text-muted">
+      {t.body}
+    </p>
+  </div>
   <div class="mt-3 flex items-center justify-between gap-3">
-    <span class="text-xs text-muted/60" aria-hidden="true">
-      Closing in <span id="pa-toast-timer">7</span>s
+    <!-- Both children stay in this span's own aria-hidden scope (matches the
+         original countdown-only span) — the toast not auto-dismissing while
+         hovered/focused is what matters functionally for AT users, and the
+         whole strip already goes unannounced, so a "Paused" label here would
+         just be visual-only noise if it weren't hidden too. The countdown
+         stays in normal flow and the paused indicator overlays it via
+         .pa-toast-status's position:relative below, so the pill's width is
+         always set by the (longer) countdown string and swapping states
+         never shifts the dismiss button beside it. -->
+    <span class="pa-toast-status text-xs text-muted/60" aria-hidden="true">
+      <span class="pa-toast-status-countdown">
+        {t.closingInPrefix} <span id="pa-toast-timer">9</span>{t.closingInSuffix}
+      </span>
+      <span class="pa-toast-status-paused">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1" />
+          <rect x="14" y="5" width="4" height="14" rx="1" />
+        </svg>
+        {t.paused}
+      </span>
     </span>
     <button
       type="button"
       id="pa-toast-dismiss"
       class="pa-toast-dismiss shrink-0 rounded-full border border-teal-400/50 px-4 py-1.5 text-xs font-semibold text-teal-300 transition-colors duration-[var(--dur-fast)] ease-[var(--ease-ios-in-out)] hover:bg-teal-400/10 hover:text-teal-200"
     >
-      Got it
+      {t.dismiss}
     </button>
   </div>
 </div>
@@ -49,7 +103,10 @@
   // Runs once: this component is transition:persist-ed in BaseLayout (same
   // reasoning as Nav.astro's own top-level script), so a fresh
   // astro:page-load rebind isn't needed here.
-  const AUTO_DISMISS_MS = 6500;
+  // Bumped +2s (2026-08-12) to give the new anti-tracking sentence below
+  // enough time to actually be read before auto-dismiss. Keep the hardcoded
+  // "9" in the markup above in sync — it's ceil(AUTO_DISMISS_MS / 1000).
+  const AUTO_DISMISS_MS = 8500;
   const STORAGE_KEY = 'pa-toast-seen';
 
   const toast = document.getElementById('pa-toast');
@@ -87,13 +144,19 @@
     // from) so a keyboard/screen-reader user mid-read doesn't have the toast
     // vanish under them — cheap to add and matches the site's general "don't
     // rush the visitor" motion philosophy (global.css's slowed-down durations).
+    // The is-paused class swaps the countdown for a "Paused" signifier below
+    // (CSS) — a silently-frozen number reads as broken/stuck, not paused, so
+    // pausing needs its own visible confirmation rather than just the
+    // absence of a change.
     const start = () => {
+      toast.classList.remove('is-paused');
       if (tickId) return;
       tickId = setInterval(tick, 1000);
     };
     const pause = () => {
       clearInterval(tickId);
       tickId = undefined;
+      toast.classList.add('is-paused');
     };
 
     toast.classList.add('is-visible');
@@ -147,11 +210,51 @@
     }
   }
 
+  /* Grounds the art against the card's flat navy background now that it has
+     no white backing chip behind it — same "a shadow reads as sitting on
+     something, not floating" instinct as SavingsCalculator.astro's tree
+     icons, just a single softer shadow here since this is one large piece,
+     not a cluster of small ones needing a tight contact shadow too. */
+  .pa-toast-art {
+    filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.45));
+  }
+
   #pa-toast-timer {
     display: inline-block;
     min-width: 1ch;
     font-weight: 600;
     color: var(--color-teal-300);
+  }
+
+  /* Countdown and "Paused" signifier occupy the same spot, crossfaded rather
+     than swapped with display:none — .pa-toast-status stays a normal-flow
+     inline-flex sized by the countdown (the longer of the two strings in
+     both locales), and the paused span is the only absolutely-positioned
+     one, so toggling .is-paused never shifts the dismiss button beside it. */
+  .pa-toast-status {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+  }
+  .pa-toast-status-countdown,
+  .pa-toast-status-paused {
+    transition: opacity var(--dur-fast) var(--ease-ios-in-out);
+  }
+  .pa-toast-status-paused {
+    position: absolute;
+    inset: 0;
+    left: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    opacity: 0;
+    color: var(--color-teal-300);
+  }
+  .pa-toast.is-paused .pa-toast-status-countdown {
+    opacity: 0;
+  }
+  .pa-toast.is-paused .pa-toast-status-paused {
+    opacity: 1;
   }
   @keyframes pa-toast-tick-pulse {
     0%, 100% { transform: scale(1); }

@@ -7,23 +7,29 @@ import {
   lastPromotedAt,
   relativeTime,
 } from '../lib/metrics';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).statRow;
+const tCommon = useTranslations(locale).common;
 
 const live = isLive();
 const recall = `${failureRecallPct()}%`;
 const precision = `${failurePrecisionPct()}%`;
-const retrained = relativeTime(lastPromotedAt());
+const retrained = relativeTime(lastPromotedAt(), locale);
 // Honesty cue (§5): live values labelled live, illustrative copy labelled illustrative.
-const recallCaption = live ? 'live · updated hourly' : 'sample metric';
-const precisionCaption = live ? 'live · updated hourly' : 'sample metric';
+const recallCaption = live ? tCommon.liveUpdatedHourly : tCommon.sampleMetric;
+const precisionCaption = live ? tCommon.liveUpdatedHourly : tCommon.sampleMetric;
 ---
 
 <div class="grid gap-4 sm:grid-cols-3">
   <StatCard
     value={recall}
-    label="Failure Recall"
+    label={t.failureRecall}
     caption={recallCaption}
     captionTone={live ? 'live' : 'plain'}
-    info={'"Recall" measures how many of the machine failures that actually happened were correctly flagged in advance. A higher number means fewer failures slip through unnoticed.'}
+    info={t.failureRecallInfo}
+    locale={locale}
   >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
@@ -34,10 +40,11 @@ const precisionCaption = live ? 'live · updated hourly' : 'sample metric';
 
   <StatCard
     value={precision}
-    label="Failure Precision"
+    label={t.failurePrecision}
     caption={precisionCaption}
     captionTone={live ? 'live' : 'plain'}
-    info={'"Precision" measures how often a failure warning turns out to be a real one. A higher number means fewer false alarms — you\'re not chasing problems that were never really there.'}
+    info={t.failurePrecisionInfo}
+    locale={locale}
   >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" />
@@ -47,10 +54,11 @@ const precisionCaption = live ? 'live · updated hourly' : 'sample metric';
 
   <StatCard
     value="∞"
-    label="Retrains Automatically"
-    caption={`Last retrained ${retrained}`}
+    label={t.retrainsAutomatically}
+    caption={`${t.lastRetrainedPrefix} ${retrained}`}
     captionTone={live ? 'live' : 'plain'}
-    info="The model isn't trained once and left alone. It automatically retrains itself as new sensor data comes in, so its predictions keep improving instead of slowly going stale."
+    info={t.retrainsInfo}
+    locale={locale}
     hint
   >
     <svg slot="icon" width="26" height="26" viewBox="0 0 24 24" fill="none" aria-hidden="true">

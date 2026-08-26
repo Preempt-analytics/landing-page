@@ -1,0 +1,372 @@
+---
+// Top-of-page accessibility widget: text size, high contrast, reduced
+// motion — three controls, persisted to localStorage, applied via data-*
+// attributes on <html> that global.css's accessibility block reads. Kept as
+// its own control, separate from LanguageSwitcher.astro, on a Krug-style
+// usability review (2026-08-12): accessibility customization and content
+// language are different mental models, and a visitor should be able to
+// tell what either control does without a tooltip. The three toggles here
+// are the full set; see global.css's "Accessibility overrides" section for
+// what each one actually changes.
+//
+// The saved preference is applied BEFORE first paint by a tiny blocking
+// script in BaseLayout's <head> (so a returning visitor never sees a flash
+// of default-size/contrast/motion) — this component's own script only
+// wires up the interactive controls and keeps them in sync with whatever
+// that head script already applied.
+import { useTranslations, DEFAULT_LOCALE, type Locale } from '../i18n';
+
+interface Props {
+  locale: Locale;
+}
+const { locale } = Astro.props;
+const t = useTranslations(locale).accessibilityMenu;
+---
+
+<div class="a11y-menu relative" id="a11y-menu-root">
+  <button
+    type="button"
+    id="a11y-menu-toggle"
+    class="inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-muted transition-colors duration-[var(--dur-fast)] ease-[var(--ease-ios-in-out)] hover:text-offwhite"
+    aria-label={t.buttonLabel}
+    aria-expanded="false"
+    aria-controls="a11y-menu-panel"
+  >
+    <!-- International accessibility pictogram (svgrepo.com), swapped in for
+         the earlier hand-drawn stick figure — solid fill, not an outline
+         like most icons here, so it's currentColor on the <svg> itself
+         rather than a per-stroke color (same pattern as the footer's EU-stars
+         glyph). Native 16x16 viewBox kept as-is; only the hardcoded black
+         fill was replaced to respect Contract 4 (no one-off hex). -->
+    <svg width="18" height="18" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <path
+        fill-rule="evenodd"
+        clip-rule="evenodd"
+        d="M16 8C16 12.4183 12.4183 16 8 16C3.58172 16 0 12.4183 0 8C0 3.58172 3.58172 0 8 0C12.4183 0 16 3.58172 16 8ZM9.25 3.75C9.25 4.44036 8.69036 5 8 5C7.30964 5 6.75 4.44036 6.75 3.75C6.75 3.05964 7.30964 2.5 8 2.5C8.69036 2.5 9.25 3.05964 9.25 3.75ZM12 8H9.41901L11.2047 13H9.081L8 9.97321L6.91901 13H4.79528L6.581 8H4V6H12V8Z"
+      />
+    </svg>
+    <span class="hidden sm:inline">{t.buttonLabel}</span>
+  </button>
+
+  <!-- role="group", not "dialog" — this is a non-modal disclosure panel (no
+       focus trap, no initial-focus-on-open), and announcing it as a dialog
+       sets an expectation the implementation doesn't deliver (Krug+Redish
+       review, 2026-08-12). -->
+  <div id="a11y-menu-panel" class="nav-dropdown-panel a11y-menu-panel" role="group" aria-label={t.panelHeading}>
+    <p class="nav-dropdown-heading">{t.panelHeading}</p>
+
+    <div class="a11y-menu-row">
+      <span class="a11y-menu-row-label">{t.textSize}</span>
+      <div class="a11y-stepper" role="group" aria-label={t.textSize}>
+        <button type="button" id="a11y-text-decrease" aria-label={t.textSizeDecrease}>A−</button>
+        <button type="button" id="a11y-text-reset" aria-label={t.textSizeReset} aria-pressed="true">A</button>
+        <button type="button" id="a11y-text-increase" aria-label={t.textSizeIncrease}>A+</button>
+      </div>
+    </div>
+
+    <label class="a11y-menu-toggle-row">
+      <span class="flex items-start gap-2">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="mt-0.5 shrink-0 text-offwhite">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 21a9 9 0 0 0 0-18v18z" />
+        </svg>
+        <span>
+          <span class="a11y-menu-row-label">{t.highContrast}</span>
+          <span class="a11y-menu-row-description">{t.highContrastDescription}</span>
+        </span>
+      </span>
+      <input type="checkbox" role="switch" id="a11y-contrast-toggle" />
+    </label>
+
+    <label class="a11y-menu-toggle-row">
+      <span class="flex items-start gap-2">
+        <!-- "Motion photo, paused" pictogram (svgrepo.com) — same solid-fill
+             treatment as the High Contrast row's icon above. White/mono
+             (human-requested, 2026-08-12), not the sitewide teal icon-accent
+             — this menu's own icons stay monochromatic as a deliberate,
+             scoped exception. -->
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" class="mt-0.5 shrink-0 text-offwhite">
+          <path d="M10 15q.425 0 .713-.288T11 14v-4q0-.425-.288-.713T10 9q-.425 0-.713.288T9 10v4q0 .425.288.713T10 15Zm4 0q.425 0 .713-.288T15 14v-4q0-.425-.288-.713T14 9q-.425 0-.713.288T13 10v4q0 .425.288.713T14 15Zm-2 7q-2.075 0-3.9-.788t-3.175-2.137q-1.35-1.35-2.137-3.175T2 12q0-.8.125-1.6T2.5 8.825q.125-.4.513-.537t.737.062q.375.2.537.588t.038.812q-.15.55-.238 1.113T4 12q0 3.35 2.325 5.675T12 20q3.35 0 5.675-2.325T20 12q0-3.35-2.325-5.675T12 4q-.6 0-1.188.087T9.65 4.35q-.425.125-.8-.025T8.3 3.8q-.175-.375-.013-.762t.563-.513q.75-.275 1.55-.4T12 2q2.075 0 3.9.788t3.175 2.137q1.35 1.35 2.138 3.175T22 12q0 2.075-.788 3.9t-2.137 3.175q-1.35 1.35-3.175 2.138T12 22ZM5.5 7q-.625 0-1.063-.438T4 5.5q0-.625.438-1.063T5.5 4q.625 0 1.063.438T7 5.5q0 .625-.438 1.063T5.5 7Zm.5 5q0-2.5 1.75-4.25T12 6q2.5 0 4.25 1.75T18 12q0 2.5-1.75 4.25T12 18q-2.5 0-4.25-1.75T6 12Z" />
+        </svg>
+        <span>
+          <span class="a11y-menu-row-label">{t.reduceMotion}</span>
+          <span class="a11y-menu-row-description">{t.reduceMotionDescription}</span>
+        </span>
+      </span>
+      <input type="checkbox" role="switch" id="a11y-motion-toggle" />
+    </label>
+
+    <button type="button" id="a11y-menu-reset" class="a11y-menu-reset">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+        <path d="M3 3v5h5" />
+      </svg>
+      {t.reset}
+    </button>
+  </div>
+</div>
+
+<script>
+  // Bound once at module-eval time, same as Nav.astro's own mobile-menu
+  // toggle: this component lives inside Nav's transition:persist-ed header,
+  // so the DOM node (and every listener below) survives same-locale
+  // client-side navigations rather than being torn down and rebuilt.
+  const TEXT_SIZES = ['md', 'lg', 'xl'] as const;
+  type TextSize = (typeof TEXT_SIZES)[number];
+
+  const root = document.documentElement;
+  const toggle = document.getElementById('a11y-menu-toggle');
+  const panel = document.getElementById('a11y-menu-panel');
+  const decreaseBtn = document.getElementById('a11y-text-decrease');
+  const resetTextBtn = document.getElementById('a11y-text-reset');
+  const increaseBtn = document.getElementById('a11y-text-increase');
+  const contrastToggle = document.getElementById('a11y-contrast-toggle') as HTMLInputElement | null;
+  const motionToggle = document.getElementById('a11y-motion-toggle') as HTMLInputElement | null;
+  const resetAllBtn = document.getElementById('a11y-menu-reset');
+
+  function currentTextSize(): TextSize {
+    const size = root.dataset.textSize;
+    return (TEXT_SIZES as readonly string[]).includes(size ?? '') ? (size as TextSize) : 'md';
+  }
+
+  function updateStepperState() {
+    const size = currentTextSize();
+    const i = TEXT_SIZES.indexOf(size);
+    if (decreaseBtn instanceof HTMLButtonElement) decreaseBtn.disabled = i === 0;
+    if (increaseBtn instanceof HTMLButtonElement) increaseBtn.disabled = i === TEXT_SIZES.length - 1;
+    resetTextBtn?.setAttribute('aria-pressed', String(size === 'md'));
+  }
+
+  function setTextSize(size: TextSize) {
+    if (size === 'md') delete root.dataset.textSize;
+    else root.dataset.textSize = size;
+    localStorage.setItem('pa-text-size', size);
+    updateStepperState();
+  }
+
+  function setContrast(high: boolean) {
+    if (high) {
+      root.dataset.contrast = 'high';
+      localStorage.setItem('pa-contrast', 'high');
+    } else {
+      delete root.dataset.contrast;
+      localStorage.removeItem('pa-contrast');
+    }
+    if (contrastToggle) contrastToggle.checked = high;
+  }
+
+  function setMotion(reduced: boolean) {
+    if (reduced) {
+      root.dataset.motion = 'reduced';
+      localStorage.setItem('pa-motion', 'reduced');
+    } else {
+      delete root.dataset.motion;
+      localStorage.removeItem('pa-motion');
+    }
+    if (motionToggle) motionToggle.checked = reduced;
+  }
+
+  // Sync the controls' own visible state to whatever BaseLayout's pre-paint
+  // script already applied — this never needs to re-run per navigation
+  // (see this file's top comment) since <html>'s data-* attributes persist
+  // across client-side transitions same as any other DOM state.
+  if (contrastToggle) contrastToggle.checked = root.dataset.contrast === 'high';
+  if (motionToggle) motionToggle.checked = root.dataset.motion === 'reduced';
+  updateStepperState();
+
+  decreaseBtn?.addEventListener('click', () => {
+    const i = TEXT_SIZES.indexOf(currentTextSize());
+    setTextSize(TEXT_SIZES[Math.max(0, i - 1)]);
+  });
+  resetTextBtn?.addEventListener('click', () => setTextSize('md'));
+  increaseBtn?.addEventListener('click', () => {
+    const i = TEXT_SIZES.indexOf(currentTextSize());
+    setTextSize(TEXT_SIZES[Math.min(TEXT_SIZES.length - 1, i + 1)]);
+  });
+
+  contrastToggle?.addEventListener('change', () => setContrast(!!contrastToggle.checked));
+  motionToggle?.addEventListener('change', () => setMotion(!!motionToggle.checked));
+
+  resetAllBtn?.addEventListener('click', () => {
+    setTextSize('md');
+    setContrast(false);
+    setMotion(false);
+  });
+
+  // Panel open/close: click-toggle for keyboard/touch (tabbing to the
+  // button + pressing Enter/Space fires the same `click` event a tap does —
+  // no separate keyboard path needed) that PINS the panel open until
+  // explicitly closed, layered with a mouse-hover reveal for a quick peek
+  // without needing to click at all (human-requested, 2026-08-12). The two
+  // are independent: hovering opens/closes it for free; clicking sets
+  // `pinned`, which keeps it open even after the mouse leaves, until the
+  // next click, Escape, or an outside click/focus.
+  let pinned = false;
+
+  function closePanel() {
+    panel?.classList.remove('is-open');
+    toggle?.setAttribute('aria-expanded', 'false');
+    pinned = false;
+  }
+  function openPanel() {
+    panel?.classList.add('is-open');
+    toggle?.setAttribute('aria-expanded', 'true');
+  }
+  toggle?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    if (pinned) {
+      closePanel();
+    } else {
+      openPanel();
+      pinned = true;
+    }
+  });
+  panel?.addEventListener('click', (event) => event.stopPropagation());
+  document.addEventListener('click', closePanel);
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && panel?.classList.contains('is-open')) {
+      closePanel();
+      (toggle as HTMLElement | null)?.focus();
+    }
+  });
+
+  // Sighted keyboard users who tab past the last control (a11y-menu-reset)
+  // move focus out to the mobile hamburger button — without this, an
+  // un-pinned panel opened by hover/click would stay visibly open (and in
+  // the tab order) after focus has already moved elsewhere on the page.
+  const menuRoot = document.getElementById('a11y-menu-root');
+  menuRoot?.addEventListener('focusout', (event) => {
+    const next = (event as FocusEvent).relatedTarget as Node | null;
+    if (!next || !menuRoot.contains(next)) closePanel();
+  });
+
+  // Hover reveal: a short close-delay (not an instant mouseleave close)
+  // bridges the small visual gap between the toggle button and the panel
+  // below it — without it, moving the mouse diagonally from button to panel
+  // crosses a sliver of empty space with neither element under the pointer,
+  // flickering the panel shut before the cursor arrives. Re-entering before
+  // the delay fires cancels the pending close.
+  let hoverCloseTimer: ReturnType<typeof setTimeout> | undefined;
+  menuRoot?.addEventListener('pointerenter', () => {
+    clearTimeout(hoverCloseTimer);
+    openPanel();
+  });
+  menuRoot?.addEventListener('pointerleave', () => {
+    if (pinned) return;
+    hoverCloseTimer = setTimeout(closePanel, 150);
+  });
+</script>
+
+<style>
+  /* Panel chrome (position, translucent background, open/close transition)
+     lives in global.css's shared .nav-dropdown-panel — LanguageSwitcher.astro
+     uses the exact same rules, so it's centralized there rather than
+     duplicated (see that rule's own comment). Only this panel's own width
+     stays local. */
+  .a11y-menu-panel {
+    width: 17rem;
+  }
+
+  .a11y-menu-row,
+  .a11y-menu-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .a11y-menu-row:first-of-type {
+    border-top: none;
+    padding-top: 0;
+  }
+
+  .a11y-menu-row-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-offwhite);
+  }
+  .a11y-menu-row-description {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: var(--color-muted);
+  }
+
+  .a11y-stepper {
+    display: inline-flex;
+    overflow: hidden;
+    border-radius: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .a11y-stepper button {
+    min-width: 2rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    background: transparent;
+    transition: background-color var(--dur-fast) var(--ease-ios), color var(--dur-fast) var(--ease-ios);
+  }
+  .a11y-stepper button:not(:last-child) {
+    border-right: 1px solid rgba(255, 255, 255, 0.15);
+  }
+  .a11y-stepper button:hover {
+    color: var(--color-offwhite);
+    background-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .a11y-menu-toggle-row input[type='checkbox'] {
+    flex-shrink: 0;
+    width: 2.25rem;
+    height: 1.25rem;
+    appearance: none;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: var(--color-navy-800);
+    cursor: pointer;
+    position: relative;
+    transition: background-color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios);
+  }
+  .a11y-menu-toggle-row input[type='checkbox']::after {
+    content: '';
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 9999px;
+    background: var(--color-muted);
+    transition: transform var(--dur-fast) var(--ease-ios), background-color var(--dur-fast) var(--ease-ios);
+  }
+  .a11y-menu-toggle-row input[type='checkbox']:checked {
+    background: color-mix(in srgb, var(--color-teal-400) 35%, var(--color-navy-800));
+    border-color: var(--color-teal-400);
+  }
+  .a11y-menu-toggle-row input[type='checkbox']:checked::after {
+    transform: translateX(1rem);
+    background: var(--color-teal-400);
+  }
+
+  .a11y-menu-reset {
+    margin-top: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    width: 100%;
+    border-radius: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 0.45rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    transition: color var(--dur-fast) var(--ease-ios), border-color var(--dur-fast) var(--ease-ios);
+  }
+  .a11y-menu-reset:hover {
+    color: var(--color-offwhite);
+    border-color: color-mix(in srgb, var(--color-teal-400) 40%, transparent);
+  }
+</style>

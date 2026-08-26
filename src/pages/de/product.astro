@@ -1,0 +1,29 @@
+---
+// German /product page — mirrors src/pages/product.astro exactly (see that
+// file's own comments for the section's history). Only the relative import
+// depth changes (one directory deeper under /de/); all copy comes from the
+// i18n dictionary via Astro.currentLocale, resolved automatically from this
+// file's location under Astro's i18n routing (astro.config.mjs). Keep this
+// file's composition in sync with product.astro's whenever it changes.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProductPreview from '../../components/sections/ProductPreview.astro';
+import Button from '../../components/Button.astro';
+import { withBase } from '../../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).productPage;
+const tCommon = useTranslations(locale).common;
+---
+
+<BaseLayout title={t.title} description={t.description}>
+  <div class="mx-auto max-w-6xl px-5 pt-10 md:px-8">
+    <a href={withBase('/', locale)} class="text-sm text-teal-400 hover:text-teal-300">{tCommon.backToHome}</a>
+  </div>
+  <ProductPreview />
+  <div class="mx-auto max-w-6xl px-5 pb-20 md:px-8">
+    <div class="flex justify-center">
+      <Button href={withBase('/try-it-yourself', locale)} variant="solid">{tCommon.testItOnYourDeviceArrow}</Button>
+    </div>
+  </div>
+</BaseLayout>

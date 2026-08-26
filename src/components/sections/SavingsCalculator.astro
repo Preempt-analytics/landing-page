@@ -22,6 +22,11 @@ import {
   estimateTreesSaved,
   formatEur,
 } from '../../lib/savings';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).savingsCalculator;
+const tCommon = useTranslations(locale).common;
 
 const live = isLive();
 const recall = failureRecallPct();
@@ -30,7 +35,7 @@ const { min, max, step, default: defaultCost } = SAVINGS_SLIDER;
 const defaultSavings = estimateMonthlySavings(defaultCost, recall);
 const defaultWithPM = defaultCost - defaultSavings;
 const defaultWithPct = ((defaultWithPM / defaultCost) * 100).toFixed(1);
-const liveCaption = live ? 'live · updated hourly' : 'sample metric';
+const liveCaption = live ? tCommon.liveUpdatedHourly : tCommon.sampleMetric;
 
 // Trees-saved figure (human-requested, 2026-08-07) — see savings.ts for why
 // this is a deliberately round illustrative ratio, not a carbon calculation.
@@ -161,15 +166,53 @@ function stageScale(opacity: number, baseScale: number) {
 }
 ---
 
-<section id="savings-calculator" class="scroll-mt-20 border-t border-white/5 bg-navy-950 py-20">
-  <div class="mx-auto max-w-7xl px-5 md:px-8">
+<section id="savings-calculator" class="relative scroll-mt-20 overflow-hidden border-t border-white/5 bg-navy-950 py-20">
+  <!-- Ambient background photo (human-requested, 2026-08-11) — an erupting
+       volcano at night, used purely as an abstract proto-metaphor for
+       industrial heat/energy, not a literal factory reference (LiveFactory
+       already owns the site's one literal factory photo). Heavily blurred
+       and scaled past its own edges so the blur has real pixel data to
+       sample past the visible boundary — a plain blur flush with the
+       container edge halos/clips instead. Plain DOM order (no z-index on
+       either layer) keeps this behind the content div below without the
+       negative-z-index "escapes behind a different section" bug Hero.astro
+       and LiveFactory.astro both had to work around for their own glow
+       layers — z-index math is unnecessary here since nothing needs to
+       stack ABOVE the content. A dark navy wash on top keeps the slider/
+       copy readable and the palette inside Contract 4's dark system rather
+       than competing with it — a first pass stacked opacity-40 on the img
+       under a gradient that went nearly opaque almost everywhere, which
+       compounded into the photo being essentially invisible; the values
+       below (70% image opacity, a much lighter gradient) are the corrected
+       balance. object-[center_62%] biases the crop toward the lower-middle
+       glow rather than the frame's true center — on an ultra-wide/short
+       section (a very wide viewport with modest content height),
+       object-cover crops hard from top and bottom to cover the width, and a
+       plain center crop pushed the actual warm glow (sitting below the
+       photo's geometric center) out of frame. 2xl:blur-3xl widens the blur
+       radius to match the much larger rendered size on super-widescreen —
+       blur-2xl's fixed 40px radius reads as comparatively sharp/small once
+       the image itself is upscaled to cover a 1536px+-wide section — that
+       upscaling past the source's native 2000px width is intentional and
+       harmless, since the blur already discards fine detail regardless. -->
+
+  <div class="pointer-events-none absolute inset-0" aria-hidden="true">
+    <img
+      src={withBase('/images/savings-calculator/volcano-night.jpg')}
+      alt=""
+      class="h-full w-full scale-110 object-cover object-[center_62%] opacity-70 blur-2xl 2xl:blur-3xl"
+    />
+    <div class="absolute inset-0 bg-gradient-to-b from-navy-950/35 via-navy-950/55 to-navy-950/85"></div>
+  </div>
+
+  <div class="relative mx-auto max-w-7xl px-5 md:px-8">
     <div class="mx-auto max-w-2xl text-center" data-reveal>
-      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">Scenario: You are in charge of a factory</p>
+      <p class="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-teal-400">{t.eyebrow}</p>
       <h2 class="text-3xl font-bold tracking-tight text-offwhite sm:text-4xl 2xl:text-5xl">
-        What could this save you?
+        {t.heading}
       </h2>
       <p class="mt-4 text-lg text-muted">
-        Drag the slider to roughly what unplanned downtime costs you each month.
+        {t.subtitle}
       </p>
     </div>
 
@@ -209,7 +252,7 @@ function stageScale(opacity: number, baseScale: number) {
            it can never overlap the value or slider below it. -->
       <div class="flex items-start justify-between gap-4">
         <label for="savings-slider" class="inline-flex items-center gap-1 text-sm font-medium text-offwhite">
-          Your monthly unplanned downtime cost
+          {t.sliderLabel}
           <!-- Plain-language aside (Redish-style: short, concrete, contrasts
                what it IS vs. what it ISN'T) for a label that's really asking
                visitors to do a bit of mental math before they can even use
@@ -220,95 +263,114 @@ function stageScale(opacity: number, baseScale: number) {
                `max` rather than a hardcoded figure so it can't drift out of
                sync with SAVINGS_SLIDER.max (savings.ts) if that ever
                changes. -->
-          <InfoTip label="What does this include?" position="start">
-            Lost production, rushed repairs, idle staff — the real cost each time a machine breaks down without
-            warning. Not the routine maintenance you already budget for. Not sure what to pick? A single line with
-            occasional stoppages usually costs €2,000–€10,000/month; a busier multi-shift line typically runs
-            €15,000–{formatEur(max)}/month. Start with whichever's closer, then adjust.
+          <InfoTip label={t.sliderInfoLabel} position="start">
+            {t.sliderInfoBody(formatEur(max, locale))}
           </InfoTip>
         </label>
         <span class="inline-flex shrink-0 rounded-full border border-teal-400/50 px-2.5 py-0.5 text-[0.65rem] font-medium text-teal-300">
-          Illustrative example
+          {tCommon.illustrativeExample}
         </span>
       </div>
-      <div class="mt-2 text-3xl font-bold tabular-nums text-offwhite" data-sc-input-value>{formatEur(defaultCost)}</div>
-      <input
-        type="range"
-        id="savings-slider"
-        min={min}
-        max={max}
-        step={step}
-        value={defaultCost}
-        data-sc-slider
-        aria-label="Your monthly unplanned downtime cost, in euros"
-        class="mt-4 h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-teal-400"
-      />
-      <div class="mt-1.5 flex justify-between text-xs text-muted/60">
-        <span>{formatEur(min)}</span>
-        <span>{formatEur(max)}</span>
+      <div class="mt-2 text-3xl font-bold tabular-nums text-offwhite" data-sc-input-value>{formatEur(defaultCost, locale)}</div>
+      <!-- Min/max labels flank the track itself, same line, rather than a
+           second row underneath (human-requested, 2026-08-11 — the previous
+           dashed-leader-line row read as an extra element competing with the
+           slider instead of just marking its two ends). shrink-0 on the
+           labels + flex-1 on the input is what keeps the track filling all
+           the remaining space between them at any viewport width. -->
+      <div class="mt-6 flex items-center gap-3">
+        <span class="shrink-0 text-xs tabular-nums text-muted/60">{formatEur(min, locale)}</span>
+        <input
+          type="range"
+          id="savings-slider"
+          min={min}
+          max={max}
+          step={step}
+          value={defaultCost}
+          data-sc-slider
+          aria-label={t.sliderAriaLabel}
+          class="h-1.5 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-teal-400"
+        />
+        <span class="shrink-0 text-xs tabular-nums text-muted/60">{formatEur(max, locale)}</span>
       </div>
 
-      <!-- Downtime-cost context chips (human research, 2026-08-11) — defuses
-           big downtime-cost headlines a visitor may already have seen
-           elsewhere by showing where three widely-cited figures actually
+      <!-- Downtime-cost context chips (human research, 2026-08-11; German
+           figure added 2026-08-11 follow-up for European/local grounding) —
+           defuses big downtime-cost headlines a visitor may already have
+           seen elsewhere by showing where four widely-cited figures actually
            sit, since most describe a different scale of operation than this
            calculator's own {formatEur(min)}–{formatEur(max)}/month range.
-           Figures stay in their ORIGINAL published currency ($/£), never
-           converted to EUR: inventing a USD/GBP→EUR exchange rate would bake
-           a fabricated, staling number into permanent site copy (CLAUDE.md's
+           Figures stay in their ORIGINAL published currency ($/£/€), never
+           converted: inventing a USD/GBP→EUR exchange rate would bake a
+           fabricated, staling number into permanent site copy (CLAUDE.md's
            "illustrative numbers must stay labeled illustrative" rule) — any
            scale comparison below is made in words, not cross-currency
-           arithmetic. Reuses the "Illustrative example" pill's own rounded-
+           arithmetic. The Germany chip needed no conversion in the first
+           place — ABB published that figure in EUR natively, so it's the one
+           chip a euro-reading visitor can compare directly without doing any
+           mental math. Reuses the "Illustrative example" pill's own rounded-
            pill visual language (above) rather than inventing a new one. -->
       <p class="mt-4 text-xs text-muted/60">
-        You may have seen bigger downtime numbers elsewhere — here's where three widely-cited figures actually sit.
+        {t.contextIntro}
       </p>
       <div class="mt-2 flex flex-wrap gap-2">
         <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
-          <span class="font-semibold text-offwhite">$2.3M<span class="font-normal text-muted/60">/hr</span></span>
-          <span class="text-muted/60">Automotive plants</span>
-          <InfoTip label="About the Siemens figure" position="center">
-            Siemens' 2024 downtime report: automotive plants can lose up to this much per hour of idle production —
-            a different scale of operation than a single production line like the one above. Source:{' '}
+          <span class="font-semibold text-offwhite">{t.citations[0].value}<span class="font-normal text-muted/60">{t.citations[0].unit}</span></span>
+          <span class="text-muted/60">{t.citations[0].source}</span>
+          <InfoTip label={t.citations[0].infoLabel} position="center">
+            {t.citations[0].infoBody}{' '}
             <a
               href="https://assets.new.siemens.com/siemens/assets/api/uuid:1b43afb5-2d07-47f7-9eb7-893fe7d0bc59/TCOD-2024_original.pdf"
               target="_blank"
               rel="noopener noreferrer"
               class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
             >
-              Siemens, True Cost of Downtime 2024
+              {t.citations[0].linkText}
             </a>.
           </InfoTip>
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
-          <span class="font-semibold text-offwhite">$125k<span class="font-normal text-muted/60">/hr</span></span>
-          <span class="text-muted/60">Global average</span>
-          <InfoTip label="About the ABB figure" position="center">
-            ABB's 2023 survey of 3,215 plant-maintenance leaders worldwide found this to be the global average cost
-            per hour of unplanned downtime — many individual businesses report well below it. Source:{' '}
+          <span class="font-semibold text-offwhite">{t.citations[1].value}<span class="font-normal text-muted/60">{t.citations[1].unit}</span></span>
+          <span class="text-muted/60">{t.citations[1].source}</span>
+          <InfoTip label={t.citations[1].infoLabel} position="center">
+            {t.citations[1].infoBody}{' '}
             <a
               href="https://new.abb.com/news/detail/107660/abb-survey-reveals-unplanned-downtime-costs-125-000-per-hour"
               target="_blank"
               rel="noopener noreferrer"
               class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
             >
-              ABB, Value of Reliability survey
+              {t.citations[1].linkText}
             </a>.
           </InfoTip>
         </span>
         <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
-          <span class="font-semibold text-offwhite">{'<'}£500<span class="font-normal text-muted/60">/hr</span></span>
-          <span class="text-muted/60">Smallest UK firms</span>
-          <InfoTip label="About the RS Industria figure" position="center">
-            The smallest UK manufacturers — the scale closest to a single production line — are the ones RS
-            Industria's survey found reporting under £500/hour. Source:{' '}
+          <span class="font-semibold text-offwhite">{t.citations[2].value}<span class="font-normal text-muted/60">{t.citations[2].unit}</span></span>
+          <span class="text-muted/60">{t.citations[2].source}</span>
+          <InfoTip label={t.citations[2].infoLabel} position="center">
+            {t.citations[2].infoBody}{' '}
+            <a
+              href="https://new.abb.com/news/de/detail/116577/ungeplante-stillstande-kosten-deutsche-unternehmen-147000-eur-pro-stunde"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
+            >
+              {t.citations[2].linkText}
+            </a>.
+          </InfoTip>
+        </span>
+        <span class="inline-flex items-center gap-1.5 rounded-full border border-white/15 px-2.5 py-1 text-[0.7rem]">
+          <span class="font-semibold text-offwhite">{t.citations[3].value}<span class="font-normal text-muted/60">{t.citations[3].unit}</span></span>
+          <span class="text-muted/60">{t.citations[3].source}</span>
+          <InfoTip label={t.citations[3].infoLabel} position="center">
+            {t.citations[3].infoBody}{' '}
             <a
               href="https://www.rs-industria.com/knowledge-hub/how-much-is-manufacturing-downtime-costing-you"
               target="_blank"
               rel="noopener noreferrer"
               class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
             >
-              RS Industria, UK manufacturing survey
+              {t.citations[3].linkText}
             </a>.
           </InfoTip>
         </span>
@@ -318,26 +380,37 @@ function stageScale(opacity: number, baseScale: number) {
            improved number, not just a single savings figure. -->
       <div class="mt-8 grid gap-4 sm:grid-cols-2">
         <div class="rounded-lg border border-alert-400/30 bg-alert-400/5 p-4">
-          <p class="text-xs font-medium uppercase tracking-wide text-alert-400">If nothing changes</p>
-          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-without>{formatEur(defaultCost)}</p>
+          <p class="text-xs font-medium uppercase tracking-wide text-alert-400">{t.ifNothingChanges}</p>
+          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-without>{formatEur(defaultCost, locale)}</p>
           <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
             <div class="h-full rounded-full bg-alert-400" style="width: 100%" data-sc-without-bar></div>
           </div>
         </div>
         <div class="rounded-lg border border-teal-400/30 bg-teal-400/5 p-4">
-          <p class="text-xs font-medium uppercase tracking-wide text-teal-300">With predictive maintenance</p>
-          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-with>{formatEur(defaultWithPM)}</p>
+          <p class="text-xs font-medium uppercase tracking-wide text-teal-300">{t.withPredictiveMaintenance}</p>
+          <p class="mt-1 text-xl font-bold tabular-nums text-offwhite" data-sc-with>{formatEur(defaultWithPM, locale)}</p>
           <div class="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-            <div class="h-full rounded-full bg-teal-400" style={`width: ${defaultWithPct}%`} data-sc-with-bar></div>
+            <!-- Fixed-width bar scaled via `transform: scaleX()` (transform-
+                 origin: left), not an animated `width` — `width` changes
+                 force the browser to recompute layout on the main thread on
+                 every slider `input` tick, competing with the drag itself
+                 for the frame budget; `transform` is compositor/GPU-only, no
+                 layout, same mechanism as the tree icons below (human-
+                 requested, 2026-08-11 — smoother dragging). -->
+            <div
+              class="h-full w-full origin-left rounded-full bg-teal-400"
+              style={`transform: scaleX(${(Number(defaultWithPct) / 100).toFixed(4)})`}
+              data-sc-with-bar
+            ></div>
           </div>
         </div>
       </div>
 
       <div class="mt-6 rounded-lg border border-teal-400/40 bg-teal-400/10 p-5 text-center">
-        <p class="text-xs font-medium uppercase tracking-wide text-offwhite">Estimated savings</p>
+        <p class="text-xs font-medium uppercase tracking-wide text-offwhite">{t.estimatedSavings}</p>
         <p class="mt-1 text-3xl font-bold tabular-nums text-teal-300">
-          <span data-sc-savings>{formatEur(defaultSavings)}</span>
-          <span class="text-base font-medium text-offwhite"> / month</span>
+          <span data-sc-savings>{formatEur(defaultSavings, locale)}</span>
+          <span class="text-base font-medium text-offwhite">{t.perMonthSuffix}</span>
         </p>
 
         <!-- Trees saved — parallel illustrative figure in the same card
@@ -373,18 +446,14 @@ function stageScale(opacity: number, baseScale: number) {
              better") rather than reintroduced as a third row. -->
         <div class="mt-5 border-t border-teal-400/20 pt-5">
           <p class="flex items-center justify-center gap-1 text-xs font-medium uppercase tracking-wide text-offwhite">
-            Trees saved (equivalent)
-            <InfoTip icon="eco" label="How is this estimated?" position="center">
-              A rough, illustrative comparison, not a carbon calculation — this project's model predicts failures,
-              not emissions. Unplanned downtime commonly wastes energy (idle machines, restart surges, scrapped
-              material); we compare the scale of that avoided waste to a mature tree's yearly CO2 absorption
-              (~21kg), using {formatEur(EUR_PER_TREE_EQUIVALENT)} saved per year ≈ one tree. Meant to give a feel
-              for the scale, not a precise figure.
+            {t.treesSaved}
+            <InfoTip icon="eco" label={t.treesInfoLabel} position="center">
+              {t.treesInfoBody(formatEur(EUR_PER_TREE_EQUIVALENT, locale))}
             </InfoTip>
           </p>
           <p class="mt-1 text-3xl font-bold tabular-nums text-teal-300">
             <span data-sc-trees>{defaultTrees.toFixed(0)}</span>
-            <span class="text-base font-medium text-offwhite"> / year</span>
+            <span class="text-base font-medium text-offwhite">{t.perYearSuffix}</span>
           </p>
           <div class="tree-clearing-wrap mt-4 mb-3">
           <div
@@ -480,20 +549,17 @@ function stageScale(opacity: number, baseScale: number) {
           {live && <span class="live-dot inline-block h-1.5 w-1.5 rounded-full bg-teal-400" aria-hidden="true" />}
           {liveCaption}
         </span>
-        · This model currently catches
+        {t.recallSentencePrefix}
         <span class="font-semibold text-offwhite" data-sc-recall-display>{recall}%</span>
-        of failures before they happen.
-        <InfoTip label="How is this estimate calculated?" position="start">
-          We use the model's real recall rate — how many of the real failures it catches in advance. For example,
-          since it currently catches {recall}% of failures, we assume {recall}% of your downtime cost is avoided
-          too. It's one real, live number, not a marketing multiplier — but it's still an estimate. Your actual
-          savings depend on your own failure costs, response times, and operations.
+        {t.recallSentenceSuffix}
+        <InfoTip label={t.recallInfoLabel} position="start">
+          {t.recallInfoBody(recall)}
         </InfoTip>
         <a
-          href={withBase('/product/#model-health')}
+          href={withBase('/product/#model-health', locale)}
           class="font-medium text-teal-300 underline decoration-teal-300/30 underline-offset-2 hover:text-teal-200"
         >
-          See the live number →
+          {t.seeLiveNumber}
         </a>
       </p>
     </div>
@@ -526,7 +592,17 @@ function stageScale(opacity: number, baseScale: number) {
 
     if (!slider) return;
 
-    const fmt = (n: number) => `€${Math.round(n).toLocaleString('en-US')}`;
+    // Mirrors savings.ts's own formatEur() exactly (Intl.NumberFormat, keyed
+    // off <html lang>) — duplicated rather than imported for the same
+    // self-contained-inline-script reason as growthStages()/slotStages()
+    // below, but MUST stay numerically identical or the slider's live-drag
+    // figures would visibly format differently from the page's initial,
+    // server-rendered ones the instant a visitor starts dragging.
+    const fmtLocale = document.documentElement.lang === 'de' ? 'de-DE' : 'en-US';
+    const fmt = (n: number) =>
+      new Intl.NumberFormat(fmtLocale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(
+        Math.round(n)
+      );
 
     // Exact mirror of the frontmatter's growthStages()/slotStages()/
     // stageScale() (see that comment for the full rationale) — duplicated
@@ -549,6 +625,85 @@ function stageScale(opacity: number, baseScale: number) {
       return ((0.7 + 0.3 * opacity) * baseScale).toFixed(3);
     }
 
+    // One-time "boot up" intro (human-requested, 2026-08-11, refined the
+    // same day into a calmer "count up from zero with fading noise" —
+    // closer to a fintech/analytics stat counter than the original's
+    // wider, more chaotic scramble, which read as glitchy rather than
+    // considered once the novelty wore off). Each headline number rises
+    // from 0 toward its real value on a long quartic ease-out (a longer,
+    // more deliberate settle than a cubic curve — the "Apple" half of the
+    // brief), with a small randomized jitter layered on top that itself
+    // decays on its OWN faster curve (squared, not linear) so the back half
+    // of the animation reads as a clean, confident rise rather than noise
+    // continuing right up to the landing. `scrambleGeneration` is a
+    // cancellation token: the slider's own `input` handler below bumps it
+    // the instant a visitor drags mid-animation, which makes every
+    // in-flight tick's stale `myGeneration` check fail and stop touching
+    // textContent — without this, a drag during the intro would otherwise
+    // leave the number "fighting" between the live dragged value and the
+    // animation's own stale pre-drag target, and could even settle on the
+    // WRONG (stale) number once the animation's last tick fires after
+    // `render()` already painted the real one.
+    let scrambleGeneration = 0;
+    function animateCount(
+      el: HTMLElement | null,
+      target: number,
+      formatFn: (n: number) => string,
+      { duration = 1900, delay = 0 }: { duration?: number; delay?: number } = {}
+    ) {
+      if (!el) return;
+      const myGeneration = scrambleGeneration;
+      const startTime = performance.now() + delay;
+      const jitterCeiling = Math.max(Math.abs(target) * 0.12, 3);
+      el.classList.add('sc-scrambling');
+      function step() {
+        if (myGeneration !== scrambleGeneration) return;
+        const now = performance.now();
+        if (now < startTime) {
+          setTimeout(step, startTime - now);
+          return;
+        }
+        const t = clamp01((now - startTime) / duration);
+        const eased = 1 - Math.pow(1 - t, 4);
+        if (t >= 1) {
+          el!.textContent = formatFn(target);
+          el!.classList.remove('sc-scrambling');
+          return;
+        }
+        const base = target * eased;
+        const jitter = (1 - eased) ** 2 * jitterCeiling;
+        el!.textContent = formatFn(Math.max(0, base + (Math.random() * 2 - 1) * jitter));
+        setTimeout(step, 30 + eased * 160);
+      }
+      step();
+    }
+
+    function playIntro() {
+      const cost = Number(slider!.value);
+      const savings = cost * (recallPct / 100);
+      const withPM = cost - savings;
+      animateCount(inputValue, cost, fmt, { delay: 0, duration: 1900 });
+      animateCount(without, cost, fmt, { delay: 150, duration: 1900 });
+      animateCount(withEl, withPM, fmt, { delay: 300, duration: 1900 });
+      animateCount(savingsEl, savings, fmt, { delay: 500, duration: 2300 });
+      if (eurPerTree > 0 && treesEl) {
+        const trees = (savings * 12) / eurPerTree;
+        animateCount(treesEl, trees, (n) => String(Math.round(n)), { delay: 650, duration: 2100 });
+      }
+      // Slider drag affordance (human-requested, 2026-08-11 — "what would
+      // Steve Krug suggest"): a slider is already a familiar convention, so
+      // the gap isn't understanding what dragging would DO, it's noticing
+      // this specific thin, custom-styled track is grabbable at all. A
+      // radar-ping pulse expanding from the thumb itself shows that
+      // silently — no bubble/text needed, unlike StatCard.astro's "Tap for
+      // details" hint, which exists because THAT affordance (an icon hides
+      // more info behind it) genuinely can't be conveyed visually. Delayed
+      // past the number scramble above so it reads as "now go ahead and
+      // try it" once the card has finished introducing itself, not
+      // competing for attention with five numbers changing at once.
+      slider!.classList.add('sc-hint-pulse');
+    }
+
     function render() {
       const cost = Number(slider!.value);
       const savings = cost * (recallPct / 100);
@@ -557,7 +712,7 @@ function stageScale(opacity: number, baseScale: number) {
       if (inputValue) inputValue.textContent = fmt(cost);
       if (without) without.textContent = fmt(cost);
       if (withEl) withEl.textContent = fmt(withPM);
-      if (withBar) withBar.style.width = `${((withPM / cost) * 100).toFixed(1)}%`;
+      if (withBar) withBar.style.transform = `scaleX(${(withPM / cost).toFixed(4)})`;
       if (savingsEl) savingsEl.textContent = `${fmt(savings)}`;
 
       // Trees saved — same annual €-per-tree ratio and same per-slot growth
@@ -586,11 +741,135 @@ function stageScale(opacity: number, baseScale: number) {
       }
     }
 
-    slider.addEventListener('input', render);
+    // requestAnimationFrame-throttled render (human-requested, 2026-08-11 —
+    // smoother dragging): a native range input can fire `input` far more
+    // often than the display can paint (high-poll-rate mice/trackpads), and
+    // render() does real work per tick — 13 tree icons × 3 stages each, all
+    // read via querySelector. Running that on every raw event has it
+    // competing with the drag itself for the same frame; coalescing to at
+    // most once per rAF (the same cadence the compositor already uses for
+    // GPU-accelerated transforms) means a burst of input events between two
+    // paints collapses into the single render the next frame actually shows.
+    let renderScheduled = false;
+    function scheduleRender() {
+      if (renderScheduled) return;
+      renderScheduled = true;
+      requestAnimationFrame(() => {
+        renderScheduled = false;
+        render();
+      });
+    }
+
+    // Cancels any in-flight intro scramble the instant a visitor drags the
+    // slider (see the animateCount/scrambleGeneration comment above for why
+    // this is necessary, not just tidy) — bumping the generation makes every
+    // pending tick's stale check fail, and the classList cleanup here covers
+    // the one already-painted scrambled frame that render() is about to
+    // overwrite anyway. Kept synchronous (not rAF-scheduled) since it's cheap
+    // and needs to win the race against the scramble's own next tick.
+    slider.addEventListener('input', () => {
+      scrambleGeneration++;
+      root!.querySelectorAll('.sc-scrambling').forEach((el) => el.classList.remove('sc-scrambling'));
+      slider!.classList.remove('sc-hint-pulse');
+      scheduleRender();
+    });
+
+    // One-time intro, triggered the first time the card actually scrolls
+    // into view (same IntersectionObserver + disconnect-after-first-fire
+    // pattern as UserStory.astro's timeline reveal) rather than firing
+    // unconditionally on load — a visitor who never scrolls this far never
+    // pays for it, and one who does sees it right as the card itself
+    // reveals rather than already-settled from a fire-on-load. Respects
+    // prefers-reduced-motion by skipping straight to the real values with
+    // no scramble at all, matching every other animated component here.
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if ('IntersectionObserver' in window) {
+        const introObserver = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                playIntro();
+                introObserver.disconnect();
+              }
+            }
+          },
+          { threshold: 0.3 }
+        );
+        introObserver.observe(root);
+      } else {
+        playIntro();
+      }
+    }
   });
 </script>
 
 <style>
+  /* Intro number-scramble glow (see the script's animateCount comment for
+     the mechanics) — a teal flare while a figure is mid-scramble, easing
+     back to its normal resting color the instant the real value locks in.
+     The transition lives on the resting selector (not `.sc-scrambling`
+     itself) so only the SETTLE direction eases — the class is added
+     synchronously right as the scramble starts, and an instant "snap into
+     glowing" reads as the scramble kicking off with a jolt, which is the
+     point; only the return to rest should feel smooth. */
+  [data-sc-input-value],
+  [data-sc-without],
+  [data-sc-with],
+  [data-sc-savings],
+  [data-sc-trees] {
+    transition: color var(--dur-base) var(--ease-ios), text-shadow var(--dur-base) var(--ease-ios);
+  }
+  .sc-scrambling {
+    color: var(--color-teal-300);
+    /* Dialed back from an earlier, brighter glow (human-requested follow-up,
+       2026-08-12: "a bit more professional") — a quieter flare reads as a
+       live figure still settling; the original's stronger bloom read closer
+       to a flashing alert than a calm "computing" cue. */
+    text-shadow: 0 0 8px color-mix(in srgb, var(--color-teal-400) 40%, transparent);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-sc-input-value],
+    [data-sc-without],
+    [data-sc-with],
+    [data-sc-savings],
+    [data-sc-trees] {
+      transition: none;
+    }
+  }
+
+  /* Slider drag affordance (see the script's playIntro comment for the
+     Krug reasoning) — a plain radar-ping `box-shadow` pulse expanding from
+     the native thumb itself, applied directly to the vendor-prefixed thumb
+     pseudo-elements rather than a separately-positioned overlay: the
+     browser already places these exactly on the real thumb at whatever
+     value the slider currently holds, so there's no positioning math to
+     get wrong or keep in sync. `animation-delay` lands it after the number-
+     scramble intro above finishes (~2.8s now that those run longer — see
+     animateCount's own comment) rather than competing with it, and a finite
+     `3` iteration-count is what makes this genuinely one-time — no JS timer
+     needed to stop it, only to cancel it EARLY if a visitor drags before
+     it's done (the script's `sc-hint-pulse` class removal on `input`).
+     `-webkit-` and `-moz-` thumb selectors can't be combined into one rule
+     (a single invalid selector in the list would drop the whole rule in
+     every engine that doesn't recognize the other prefix), so they're
+     repeated as two separate rules on purpose, not a missed dedupe. */
+  [data-sc-slider].sc-hint-pulse::-webkit-slider-thumb {
+    animation: sc-slider-hint-pulse 1.6s var(--ease-ios-in-out) 2.9s 3;
+  }
+  [data-sc-slider].sc-hint-pulse::-moz-range-thumb {
+    animation: sc-slider-hint-pulse 1.6s var(--ease-ios-in-out) 2.9s 3;
+  }
+  @keyframes sc-slider-hint-pulse {
+    0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-teal-400) 55%, transparent); }
+    70%, 100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--color-teal-400) 0%, transparent); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-sc-slider].sc-hint-pulse::-webkit-slider-thumb,
+    [data-sc-slider].sc-hint-pulse::-moz-range-thumb {
+      animation: none;
+    }
+  }
+
   .tree-icon {
     display: block;
   }
@@ -625,6 +904,13 @@ function stageScale(opacity: number, baseScale: number) {
     transform-box: fill-box;
     transform-origin: 50% 100%;
     transition: opacity var(--dur-fast) var(--ease-ios-in-out), transform var(--dur-fast) var(--ease-ios-in-out);
+    /* Hints the browser to promote this to its own compositor layer up
+       front, not on the first frame it actually animates — avoids a one-
+       time layer-promotion stutter mid-drag (human-requested, 2026-08-11).
+       Cheap here: each tree only ever animates opacity/transform, never
+       layout-affecting properties, so there's nothing will-change forces
+       the browser to keep recalculating. */
+    will-change: opacity, transform;
   }
   /* Layered shadow (human-requested follow-up, 2026-08-07 — "clever tricks
      with layered shadows to create depth and more of a 3d tree effect"):
@@ -666,5 +952,11 @@ function stageScale(opacity: number, baseScale: number) {
      stacking-context reasoning as Hero.astro's own `z-0` comment. */
   .tree-clearing-wrap {
     position: relative;
+  }
+  /* Same compositor-layer hint as .tree-stage above, for the "with
+     predictive maintenance" fill bar now driven by `transform: scaleX()`
+     instead of `width` (see the markup's own comment for why). */
+  [data-sc-with-bar] {
+    will-change: transform;
   }
 </style>

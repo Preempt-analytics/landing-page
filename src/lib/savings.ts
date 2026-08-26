@@ -3,6 +3,7 @@
 // drives inside UserStory.astro's Overnight Impact card. Centralized so both
 // components read one number instead of two inline constants that can
 // quietly drift apart — same single-source-of-truth reasoning as site.ts.
+import { DEFAULT_LOCALE, type Locale } from '../i18n';
 
 /** UserStory.astro's one-night example. Defined here, not just inline in
     that component, so the calculator can reference the exact same figure
@@ -31,9 +32,20 @@ export function estimateMonthlySavings(monthlyCostEur: number, recallPct: number
 }
 
 /** "€12,345"-style formatting, shared so the calculator and UserStory's card
-    never render the same kind of number two different ways. */
-export function formatEur(amount: number): string {
-  return `€${Math.round(amount).toLocaleString('en-US')}`;
+    never render the same kind of number two different ways. Locale-aware via
+    Intl.NumberFormat (Second Law: the platform already knows German's
+    period-thousands/comma-decimal convention and post-number € placement —
+    hand-rolling a second currency formatter would just be a second place to
+    get it wrong). SavingsCalculator.astro's client-side `fmt()` mirrors this
+    exact call for its live-drag updates; keep the two in sync if this ever
+    changes. */
+export function formatEur(amount: number, locale: Locale = DEFAULT_LOCALE): string {
+  const intlLocale = locale === 'de' ? 'de-DE' : 'en-US';
+  return new Intl.NumberFormat(intlLocale, {
+    style: 'currency',
+    currency: 'EUR',
+    maximumFractionDigits: 0,
+  }).format(Math.round(amount));
 }
 
 /** Illustrative €-to-trees ratio for the calculator's "trees saved" figure

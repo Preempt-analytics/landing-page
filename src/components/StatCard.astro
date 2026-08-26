@@ -2,11 +2,13 @@
 // One hero stat tile. Styling rule (§5): all values render the same off-white;
 // teal is reserved for the icon + a 1px top-border accent — one consistent system.
 import InfoTip from './InfoTip.astro';
+import { useTranslations, DEFAULT_LOCALE, type Locale } from '../i18n';
 
 interface Props {
   value: string;
   label: string;
   caption: string;
+  locale?: Locale;
   /** 'live' shows a teal dot; 'illustrative' is a quiet honesty label. */
   captionTone?: 'live' | 'illustrative' | 'plain';
   /** Optional plain-language explanation of the metric, surfaced via an InfoTip. */
@@ -41,7 +43,9 @@ interface Props {
       redundant there. */
   hint?: boolean;
 }
-const { value, label, caption, captionTone = 'plain', info, hint = false } = Astro.props;
+const { value, label, caption, captionTone = 'plain', info, hint = false, locale = DEFAULT_LOCALE } = Astro.props;
+const tCommon = useTranslations(locale).common;
+const tStatCard = useTranslations(locale).statCard;
 ---
 
 <div class="tile-hover relative rounded-xl border border-white/10 border-t-teal-400/70 bg-navy-800/40 p-5 backdrop-blur-sm">
@@ -53,12 +57,12 @@ const { value, label, caption, captionTone = 'plain', info, hint = false } = Ast
     {label}
     {info && (
       <span class="relative inline-flex">
-        <InfoTip label={`What is ${label}?`} position="center">
+        <InfoTip label={tCommon.whatIs(label)} position="center">
           {info}
         </InfoTip>
         {hint && (
           <span class="stat-hint" aria-hidden="true">
-            Tap for details
+            {tStatCard.tapForDetails}
           </span>
         )}
       </span>

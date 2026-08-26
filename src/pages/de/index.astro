@@ -1,0 +1,28 @@
+---
+// German homepage — mirrors src/pages/index.astro exactly. Astro's i18n
+// routing (astro.config.mjs) determines the 'de' locale from this file's
+// directory, not from anything in this file itself; every section component
+// already reads Astro.currentLocale internally (see e.g. Hero.astro's own
+// `const locale = Astro.currentLocale ?? DEFAULT_LOCALE`), so this page is
+// just the same composition re-rendered under /de/ — no separate German
+// logic lives here. Keep this file's composition in sync with index.astro's
+// whenever a section is added/removed/reordered there.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../../components/Hero.astro';
+import LiveFactory from '../../components/sections/LiveFactory.astro';
+import HowItWorks from '../../components/sections/HowItWorks.astro';
+import Benefits from '../../components/sections/Benefits.astro';
+import UserStory from '../../components/sections/UserStory.astro';
+import SavingsCalculator from '../../components/sections/SavingsCalculator.astro';
+import MlopsSystem from '../../components/sections/MlopsSystem.astro';
+---
+
+<BaseLayout>
+  <Hero />
+  <LiveFactory />
+  <HowItWorks />
+  <Benefits />
+  <UserStory />
+  <SavingsCalculator />
+  <MlopsSystem />
+</BaseLayout>

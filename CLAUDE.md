@@ -30,8 +30,10 @@ A change is not complete until the **build + deploy contract** still holds, not
 just because the edited file looks right in isolation:
 
 ```
-Build contract : npm run build passes → both routes (/,  /try-it-yourself/) render
+Build contract : npm run build passes → all 6 routes render (/, /product/,
+                 /try-it-yourself/ × English + German — Contract 8)
                  → internal links resolve under base: '/landing-page'
+                 → every de.ts key matches en.ts's shape (TS build error otherwise)
 Deploy contract: fetch-metrics.mjs must fail open → deploy.yml builds → GitHub
                  Pages serves it
 ```
@@ -386,6 +388,50 @@ not quote a price.
 
 ---
 
+### Contract 8 — i18n Dictionary & Locale Routing
+
+**Owner:** `src/i18n/en.ts` (canonical shape), `src/i18n/de.ts` (typed against
+it via `Dictionary = typeof en`), `src/i18n/index.ts` (`Locale`,
+`DEFAULT_LOCALE`, `useTranslations()`), `astro.config.mjs`'s `i18n` block
+**Dependents:** every component that renders visitor-facing text; `src/lib/site.ts`'s
+`withBase()`/`getNavLinks()`; `src/lib/metrics.ts`'s `relativeTime()`;
+`src/lib/savings.ts`'s `formatEur()`; `src/pages/de/*` (the mirrored German
+page tree)
+
+German is a full parallel content tree via Astro's built-in i18n routing —
+real static pages per locale (`src/pages/de/*`, zero added client JS for the
+routing itself), not a client-side string swap over one English DOM. English
+stays unprefixed (`defaultLocale: 'en'`, `prefixDefaultLocale: false`);
+German lives under `/landing-page/de/*`.
+
+**What is locked:**
+
+| Field | Controls | If changed without updating dependents |
+|---|---|---|
+| `en.ts`'s object shape | Every key `de.ts` must also have, with matching value types (string vs. function) | TypeScript errors at build time — a missing/extra key in `de.ts` fails `npm run build` rather than shipping a blank string, by design |
+| `withBase(path, locale?)`'s signature | Every internal `href` and asset `src` sitewide | Omitting the second argument on a `href` silently links to the English page even from a German one; **never** pass `locale` to an image/asset `src` call — see the Danger Zone below on why |
+| `Astro.currentLocale` | Which dictionary a component reads (`useTranslations(Astro.currentLocale ?? DEFAULT_LOCALE)`) | A component that hardcodes a string instead of reading `t.xxx` silently ships English-only inside a German page |
+| `formatEur(amount, locale?)` / `relativeTime(iso, locale?)` | Locale-correct number/date formatting (German period-thousands + trailing €; German "vor X" phrasing via `Intl.RelativeTimeFormat`) | A call site missing the `locale` argument silently reverts to English formatting (e.g. "€15,000" instead of "15.000 €") on an otherwise-German page |
+| `transition:name` on `Nav.astro`'s `<header>`, `Footer.astro`'s `<footer>`, `SiteToast.astro`'s toast | Must be locale-keyed (e.g. `` `site-nav-${locale}` ``), not a fixed string | A fixed name lets Astro's view-transitions persist the OLD locale's DOM across a language switch — the nav/footer/toast silently stay in English under German page content until a hard refresh |
+
+Every new component with visitor-facing copy must: import `useTranslations`
+and `DEFAULT_LOCALE` from `../i18n`, read
+`const locale = Astro.currentLocale ?? DEFAULT_LOCALE;`, pull its strings
+from `useTranslations(locale).<namespace>`, and add the matching English
+value to `en.ts` (`de.ts` follows immediately or the build fails). A
+`<script>` block has no access to `Astro.currentLocale` — pass translated
+strings it needs down via a `data-*` attribute (see `ProductPreview.astro`'s
+`data-lm-strings` JSON blob on the Live Machines panel, or
+`SavingsCalculator.astro`'s client `fmt()` reading `document.documentElement.lang`)
+rather than hardcoding English inside the script.
+
+Adding a mirrored German page under `src/pages/de/*` needs the exact same
+section composition as its English counterpart, with import paths one
+directory deeper (`../../` not `../`) — see that directory's own file-top
+comments for the "keep in sync" note.
+
+---
+
 ## PRE-CHANGE CHECKLIST
 
 | Change type | Check |
@@ -401,6 +447,10 @@ not quote a price.
 | Add/flip a `/product` dashboard panel | Registry entry (`dashboard.ts`) **and** a matching branch/asset in `ProductPreview.astro` updated in the same change (Contract 5)? |
 | Re-record `live-machines.json` | Ran `scripts/record-live-machines.py` (never hand-edited)? Frame arity still matches `_meta.fields`? No drift/export flags used (Contract 6)? |
 | Edit `src/lib/savings.ts` | `SavingsCalculator.astro` **and** `UserStory.astro` both updated in the same change if the constant they share changes (Contract 7)? |
+| Add a new visitor-facing string anywhere | Added to **both** `src/i18n/en.ts` and `src/i18n/de.ts` (build fails otherwise), read via `useTranslations(locale)`, not hardcoded (Contract 8)? |
+| Add a new internal `href` | `withBase(path, locale)` with the locale argument — not just `withBase(path)`, which silently defaults to English (Contract 8)? |
+| Add a new page | Mirrored under `src/pages/de/*` with the same section composition, import paths one level deeper (Contract 8)? |
+| Add a `transition:persist`-ed element with translated content inside it | `transition:name` keyed by locale (e.g. `` `foo-${locale}` ``), not a fixed string (Contract 8)? |
 
 ---
 
@@ -476,6 +526,24 @@ and the handover docs so they don't have to be rediscovered:
   global npm config points at.** Already happened once — a global `~/.npmrc`
   pointed at `registry.npmmirror.com` (China-hosted) and every `resolved` URL in
   `package-lock.json` silently followed. See Digital Sovereignty & Privacy above.
+- **`withBase()`'s `locale` argument is for page routes only, never for image/asset
+  `src`.** Astro's own `getRelativeLocaleUrl` (the obvious first choice for a
+  locale-aware path helper) appends a trailing slash to every path it returns —
+  correct for a page route (`/product/`), but it turns
+  `cnc-machine-hyperrealistic.png` into `cnc-machine-hyperrealistic.png/`, a
+  silent 404 for the actual image file. `withBase()` is hand-rolled specifically
+  to avoid this (no `getRelativeLocaleUrl` dependency, no trailing slash added to
+  a non-empty path) — this already broke the Hero/LiveFactory/SavingsCalculator
+  background photos once during the i18n build-out. Image `src={withBase(path)}`
+  calls correctly omit the `locale` argument (assets aren't duplicated per
+  locale) — don't "fix" that by adding one.
+- **A `<script>` tag has no access to `Astro.currentLocale`.** Any client script
+  that needs translated text (a Play/Pause label, a "Copied!" toast, a status
+  string set from JS after the initial render) must receive it via a `data-*`
+  attribute rendered from the component's own frontmatter, or by reading
+  `document.documentElement.lang` at runtime (see `SavingsCalculator.astro`'s
+  client-side `fmt()`) — never hardcode the English string as a fallback inside
+  the script itself.
 
 ---
 
@@ -492,5 +560,9 @@ and the handover docs so they don't have to be rediscovered:
 | `src/lib/live-machines.ts` | Recorded-run accessor | `src/data/live-machines.json` | `ProductPreview.astro`'s Live Machines panel |
 | `astro.config.mjs` | Site/base config | — | every internal link via `withBase()` |
 | `src/styles/global.css` | Design tokens, motion/focus rules | — | every component's Tailwind classes |
-| `src/layouts/BaseLayout.astro` | Page shell, SEO/OG meta | `site.ts` | wraps every page in `src/pages/` |
+| `src/layouts/BaseLayout.astro` | Page shell, SEO/OG meta, pre-paint a11y-preference script | `site.ts`, `i18n/` | wraps every page in `src/pages/` |
 | `.github/workflows/deploy.yml` | CI/CD | secrets `DAGSHUB_USERNAME`/`DAGSHUB_TOKEN`, var `MLFLOW_TRACKING_URI` | GitHub Pages |
+| `src/i18n/en.ts` / `de.ts` / `index.ts` | Translation dictionary (Contract 8) — `en.ts` is the canonical shape, `de.ts` is typed against it | — | every component with visitor-facing text |
+| `src/pages/de/*` | Mirrored German page tree (Contract 8) | Same section components as their English counterparts | Astro's i18n router (`astro.config.mjs`) |
+| `src/components/AccessibilityMenu.astro` | Nav-row widget: text size / high contrast / reduced motion, persisted to `localStorage`, hover-expand + click-pin panel | `i18n/`, `global.css`'s `.nav-dropdown-panel` + "Accessibility overrides" section | `Nav.astro` |
+| `src/components/LanguageSwitcher.astro` | Nav-row EN/DE link (autonym label, e.g. "Deutsch") | `i18n/`, `lib/site.ts`'s `withBase()` | `Nav.astro` |

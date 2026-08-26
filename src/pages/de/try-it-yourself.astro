@@ -1,37 +1,27 @@
 ---
-// §9.7 Try It Yourself — plain-language (Krug/Redish), menu-first, teaser not a full
-// copy of the README. Links out to the repo rather than duplicating setup steps.
-// Human review (2026-07-23) added a Docker Desktop download link + InfoTip
-// (short glossary popover) and BeginnersTrail guidance for readers who don't
-// know what GitHub/cloning/a terminal are.
-// Human review (2026-07-28): removed the git-free "Download ZIP" path. GitHub's
-// ZIP archive has no .git folder, and docker-compose.yml bind-mounts .git into
-// the monitor container so it can push the retrain trigger — a ZIP-downloaded
-// folder silently breaks the automatic retraining demo (the container gets an
-// empty .git dir, and every push fails forever with no visible error). git
-// clone is now the one documented path, so Git joins Docker Desktop as a
-// stated prerequisite.
-import BaseLayout from '../layouts/BaseLayout.astro';
-import InfoTip from '../components/InfoTip.astro';
-import BeginnersTrail from '../components/BeginnersTrail.astro';
-import CodeBlock from '../components/CodeBlock.astro';
-import StatCard from '../components/StatCard.astro';
-import { REPO_URL, withBase } from '../lib/site';
-import { isLive, retrainCount, relativeTime } from '../lib/metrics';
-import { isCiLive, totalCiRuns, lastCiRunAt } from '../lib/ci';
-import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+// German /try-it-yourself page — mirrors src/pages/try-it-yourself.astro
+// exactly (see that file's own comments for the section's history). Only the
+// relative import depth changes (one directory deeper under /de/); all copy
+// comes from the i18n dictionary via Astro.currentLocale, resolved
+// automatically from this file's location under Astro's i18n routing
+// (astro.config.mjs). Keep this file's composition in sync with
+// try-it-yourself.astro's whenever it changes — the shell commands
+// (git clone, docker compose, ./preempt.sh) stay untranslated on purpose,
+// same as the English version.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import InfoTip from '../../components/InfoTip.astro';
+import BeginnersTrail from '../../components/BeginnersTrail.astro';
+import CodeBlock from '../../components/CodeBlock.astro';
+import StatCard from '../../components/StatCard.astro';
+import { REPO_URL, withBase } from '../../lib/site';
+import { isLive, retrainCount, relativeTime } from '../../lib/metrics';
+import { isCiLive, totalCiRuns, lastCiRunAt } from '../../lib/ci';
+import { useTranslations, DEFAULT_LOCALE } from '../../i18n';
 
 const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
 const t = useTranslations(locale).tryItYourselfPage;
 const tCommon = useTranslations(locale).common;
 
-// Live proof strip (human-requested, 2026-07-30): same honesty-labelled
-// StatCard system as the homepage hero, so a visitor who's already seen
-// "live · updated hourly" there recognizes this as more of the same real
-// system rather than a fresh claim. Model Retrains reuses metrics.json's
-// already-fetched binary_model.version (MLflow version numbers increment
-// with each promoted retrain); CI Pipeline Runs is a new source —
-// scripts/fetch-ci-stats.mjs reads the ML repo's public GitHub Actions API.
 const metricsLive = isLive();
 const retrains = retrainCount();
 const retrainsCaption = metricsLive ? tCommon.liveUpdatedHourly : tCommon.sampleMetric;
@@ -43,15 +33,6 @@ const ciCaption = ciLive ? t.ciLiveLastRun(relativeTime(lastCiRunAt(), locale)) 
 
 <BaseLayout title={t.title} description={t.description}>
   <section class="relative z-0 overflow-hidden">
-    <!-- Macro-gears photo band (human-requested, 2026-07-31) — this is the site's
-         original hero image (design/visual-assets/gears.png), reused here rather
-         than discarded once the homepage hero moved to a real CNC machine shot
-         (docs/IMAGE_ASSETS.md item 1). Fixed-height band behind just the header
-         (back link, H1, intro, stat cards), not the full page — fades to solid
-         navy before the instructional content below, so the plain, scannable
-         setup steps aren't fighting a busy photo behind them. Same `relative z-0`
-         stacking-context fix as Hero.astro (see that file's comment) so the
-         negative-z layers stay contained to this section. -->
     <div class="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[420px] sm:h-[480px]" aria-hidden="true">
       <img
         src={withBase('/images/try-it-yourself/macro-gears.png')}
@@ -76,7 +57,6 @@ const ciCaption = ciLive ? t.ciLiveLastRun(relativeTime(lastCiRunAt(), locale)) 
       {t.subheading}
     </p>
 
-    <!-- Live proof strip — see frontmatter note. -->
     <div class="mt-8 grid gap-4 sm:grid-cols-2">
       <StatCard
         value={String(retrains)}
@@ -120,7 +100,6 @@ const ciCaption = ciLive ? t.ciLiveLastRun(relativeTime(lastCiRunAt(), locale)) 
       </p>
     </BeginnersTrail>
 
-    <!-- Prerequisites -->
     <div class="mt-10 rounded-xl border border-white/10 bg-navy-800/40 p-5">
       <p class="text-sm font-semibold text-offwhite">{t.prerequisitesIntro}</p>
       <ul class="mt-3 space-y-3 text-sm text-muted">
@@ -155,9 +134,6 @@ const ciCaption = ciLive ? t.ciLiveLastRun(relativeTime(lastCiRunAt(), locale)) 
       </ul>
     </div>
 
-    <!-- Get the code: git clone is now the one documented path (human review,
-         2026-07-28 — see the frontmatter note: a ZIP download has no .git
-         folder, which silently breaks the automatic-retraining demo). -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">{t.getCodeHeading}</h2>
     <p class="mt-3 text-muted">{t.openTerminal}</p>
     <CodeBlock code={`git clone https://github.com/Preempt-Analytics-Demo/predictive-maintenance-demo.git
@@ -181,7 +157,6 @@ cd predictive-maintenance-demo`} locale={locale} />
       </p>
     </BeginnersTrail>
 
-    <!-- Friendly path first -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">{t.easyWayHeading}</h2>
     <p class="mt-3 text-muted">
       {t.easyWayBody}
@@ -195,7 +170,6 @@ ${t.windowsComment}
       {t.pressSixNote}
     </p>
 
-    <!-- Manual path second -->
     <h2 class="mt-16 text-xl font-semibold text-offwhite">{t.typeItHeading}</h2>
     <p class="mt-3 text-muted">
       {t.typeItBody}
@@ -207,7 +181,6 @@ docker compose up -d`} locale={locale} />
       {t.fromThereNote}
     </p>
 
-    <!-- Shared-resource expectation -->
     <div class="mt-10 rounded-xl border border-teal-400/20 bg-teal-400/[0.04] p-5">
       <p class="text-sm text-muted">
         <span class="font-semibold text-teal-300">{t.headsUpLead}</span> {t.headsUpBody}

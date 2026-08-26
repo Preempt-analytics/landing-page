@@ -2,6 +2,10 @@
 import Logo from './Logo.astro';
 import InfoTip from './InfoTip.astro';
 import { REPO_URL, TEAM, PROGRAM, KAGGLE_DATASET_URL, KAGGLE_DATASET_NAME, withBase } from '../lib/site';
+import { useTranslations, DEFAULT_LOCALE } from '../i18n';
+
+const locale = Astro.currentLocale ?? DEFAULT_LOCALE;
+const t = useTranslations(locale).footer;
 const year = new Date().getFullYear();
 // Only "AI4I 2020" is short enough to read as a link label without the
 // underline swallowing the whole dataset name — the rest stays plain text,
@@ -11,11 +15,15 @@ const kaggleDatasetId = kaggleDatasetWords.slice(0, 2).join(' ');
 const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
 ---
 
+<!-- transition:name is locale-keyed — see Nav.astro's identical comment on
+     its own <header>. Without this, switching languages via
+     LanguageSwitcher would leave this footer's persisted DOM frozen in
+     whichever locale rendered it first. -->
 <footer
   id="project-team"
   class="scroll-mt-20 border-t border-white/5 bg-navy-950"
   transition:persist
-  transition:name="site-footer"
+  transition:name={`site-footer-${locale}`}
 >
   <div class="mx-auto max-w-7xl px-5 py-14 md:px-8">
     <!-- divide-y (mobile-only, human-requested, 2026-08-11 — Krug-style
@@ -35,14 +43,36 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
          order silently mismatched from what's visually first. -->
     <div class="grid gap-10 divide-y divide-white/5 md:grid-cols-3 md:divide-y-0">
       <!-- Team -->
-      <div>
+      <!-- id is a second, narrower target than the <footer>'s own
+           id="project-team" above (which anchors the nav link's scroll
+           position via scroll-mt-20) — this one is just for Nav.astro's
+           targeting-reticule script to frame the column that actually says
+           "Project & Team," not the whole three-column footer. -->
+      <div id="team-panel">
         <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
-          Project &amp; Team
+          {t.projectAndTeam}
         </h2>
         <ul class="space-y-2 text-sm text-muted">
           {
             TEAM.map((m) => (
-              <li>
+              <li class="flex items-center gap-1.5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2.25"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="shrink-0 text-muted/60"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <circle cx="12" cy="10" r="3" />
+                  <path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662" />
+                </svg>
                 <span class="text-offwhite">{m.name}</span>{' '}
                 <a href={m.url} class="footer-link text-teal-400 hover:text-teal-300" rel="noopener">
                   {m.handle}
@@ -72,7 +102,7 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
             <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
             <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="1.6" />
           </svg>
-          Built using open data from{' '}
+          {t.builtUsingOpenData}{' '}
           <a
             href={KAGGLE_DATASET_URL}
             target="_blank"
@@ -114,14 +144,14 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
             <circle cx="5.07" cy="8" r="1.3" />
             <circle cx="8" cy="5.07" r="1.3" />
           </svg>
-          Made with love in{' '}
+          {t.madeWithLoveIn}{' '}
           <a
             href="https://digital-strategy.ec.europa.eu/en/policies/eu-tech-sovereignty"
             target="_blank"
             rel="noopener noreferrer"
             class="border-b border-teal-400 transition-colors hover:text-offwhite hover:border-teal-300"
           >
-            Europe
+            {t.europe}
           </a>.
         </p>
       </div>
@@ -140,26 +170,26 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
            closer to what "desktop mode" means anyway. -->
       <div class="lg:ml-16">
         <h2 class="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted/60">
-          Links
+          {t.links}
         </h2>
         <ul class="space-y-2 text-sm">
           <li>
-            <a href={withBase('/product')} class="footer-link text-muted hover:text-offwhite">
-              See it in action
+            <a href={withBase('/product', locale)} class="footer-link text-muted hover:text-offwhite">
+              {t.seeItInAction}
             </a>
           </li>
           <li>
-            <a href={withBase('/try-it-yourself')} class="footer-link text-muted hover:text-offwhite">
-              Test it on your device
+            <a href={withBase('/try-it-yourself', locale)} class="footer-link text-muted hover:text-offwhite">
+              {t.testItOnYourDevice}
             </a>
           </li>
           <li>
             <a href={REPO_URL} class="footer-link text-muted hover:text-offwhite" rel="noopener">
-              GitHub repository
+              {t.githubRepository}
             </a>
           </li>
           <li>
-            <a href="#top" class="footer-link text-muted hover:text-offwhite">Back to top ↑</a>
+            <a href="#top" class="footer-link text-muted hover:text-offwhite">{t.backToTop}</a>
           </li>
         </ul>
       </div>
@@ -171,19 +201,17 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
       <div class="lg:ml-16">
         <Logo class="mb-4" />
         <p class="max-w-sm text-sm leading-relaxed text-muted">
-          Predictive maintenance for industrial equipment — a complete MLOps
-          pipeline: live sensor predictions, automated drift monitoring, and
-          self-triggering retraining.
+          {t.aboutBody}
         </p>
         <p class="mt-4 max-w-sm text-xs leading-relaxed text-muted/70">
-          A capstone project showcase built on <strong class="font-medium text-muted">simulated CNC sensor data</strong> —
-          not a live paying-customer deployment, yet.
+          {t.aboutCapstonePrefix} <strong class="font-medium text-muted">{t.aboutCapstoneBold}</strong>{' '}
+          {t.aboutCapstoneSuffix}
         </p>
       </div>
     </div>
 
     <div class="mt-12 flex flex-col gap-3 border-t border-white/5 pt-6 text-xs text-muted/60 md:flex-row md:items-center md:justify-between">
-      <p>© {year} Preempt Analytics — capstone project. Built with Astro &amp; Tailwind.</p>
+      <p>{t.copyright(year)}</p>
       <!-- LED dot-matrix treatment on just the short status phrase, plain
            text for the rest (human-requested, 2026-08-07) — a dot-matrix
            face reads as noise at paragraph length, but a short all-caps
@@ -210,18 +238,33 @@ const kaggleDatasetRest = kaggleDatasetWords.slice(2).join(' ');
       <p class="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-sm">
         <span class="led-ticker" aria-hidden="true">
           <span class="led-ticker-track">
-            <span class="led-readout">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
-            <span class="led-readout">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
+            <span class="led-readout">{t.ledTicker}</span>
+            <span class="led-readout">{t.ledTicker}</span>
           </span>
         </span>
-        <span class="led-readout led-ticker-fallback" aria-hidden="true">NO ANALYTICS · NO TRACKING · NO SURVEILLANCE CAPITALISM</span>
-        <span class="sr-only">No analytics. No tracking. No surveillance capitalism.</span>
+        <span class="led-readout led-ticker-fallback" aria-hidden="true">{t.ledTicker}</span>
+        <span class="sr-only">{t.ledTickerSrOnly}</span>
         <span class="inline-flex items-center gap-1">
-          — nothing you do here is logged.
-          <InfoTip label="Our privacy approach" position="end">
-            No cookies — not even "necessary" ones. No analytics, no trackers, no fingerprinting, and nothing sent
-            to a third party. This site doesn't collect anything about your visit, so there's nothing to ask your
-            consent for under GDPR/ePrivacy — which is also why there's no cookie banner here.
+          {t.noLoggingSuffix}
+          <InfoTip label={t.privacyTipLabel} position="end">
+            {t.privacyTipBody}{' '}{t.privacyTipHostingPrefix}{' '}
+            <!-- Only interactive element ever placed inside an InfoTip
+                 popover (role="tooltip") — a deliberate, narrow exception:
+                 the GitHub Pages hosting disclosure needs a real citation,
+                 not just prose. The link stays reachable via the same
+                 :focus-within chain that opens the popover (it's the (i)
+                 button's next DOM sibling), so keyboard users can still tab
+                 into it even though WAI-ARIA's tooltip pattern generally
+                 assumes non-interactive content. -->
+            <a
+              href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="footer-link text-teal-400 hover:text-teal-300"
+            >
+              {t.privacyTipHostingLinkLabel}
+            </a>{' '}
+            {t.privacyTipHostingSuffix}
           </InfoTip>
         </span>
       </p>
