@@ -159,11 +159,21 @@ const tCommon = useTranslations(locale).common;
         <span class="text-teal-400">{t.headingPrevent}</span> <span class="text-offwhite">{t.headingLine2}</span>
       </h1>
 
+      <!-- Single body paragraph, two sentences (human-requested, 2026-08-26:
+           employer-perspective review — the old standalone "A capstone
+           project showcase…" disclaimer trailed the CTA buttons as a tiny,
+           easy-to-skim-past line that read as legal fine print. Folded into
+           the opening of the body copy instead, so the very first sentence
+           under the headline states this is a capstone project — no
+           separate de-emphasized disclaimer needed. {t.subtitle} and
+           {t.subtitleSecondary} stay separate dictionary keys — one per
+           sentence — but render inside one <p> so they read as a single
+           paragraph, not two visually separated blocks. -->
       <p
         class="hero-fade-in mt-6 max-w-xl text-lg leading-relaxed text-muted 2xl:max-w-2xl 2xl:text-xl"
         style="animation-delay: 140ms"
       >
-        {t.subtitle}
+        {t.subtitle} {t.subtitleSecondary}
       </p>
 
       <div class="hero-fade-in mt-8 flex flex-wrap gap-4" style="animation-delay: 220ms">
@@ -172,10 +182,6 @@ const tCommon = useTranslations(locale).common;
           {tCommon.testItOnYourDevice}
         </Button>
       </div>
-
-      <p class="hero-fade-in mt-5 text-xs text-muted/60" style="animation-delay: 280ms">
-        {t.capstoneNote}
-      </p>
     </div>
 
     <!-- Stat row sits on the dark/faded area, wider than the copy block, as in the mockup -->

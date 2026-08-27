@@ -95,8 +95,9 @@ export const de: Dictionary = {
     headingPrevent: 'Stillstand',
     headingLine2: 'vermeiden.',
     subtitle:
-      'Ein System für vorausschauende Wartung, das Maschinenausfälle erkennt, bevor sie eintreten — entwickelt, um zu zeigen, wie Fertigungsteams Betriebszeit und Effizienz maximieren könnten.',
-    capstoneNote: 'Ein Abschlussprojekt auf Basis simulierter CNC-Sensordaten.',
+      'In unserem Abschlussprojekt haben wir ein System für vorausschauende Wartung entwickelt, das Maschinenausfälle erkennt, bevor sie eintreten.',
+    subtitleSecondary:
+      'Es läuft auf Basis simulierter CNC-Sensordaten und zeigt, wie Fertigungsteams Betriebszeit und Effizienz maximieren könnten.',
     hoverForDetails: 'Für Details hierhin bewegen',
     checkingFor: 'Prüft auf …',
     markers: {
@@ -544,7 +545,7 @@ export const de: Dictionary = {
       title: 'Noch nie so etwas gemacht? Hier ist der komplette Weg.',
       body1: 'Sie müssen nicht programmieren können. Der gesamte Weg besteht aus drei Schritten:',
       step1: '1. Docker Desktop und Git installieren (unten) — zwei kostenlose Programme, installiert wie jedes andere auch.',
-      step2: '2. Den Code auf den eigenen Rechner holen — einen Befehl in ein Terminal einfügen (unten erklärt).',
+      step2: '2. Den Code auf den eigenen Rechner holen — einen Befehl in Terminal einfügen (unten erklärt).',
       step3: '3. Das Menüskript starten und eine Zahl drücken — zuerst 6 drücken, um alles zu aktivieren, danach eine beliebige andere Zahl zum Ausprobieren.',
       closing: 'Das ist schon alles — keine Docker-Befehle zum Auswendiglernen, nur ein paar Zeilen zum Einfügen und danach eine Zahl zum Drücken.',
     },
