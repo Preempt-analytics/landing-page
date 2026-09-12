@@ -1,8 +1,8 @@
 {
   "_meta": {
-    "source": "sample",
+    "source": "live",
     "note": "Live-fetched by CI (scripts/fetch-metrics.mjs) against DagsHub's public MLflow proxy — works anonymously for this public repo; DAGSHUB_TOKEN is optional defense-in-depth, not required. Falls back to sample values only if DagsHub is unreachable or the production alias is missing.",
-    "fetched_at": "2026-09-12T00:17:46.963Z"
+    "fetched_at": "2026-09-12T05:47:01.566Z"
   },
   "binary_model": {
     "name": "predictive-maintenance-binary",
